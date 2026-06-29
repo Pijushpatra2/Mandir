@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: var(--font-cormorant);
+  --font-sans: var(--font-inter);
+  --font-jakarta: var(--font-jakarta);
+  
+  --color-primary-gold: #C59D5F;
+  --color-secondary-bronze: #8B5E34;
+  --color-dark-surface: #111111;
+  --color-bg-warm: #FAF7F2;
+  --color-surface-white: #FFFFFF;
+  --color-accent-purple: #7C3AED;
+  --color-success-green: #16A34A;
+  --color-warning-amber: #F59E0B;
+  --color-error-red: #DC2626;
+  --color-neutral-gray: #E5E3DF;
+}
+
+@utility glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(139, 94, 52, 0.04);
+}
+
+@utility glass-card-dark {
+  background: rgba(17, 17, 17, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Typography Utilities Scale */
+@utility text-display {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  @media (min-width: 768px) {
+    font-size: 4rem;
+  }
+}
+
+@utility text-h1 {
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
+  line-height: 1.2;
+  font-weight: 600;
+  @media (min-width: 768px) {
+    font-size: 3rem;
+  }
+}
+
+@utility text-h2 {
+  font-family: var(--font-heading);
+  font-size: 1.875rem;
+  line-height: 1.25;
+  font-weight: 600;
+  @media (min-width: 768px) {
+    font-size: 2.25rem;
+  }
+}
+
+@utility text-h3 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 600;
+  @media (min-width: 768px) {
+    font-size: 1.875rem;
+  }
+}
+
+@utility text-h4 {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 600;
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+  }
+}
+
+@utility text-h5 {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  line-height: 1.4;
+  font-weight: 600;
+  @media (min-width: 768px) {
+    font-size: 1.25rem;
+  }
+}
+
+@utility text-body-lg {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+@utility text-body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+@utility text-body-sm {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+@utility text-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Button UI Components */
+@utility btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: var(--color-primary-gold);
+  color: var(--color-surface-white);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(197, 157, 95, 0.2);
+  border: none;
+  &:hover {
+    background-color: var(--color-secondary-bronze);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(139, 94, 52, 0.25);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+@utility btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: transparent;
+  color: var(--color-secondary-bronze);
+  border: 1.5px solid var(--color-primary-gold);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  &:hover {
+    background-color: rgba(197, 157, 95, 0.1);
+    transform: translateY(-1px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+/* Form Input Components */
+@utility input-standard {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--color-neutral-gray);
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+  color: var(--color-dark-surface);
+  &:focus {
+    border-color: var(--color-primary-gold);
+    box-shadow: 0 0 0 3px rgba(197, 157, 95, 0.15);
+    background-color: var(--color-surface-white);
+  }
+}
+
+@layer base {
+  body {
+    background-color: #FAF7F2;
+    color: #111111;
+    font-family: var(--font-sans);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C59D5F;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8B5E34;
+}
