@@ -26,7 +26,8 @@ import {
   ShoppingBag,
   Package,
   Tag,
-  Star
+  Star,
+  Coffee
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -47,6 +48,7 @@ export default function DashboardLayout({
     { label: "Memberships", href: "/dashboard/members", icon: Users, roles: ["SUPER_ADMIN", "TRUSTEE"] },
     { label: "Donations", href: "/dashboard/donations", icon: Heart, roles: ["SUPER_ADMIN", "TRUSTEE", "ACCOUNTANT"] },
     { label: "Bookings", href: "/dashboard/bookings", icon: Calendar, roles: ["SUPER_ADMIN", "BOOKING_MANAGER"] },
+    { label: "Canteen CRM", href: "/dashboard/canteen", icon: Coffee, roles: ["SUPER_ADMIN", "BOOKING_MANAGER"] },
     
     // E-Commerce Modules
     { label: "Shop Products", href: "/dashboard/products", icon: ShoppingBag, roles: ["SUPER_ADMIN", "BOOKING_MANAGER", "CONTENT_MANAGER"] },
