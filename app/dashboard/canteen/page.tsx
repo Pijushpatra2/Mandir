@@ -1,105 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Coffee, Users, Plus, Trash2, Edit, Check, ClipboardList, 
+  Coffee, Users, Plus, Trash2, Check, ClipboardList, 
   Utensils, DollarSign, Clock, CheckCircle2, Ticket, ShoppingCart, 
-  Printer, User, Phone, CheckCircle, RefreshCw, X
+  Printer, CheckCircle, X, Sparkles, ArrowRight
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
-
-interface SeatingTable {
-  id: string;
-  name: string;
-  capacity: number;
-  status: "AVAILABLE" | "OCCUPIED" | "RESERVED";
-}
-
-interface FoodItem {
-  id: string;
-  name: string;
-  price: number;
-  category: "Mains" | "Snacks" | "Beverages" | "Desserts";
-  variety: "Regular" | "Jain" | "Spicy" | "Sweet";
-}
-
-interface CanteenOrder {
-  id: string;
-  tokenNumber: string;
-  customerName: string;
-  customerPhone: string;
-  tableName: string;
-  items: { item: FoodItem; qty: number }[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  paymentMethod: "CASH" | "UPI" | "CARD";
-  status: "PENDING" | "SERVED" | "CANCELLED";
-  timestamp: string;
-}
+import { 
+  SeatingTable, 
+  FoodItem, 
+  CanteenOrder, 
+  initialTables, 
+  initialMenu, 
+  initialOrders 
+} from "@/data/canteen";
 
 export default function CanteenCRMPage() {
   const [activeTab, setActiveTab] = useState<"pos" | "tables" | "menu" | "orders">("pos");
 
-  // 1. Initial Tables State
-  const [tables, setTables] = useState<SeatingTable[]>([
-    { id: "tab-1", name: "Table 1 (Window)", capacity: 4, status: "AVAILABLE" },
-    { id: "tab-2", name: "Table 2 (Corner)", capacity: 2, status: "AVAILABLE" },
-    { id: "tab-3", name: "Table 3 (Center)", capacity: 6, status: "OCCUPIED" },
-    { id: "tab-4", name: "Table 4 (Center)", capacity: 4, status: "AVAILABLE" },
-    { id: "tab-5", name: "Table 5 (Satsang Area)", capacity: 8, status: "RESERVED" },
-    { id: "tab-6", name: "Table 6 (Entrance)", capacity: 4, status: "AVAILABLE" },
-  ]);
-
-  // 2. Initial Food Menu State
-  const [foodMenu, setFoodMenu] = useState<FoodItem[]>([
-    { id: "food-1", name: "Pure Veg Masala Dosa", price: 120, category: "Snacks", variety: "Regular" },
-    { id: "food-2", name: "Jain Special Khichdi", price: 150, category: "Mains", variety: "Jain" },
-    { id: "food-3", name: "Butter Paneer Masala", price: 180, category: "Mains", variety: "Spicy" },
-    { id: "food-4", name: "Saffron Kheer", price: 90, category: "Desserts", variety: "Sweet" },
-    { id: "food-5", name: "Kampala Ginger Chai", price: 30, category: "Beverages", variety: "Regular" },
-    { id: "food-6", name: "Mango Lassi", price: 70, category: "Beverages", variety: "Sweet" },
-    { id: "food-7", name: "Spicy Samosa Chat", price: 80, category: "Snacks", variety: "Spicy" },
-  ]);
-
-  // 3. Initial Orders State
-  const [orders, setOrders] = useState<CanteenOrder[]>([
-    {
-      id: "ord-1",
-      tokenNumber: "TK-2041",
-      customerName: "Kamlesh Patel",
-      customerPhone: "+256 701 234567",
-      tableName: "Table 3 (Center)",
-      items: [
-        { item: { id: "food-2", name: "Jain Special Khichdi", price: 150, category: "Mains", variety: "Jain" }, qty: 2 },
-        { item: { id: "food-5", name: "Kampala Ginger Chai", price: 30, category: "Beverages", variety: "Regular" }, qty: 2 }
-      ],
-      subtotal: 360,
-      tax: 18,
-      total: 378,
-      paymentMethod: "UPI",
-      status: "PENDING",
-      timestamp: "10:15 AM"
-    },
-    {
-      id: "ord-2",
-      tokenNumber: "TK-2040",
-      customerName: "Amit Vora",
-      customerPhone: "+256 752 987654",
-      tableName: "Table 5 (Satsang Area)",
-      items: [
-        { item: { id: "food-3", name: "Butter Paneer Masala", price: 180, category: "Mains", variety: "Spicy" }, qty: 1 },
-        { item: { id: "food-6", name: "Mango Lassi", price: 70, category: "Beverages", variety: "Sweet" }, qty: 2 }
-      ],
-      subtotal: 320,
-      tax: 16,
-      total: 336,
-      paymentMethod: "CASH",
-      status: "SERVED",
-      timestamp: "09:45 AM"
-    }
-  ]);
+  // State loaded dynamically on mount
+  const [tables, setTables] = useState<SeatingTable[]>([]);
+  const [foodMenu, setFoodMenu] = useState<FoodItem[]>([]);
+  const [orders, setOrders] = useState<CanteenOrder[]>([]);
 
   // POS CART STATE
   const [cart, setCart] = useState<{ item: FoodItem; qty: number }[]>([]);
@@ -119,6 +43,51 @@ export default function CanteenCRMPage() {
   const [newFoodCategory, setNewFoodCategory] = useState<"Mains" | "Snacks" | "Beverages" | "Desserts">("Mains");
   const [newFoodVariety, setNewFoodVariety] = useState<"Regular" | "Jain" | "Spicy" | "Sweet">("Regular");
 
+  // Load from local storage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const getOrSet = (key: string, initialData: any) => {
+        const stored = localStorage.getItem(key);
+        if (!stored) {
+          localStorage.setItem(key, JSON.stringify(initialData));
+          return initialData;
+        }
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          localStorage.setItem(key, JSON.stringify(initialData));
+          return initialData;
+        }
+      };
+
+      setTables(getOrSet("canteen_tables", initialTables));
+      setFoodMenu(getOrSet("canteen_menu", initialMenu));
+      setOrders(getOrSet("canteen_orders", initialOrders));
+    }
+  }, []);
+
+  // Sync helpers
+  const saveTables = (updated: SeatingTable[]) => {
+    setTables(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("canteen_tables", JSON.stringify(updated));
+    }
+  };
+
+  const saveMenu = (updated: FoodItem[]) => {
+    setFoodMenu(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("canteen_menu", JSON.stringify(updated));
+    }
+  };
+
+  const saveOrders = (updated: CanteenOrder[]) => {
+    setOrders(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("canteen_orders", JSON.stringify(updated));
+    }
+  };
+
   // --- ACTIONS ---
 
   // Seating layout modification
@@ -131,16 +100,19 @@ export default function CanteenCRMPage() {
       capacity: newTableCapacity,
       status: "AVAILABLE"
     };
-    setTables([...tables, newTab]);
+    const updated = [...tables, newTab];
+    saveTables(updated);
     setNewTableName("");
   };
 
   const handleDeleteTable = (id: string) => {
-    setTables(tables.filter((t) => t.id !== id));
+    const updated = tables.filter((t) => t.id !== id);
+    saveTables(updated);
   };
 
-  const toggleTableStatus = (id: string, nextStatus: "AVAILABLE" | "OCCUPIED" | "RESERVED") => {
-    setTables(tables.map((t) => (t.id === id ? { ...t, status: nextStatus } : t)));
+  const toggleTableStatus = (id: string, nextStatus: SeatingTable["status"]) => {
+    const updated = tables.map((t) => (t.id === id ? { ...t, status: nextStatus } : t));
+    saveTables(updated);
   };
 
   // Food Menu modification
@@ -152,14 +124,17 @@ export default function CanteenCRMPage() {
       name: newFoodName,
       price: newFoodPrice,
       category: newFoodCategory,
-      variety: newFoodVariety
+      variety: newFoodVariety,
+      available: true
     };
-    setFoodMenu([...foodMenu, newFood]);
+    const updated = [...foodMenu, newFood];
+    saveMenu(updated);
     setNewFoodName("");
   };
 
   const handleDeleteFood = (id: string) => {
-    setFoodMenu(foodMenu.filter((f) => f.id !== id));
+    const updated = foodMenu.filter((f) => f.id !== id);
+    saveMenu(updated);
   };
 
   // Cart operations
@@ -196,12 +171,14 @@ export default function CanteenCRMPage() {
 
     const subtotal = cart.reduce((acc, c) => acc + c.item.price * c.qty, 0);
     const tax = Math.round(subtotal * 0.05); // 5% VAT
-    const total = subtotal + tax;
+    const serviceCharge = Math.round(subtotal * 0.025); // 2.5% Service Charge
+    const total = subtotal + tax + serviceCharge;
 
     const matchedTable = tables.find((t) => t.id === selectedTable);
     const tableNameText = matchedTable ? matchedTable.name : "Walk-in Counter";
 
     const tokenNum = "TK-" + Math.floor(2000 + Math.random() * 8000);
+    const dateToday = new Date().toISOString().split("T")[0];
 
     const newOrder: CanteenOrder = {
       id: "ord-" + Date.now(),
@@ -209,21 +186,27 @@ export default function CanteenCRMPage() {
       customerName: customerName || "Guest Devotee",
       customerPhone: customerPhone || "N/A",
       tableName: tableNameText,
-      items: [...cart],
+      items: cart.map(c=> ({ item: c.item, qty: c.qty })),
       subtotal,
       tax,
+      serviceCharge,
+      discount: 0,
       total,
       paymentMethod,
-      status: "PENDING",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      paymentStatus: "PAID",
+      status: "NEW",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: dateToday
     };
 
     // Save order
-    setOrders([newOrder, ...orders]);
+    const updatedOrders = [newOrder, ...orders];
+    saveOrders(updatedOrders);
 
     // Set table as occupied if table is allocated
     if (selectedTable) {
-      setTables(tables.map((t) => (t.id === selectedTable ? { ...t, status: "OCCUPIED" } : t)));
+      const updatedTables = tables.map((t) => (t.id === selectedTable ? { ...t, status: "OCCUPIED" as const, currentBill: total, occupiedDuration: "0 mins" } : t));
+      saveTables(updatedTables);
     }
 
     // Set token receipt display
@@ -237,34 +220,54 @@ export default function CanteenCRMPage() {
   };
 
   // Update real-time order status
-  const updateOrderStatus = (id: string, nextStatus: "PENDING" | "SERVED" | "CANCELLED") => {
-    setOrders(
-      orders.map((o) => {
-        if (o.id === id) {
-          // If table was occupied, return it to available when order is served
-          if (nextStatus === "SERVED") {
-            const tableToFree = tables.find((t) => t.name === o.tableName);
-            if (tableToFree) {
-              setTables(tables.map((t) => (t.id === tableToFree.id ? { ...t, status: "AVAILABLE" } : t)));
-            }
+  const updateOrderStatus = (id: string, nextStatus: CanteenOrder["status"]) => {
+    const updatedOrders = orders.map((o) => {
+      if (o.id === id) {
+        // If table was occupied, return it to available/cleaning when order is served
+        if (nextStatus === "COMPLETED" || nextStatus === "READY_TO_SERVE") {
+          const tableToFree = tables.find((t) => t.name === o.tableName);
+          if (tableToFree) {
+            const updatedTables = tables.map((t) => (t.id === tableToFree.id ? { ...t, status: "CLEANING" as const, currentBill: 0, occupiedDuration: "" } : t));
+            saveTables(updatedTables);
           }
-          return { ...o, status: nextStatus };
         }
-        return o;
-      })
-    );
+        return { ...o, status: nextStatus };
+      }
+      return o;
+    });
+    saveOrders(updatedOrders);
   };
 
   // Statistics
   const occupiedTablesCount = tables.filter((t) => t.status === "OCCUPIED").length;
-  const pendingOrdersCount = orders.filter((o) => o.status === "PENDING").length;
+  const pendingOrdersCount = orders.filter((o) => o.status === "NEW" || o.status === "PREPARING").length;
   const totalCanteenSales = orders
-    .filter((o) => o.status === "SERVED")
+    .filter((o) => o.paymentStatus === "PAID" && o.status !== "CANCELLED")
     .reduce((acc, o) => acc + o.total, 0);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 text-left">
       
+      {/* SaaS POS PROMOTIONAL CTA BANNER */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg shadow-blue-200 mb-2">
+        <div className="space-y-1 text-left">
+          <h2 className="text-sm font-bold flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-300" />
+            <span>Launch Standalone Canteen POS Terminal (SaaS Desktop View)</span>
+          </h2>
+          <p className="text-[11px] text-blue-100 font-sans">
+            Launch the high-performance desktop cashier desk, bookings calendar, live table floor plan, KDS terminal, and reports.
+          </p>
+        </div>
+        <a
+          href="/canteenPOS"
+          className="px-5 py-2 bg-white hover:bg-gray-50 text-blue-600 text-[11px] font-bold uppercase rounded-xl transition-all shadow-md flex items-center gap-1.5 whitespace-nowrap"
+        >
+          <span>Launch POS Terminal</span>
+          <ArrowRight className="w-4 h-4" />
+        </a>
+      </div>
+
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -393,7 +396,7 @@ export default function CanteenCRMPage() {
                 </h3>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {foodMenu.map((food) => (
+                  {foodMenu.filter(m=>m.category !== "Combos" && m.category !== "Add-ons").map((food) => (
                     <div 
                       key={food.id}
                       onClick={() => addToCart(food)}
@@ -539,14 +542,14 @@ export default function CanteenCRMPage() {
                           <div className="flex items-center space-x-2.5">
                             <button 
                               onClick={() => updateCartQty(c.item.id, -1)}
-                              className="w-5 h-5 rounded bg-bg-warm flex items-center justify-center font-bold text-secondary-bronze hover:bg-[#B47F35]/10 cursor-pointer"
+                              className="w-5 h-5 rounded bg-[#FAF7F2] flex items-center justify-center font-bold text-secondary-bronze hover:bg-[#B47F35]/10 cursor-pointer"
                             >
                               -
                             </button>
                             <span className="font-bold text-dark-surface w-4 text-center">{c.qty}</span>
                             <button 
                               onClick={() => updateCartQty(c.item.id, 1)}
-                              className="w-5 h-5 rounded bg-bg-warm flex items-center justify-center font-bold text-secondary-bronze hover:bg-[#B47F35]/10 cursor-pointer"
+                              className="w-5 h-5 rounded bg-[#FAF7F2] flex items-center justify-center font-bold text-secondary-bronze hover:bg-[#B47F35]/10 cursor-pointer"
                             >
                               +
                             </button>
@@ -690,7 +693,7 @@ export default function CanteenCRMPage() {
                     key={table.id}
                     className={`border rounded-2xl p-5 text-left flex flex-col justify-between space-y-4 shadow-sm transition-colors ${
                       table.status === "AVAILABLE" ? "border-green-500/25 bg-green-500/5 text-green-700" :
-                      table.status === "OCCUPIED" ? "border-error-red/25 bg-error-red/5 text-[#2B132C]" :
+                      table.status === "OCCUPIED" ? "border-red-500/25 bg-red-500/5 text-[#2B132C]" :
                       "border-[#B47F35]/30 bg-[#B47F35]/5 text-[#B47F35]"
                     }`}
                   >
@@ -704,7 +707,7 @@ export default function CanteenCRMPage() {
                       
                       <button
                         onClick={() => handleDeleteTable(table.id)}
-                        className="text-secondary-bronze/50 hover:text-error-red transition-colors cursor-pointer"
+                        className="text-secondary-bronze/50 hover:text-red-500 transition-colors cursor-pointer"
                         title="Delete Table"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -830,7 +833,7 @@ export default function CanteenCRMPage() {
                         <td className="py-3.5">
                           <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
                             item.variety === "Jain" ? "bg-green-500/10 text-green-700" :
-                            item.variety === "Spicy" ? "bg-red-500/10 text-red-600" :
+                            item.variety === "Spicy" ? "bg-red-500/10 text-red-650" :
                             "bg-[#B47F35]/10 text-[#B47F35]"
                           }`}>
                             {item.variety}
@@ -840,7 +843,7 @@ export default function CanteenCRMPage() {
                         <td className="py-3.5 text-right">
                           <button
                             onClick={() => handleDeleteFood(item.id)}
-                            className="text-secondary-bronze/50 hover:text-error-red transition-colors cursor-pointer"
+                            className="text-secondary-bronze/50 hover:text-red-505 transition-colors cursor-pointer"
                             title="Remove Food Item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -963,8 +966,8 @@ export default function CanteenCRMPage() {
                   <div 
                     key={o.id}
                     className={`border rounded-2xl p-5 flex flex-col md:flex-row justify-between gap-6 items-stretch text-left transition-colors ${
-                      o.status === "PENDING" ? "border-[#B47F35]/25 bg-[#B47F35]/5" :
-                      o.status === "SERVED" ? "border-green-500/25 bg-green-500/5 opacity-80" :
+                      o.status === "NEW" || o.status === "PREPARING" ? "border-[#B47F35]/25 bg-[#B47F35]/5" :
+                      o.status === "COMPLETED" || o.status === "READY_TO_SERVE" ? "border-green-500/25 bg-green-500/5 opacity-80" :
                       "border-secondary-bronze/10 bg-[#FAF7F2] opacity-60"
                     }`}
                   >
@@ -974,8 +977,8 @@ export default function CanteenCRMPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-base font-bold text-[#B47F35] font-mono">{o.tokenNumber}</span>
                         <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
-                          o.status === "PENDING" ? "bg-[#B47F35]/15 text-[#B47F35]" :
-                          o.status === "SERVED" ? "bg-green-500/10 text-green-700" :
+                          o.status === "NEW" || o.status === "PREPARING" ? "bg-[#B47F35]/15 text-[#B47F35]" :
+                          o.status === "COMPLETED" || o.status === "READY_TO_SERVE" ? "bg-green-500/10 text-green-700" :
                           "bg-secondary-bronze/20 text-secondary-bronze"
                         }`}>
                           {o.status}
@@ -1012,16 +1015,16 @@ export default function CanteenCRMPage() {
                         </span>
                       </div>
 
-                      {o.status === "PENDING" && (
+                      {(o.status === "NEW" || o.status === "PREPARING") && (
                         <div className="flex gap-2 w-full justify-end mt-4">
                           <button
                             onClick={() => updateOrderStatus(o.id, "CANCELLED")}
-                            className="px-3.5 py-1.5 rounded-lg border border-error-red/35 text-error-red hover:bg-error-red/10 text-[10px] font-bold uppercase cursor-pointer"
+                            className="px-3.5 py-1.5 rounded-lg border border-red-500/35 text-red-650 hover:bg-red-50 text-[10px] font-bold uppercase cursor-pointer"
                           >
                             Cancel Token
                           </button>
                           <button
-                            onClick={() => updateOrderStatus(o.id, "SERVED")}
+                            onClick={() => updateOrderStatus(o.id, "COMPLETED")}
                             className="px-3.5 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold uppercase flex items-center gap-1 cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5" />
