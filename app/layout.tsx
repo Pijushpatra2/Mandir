@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AppProvider } from "@/lib/context";
+import { QueryProvider } from "@/lib/QueryProvider";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -24,7 +25,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Shree Kutch Satsang Swaminarayan Temple, Kampala - Enterprise ERP",
-  description: "Experience Divine Grace. Book Pooja services, Donate online, Become a Member, and Watch Live Darshan.",
+  description:
+    "Experience Divine Grace. Book Pooja services, Donate online, Become a Member, and Watch Live Darshan.",
 };
 
 export default function RootLayout({
@@ -37,9 +39,10 @@ export default function RootLayout({
       <body
         className={`${cormorantGaramond.variable} ${inter.variable} ${plusJakartaSans.variable} antialiased bg-[#FAF7F2] text-[#111111]`}
       >
-        <AppProvider>
-          {children}
-        </AppProvider>
+        {/* QueryProvider must wrap AppProvider so all contexts can use useQuery */}
+        <QueryProvider>
+          <AppProvider>{children}</AppProvider>
+        </QueryProvider>
       </body>
     </html>
   );

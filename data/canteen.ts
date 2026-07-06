@@ -1,3 +1,14 @@
+export type CanteenRole = "manager" | "receptionist" | "cashier" | "kitchen";
+
+export interface CanteenStaffAccount {
+  id: string;
+  email: string;
+  password?: string;
+  name: string;
+  assignedRole: CanteenRole;
+  createdAt: string;
+}
+
 export interface SeatingTable {
   id: string;
   name: string;
@@ -36,6 +47,7 @@ export interface CanteenOrder {
   timestamp: string;
   date: string;
   notes?: string;
+  note?: string;
 }
 
 export interface TableBooking {
@@ -72,9 +84,12 @@ export interface CanteenCustomer {
   id: string;
   name: string;
   phone: string;
+  email?: string;
   totalOrders: number;
+  totalVisits?: number;
   totalSpent: number;
   lastVisit: string;
+  type?: "VIP" | "Regular" | "Guest";
 }
 
 // Initial Mock Tables
@@ -253,9 +268,17 @@ export const initialInventory: InventoryItem[] = [
 
 // Initial Customers
 export const initialCustomers: CanteenCustomer[] = [
-  { id: "cust-1", name: "Kamlesh Patel", phone: "+256 701 234567", totalOrders: 12, totalSpent: 2840, lastVisit: "2026-07-04" },
-  { id: "cust-2", name: "Amit Vora", phone: "+256 752 987654", totalOrders: 8, totalSpent: 1960, lastVisit: "2026-07-04" },
-  { id: "cust-3", name: "Sanjay Mehta", phone: "+256 703 112233", totalOrders: 4, totalSpent: 910, lastVisit: "2026-07-04" },
-  { id: "cust-4", name: "Radha Sharma", phone: "+256 772 445566", totalOrders: 22, totalSpent: 7420, lastVisit: "2026-07-04" },
-  { id: "cust-5", name: "Pankaj Shah", phone: "+256 754 112244", totalOrders: 3, totalSpent: 750, lastVisit: "2026-07-03" }
+  { id: "cust-1", name: "Kamlesh Patel", phone: "+256 701 234567", email: "kamlesh@gmail.com", totalOrders: 12, totalVisits: 12, totalSpent: 2840, lastVisit: "2026-07-04", type: "Regular" },
+  { id: "cust-2", name: "Amit Vora", phone: "+256 752 987654", email: "amit@gmail.com", totalOrders: 8, totalVisits: 8, totalSpent: 1960, lastVisit: "2026-07-04", type: "Regular" },
+  { id: "cust-3", name: "Sanjay Mehta", phone: "+256 703 112233", email: "sanjay@gmail.com", totalOrders: 4, totalVisits: 4, totalSpent: 910, lastVisit: "2026-07-04", type: "Guest" },
+  { id: "cust-4", name: "Radha Sharma", phone: "+256 772 445566", email: "radha@gmail.com", totalOrders: 22, totalVisits: 22, totalSpent: 7420, lastVisit: "2026-07-04", type: "VIP" },
+  { id: "cust-5", name: "Pankaj Shah", phone: "+256 754 112244", email: "pankaj@gmail.com", totalOrders: 3, totalVisits: 3, totalSpent: 750, lastVisit: "2026-07-03", type: "Guest" }
+];
+
+// Initial Staff Accounts
+export const initialStaffAccounts: CanteenStaffAccount[] = [
+  { id: "staff-1", email: "manager@swami.com", password: "manager123", name: "Mukesh Patel", assignedRole: "manager", createdAt: "2026-07-01" },
+  { id: "staff-2", email: "receptionist@swami.com", password: "receptionist123", name: "Jatin Shah", assignedRole: "receptionist", createdAt: "2026-07-01" },
+  { id: "staff-3", email: "cashier@swami.com", password: "cashier123", name: "Anil Vora", assignedRole: "cashier", createdAt: "2026-07-01" },
+  { id: "staff-4", email: "kitchen@swami.com", password: "kitchen123", name: "Chef Ramesh", assignedRole: "kitchen", createdAt: "2026-07-01" }
 ];

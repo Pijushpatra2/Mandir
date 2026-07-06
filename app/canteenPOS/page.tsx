@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -16,28 +16,24 @@ import {
   Settings,
   Search,
   Bell,
-  User,
   Plus,
   Trash2,
-  Edit,
   Check,
   CheckCircle,
   X,
   AlertTriangle,
   Clock,
   Printer,
-  ChevronRight,
   TrendingUp,
-  RotateCcw,
-  Sparkles,
   ArrowRight,
-  UserCheck,
   Percent,
   PlusCircle,
   MinusCircle,
-  Truck,
-  PlusSquare,
-  FileText
+  Sparkles,
+  Lock,
+  Mail,
+  LogOut,
+  UserCheck
 } from "lucide-react";
 import {
   SeatingTable,
@@ -47,16 +43,18 @@ import {
   InventoryItem,
   Supplier,
   CanteenCustomer,
+  CanteenStaffAccount,
   initialTables,
   initialMenu,
   initialOrders,
   initialBookings,
   initialSuppliers,
   initialInventory,
-  initialCustomers
+  initialCustomers,
+  initialStaffAccounts
 } from "@/data/canteen";
+import { useCanteen } from "./context/CanteenContext";
 
-type POSRole = "manager" | "receptionist" | "cashier" | "kitchen";
 type POSTab =
   | "dashboard"
   | "pos"
@@ -71,7 +69,14 @@ type POSTab =
   | "settings";
 
 export default function CanteenPOSPage() {
-  const [currentRole, setCurrentRole] = useState<POSRole>("manager");
+  const { login } = useCanteen();
+  // Session & Auth states
+  const [activeStaff, setActiveStaff] = useState<CanteenStaffAccount | null>(null);
+  const [staffAccounts, setStaffAccounts] = useState<CanteenStaffAccount[]>([]);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
   const [activeTab, setActiveTab] = useState<POSTab>("dashboard");
 
   // Core Data States
@@ -88,7 +93,6 @@ export default function CanteenPOSPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [globalSearch, setGlobalSearch] = useState("");
 
   // Modal / Selection States
@@ -137,12 +141,31 @@ export default function CanteenPOSPage() {
       setInventory(getOrSet("canteen_inventory", initialInventory));
       setSuppliers(getOrSet("canteen_suppliers", initialSuppliers));
       setCustomers(getOrSet("canteen_customers", initialCustomers));
+      setStaffAccounts(getOrSet("canteen_staff_accounts", initialStaffAccounts));
       setWasteLogs(getOrSet("canteen_wastelogs", [
         { id: "w-1", name: "Fresh Milk", qty: 3, unit: "Litre", cost: 150, reason: "Soured/Expired", date: "2026-07-03" },
         { id: "w-2", name: "Premium Paneer", qty: 1.5, unit: "kg", cost: 270, reason: "Spoiled by power outage", date: "2026-07-02" }
       ]));
 
-      // Mock notifications
+      // Check for active staff session
+      const activeSession = localStorage.getItem("canteen_active_staff");
+      if (activeSession) {
+        try {
+          const parsed = JSON.parse(activeSession);
+          setActiveStaff(parsed);
+          // Set initial tab based on role
+          if (parsed.assignedRole === "kitchen") {
+            setActiveTab("kitchen");
+          } else if (parsed.assignedRole === "receptionist" || parsed.assignedRole === "cashier") {
+            setActiveTab("pos");
+          } else {
+            setActiveTab("dashboard");
+          }
+        } catch (e) {
+          localStorage.removeItem("canteen_active_staff");
+        }
+      }
+
       setNotifications([
         { id: 1, title: "Low Stock Alert", message: "Premium Paneer is below minimum levels (14kg left)", type: "warning", read: false },
         { id: 2, title: "Upcoming Reservation", message: "Pankaj Shah (6 guests) arriving at 02:30 PM", type: "info", read: false },
@@ -150,7 +173,6 @@ export default function CanteenPOSPage() {
       ]);
     }
 
-    // Set time clock
     const updateTime = () => {
       const options: Intl.DateTimeFormatOptions = {
         weekday: "short",
@@ -175,18 +197,43 @@ export default function CanteenPOSPage() {
     }
   };
 
-  // Switch tabs based on roles
-  const handleRoleChange = (role: POSRole) => {
-    setCurrentRole(role);
-    if (role === "kitchen") {
-      setActiveTab("kitchen");
-    } else if (role === "receptionist") {
-      setActiveTab("pos");
-    } else if (role === "cashier") {
-      setActiveTab("pos");
-    } else {
-      setActiveTab("dashboard");
+  // --- LOGIN AND LOGOUT FLOWS ---
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+
+    if (!loginEmail || !loginPassword) {
+      setLoginError("Please enter both email and password.");
+      return;
     }
+
+    const success = await login(loginEmail, loginPassword);
+    if (!success) {
+      setLoginError("Invalid email or password. Please try again.");
+      return;
+    }
+
+    // Sync state locally
+    if (typeof window !== "undefined") {
+      const activeSession = localStorage.getItem("canteen_active_staff");
+      if (activeSession) {
+        try {
+          setActiveStaff(JSON.parse(activeSession));
+        } catch (err) {}
+      }
+    }
+
+    // Clear form
+    setLoginEmail("");
+    setLoginPassword("");
+  };
+
+  const handleLogout = () => {
+    setActiveStaff(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("canteen_active_staff");
+    }
+    setActiveTab("dashboard");
   };
 
   // --- POS CART ACTIONS ---
@@ -280,7 +327,7 @@ export default function CanteenPOSPage() {
       saveState("canteen_tables", updatedTables);
     }
 
-    // Update Customer CRM
+    // Update Customer list (Devotees)
     if (posCustomerPhone) {
       const existCust = customers.find((c) => c.phone === posCustomerPhone);
       let updatedCustomers;
@@ -337,7 +384,6 @@ export default function CanteenPOSPage() {
   const handleUpdateOrderStatus = (orderId: string, nextStatus: CanteenOrder["status"]) => {
     const updatedOrders = orders.map((o) => {
       if (o.id === orderId) {
-        // If state turns COMPLETED or CANCELLED, and a seating table is occupied, clear the seating table status
         if (nextStatus === "COMPLETED" || nextStatus === "CANCELLED") {
           const tbl = tables.find((t) => t.name === o.tableName);
           if (tbl) {
@@ -451,7 +497,6 @@ export default function CanteenPOSPage() {
     setBookings(updatedBookings);
     saveState("canteen_bookings", updatedBookings);
 
-    // Free table if reserved
     if (b.tableId) {
       const tbl = tables.find((t) => t.id === b.tableId);
       if (tbl && tbl.status === "RESERVED") {
@@ -511,9 +556,7 @@ export default function CanteenPOSPage() {
     return matchesSearch;
   });
 
-  // --- RENDER COMPONENT METHODS ---
-
-  // 1. DASHBOARD
+  // Render Screens
   const renderDashboard = () => {
     const today = new Date().toISOString().split("T")[0];
     const todayBookings = bookings.filter((b) => b.date === today);
@@ -522,7 +565,7 @@ export default function CanteenPOSPage() {
       <div className="space-y-6">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
               <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Today's Revenue</span>
               <span className="p-1 bg-green-50 text-green-600 rounded-lg"><TrendingUp className="w-4 h-4" /></span>
@@ -531,7 +574,7 @@ export default function CanteenPOSPage() {
             <p className="text-[10px] text-green-500 mt-1 font-semibold">12% from yesterday</p>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
               <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Orders</span>
               <span className="p-1 bg-blue-50 text-blue-600 rounded-lg"><ClipboardList className="w-4 h-4" /></span>
@@ -540,7 +583,7 @@ export default function CanteenPOSPage() {
             <p className="text-[10px] text-gray-500 mt-1">Cashier speed avg: 2.1m</p>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
               <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Active Tables</span>
               <span className="p-1 bg-red-50 text-red-600 rounded-lg"><Grid className="w-4 h-4" /></span>
@@ -549,7 +592,7 @@ export default function CanteenPOSPage() {
             <p className="text-[10px] text-red-500 mt-1 font-semibold">Peak load: 85%</p>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
               <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Reservations</span>
               <span className="p-1 bg-amber-50 text-amber-600 rounded-lg"><Calendar className="w-4 h-4" /></span>
@@ -558,7 +601,7 @@ export default function CanteenPOSPage() {
             <p className="text-[10px] text-amber-500 mt-1 font-semibold">{bookings.filter(b=>b.status==="CONFIRMED").length} total upcoming</p>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
               <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Average Value</span>
               <span className="p-1 bg-purple-50 text-purple-600 rounded-lg"><ShoppingCart className="w-4 h-4" /></span>
@@ -567,7 +610,7 @@ export default function CanteenPOSPage() {
             <p className="text-[10px] text-gray-500 mt-1">Annadan sponsors active</p>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md border-l-4 border-l-red-500">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm border-l-4 border-l-red-500">
             <div className="flex justify-between items-start">
               <span className="text-[10px] uppercase font-bold tracking-wider text-red-500">Stock Alerts</span>
               <span className="p-1 bg-red-50 text-red-500 rounded-lg"><AlertTriangle className="w-4 h-4" /></span>
@@ -577,7 +620,7 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Section 1: Live Table Layout Floor Plan */}
+        {/* Floor Plan */}
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <div className="flex justify-between items-center mb-5">
             <div>
@@ -600,12 +643,6 @@ export default function CanteenPOSPage() {
                 table.status === "RESERVED" ? "border-amber-100 hover:border-amber-300" :
                 "border-blue-100 hover:border-blue-300";
 
-              const badgeColor =
-                table.status === "AVAILABLE" ? "bg-green-50 text-green-700" :
-                table.status === "OCCUPIED" ? "bg-red-50 text-red-700" :
-                table.status === "RESERVED" ? "bg-amber-50 text-amber-700" :
-                "bg-blue-50 text-blue-700";
-
               return (
                 <div key={table.id} className={`bg-white border-2 rounded-2xl p-4 transition-all shadow-sm flex flex-col justify-between h-40 ${cardBorder}`}>
                   <div className="flex justify-between items-start">
@@ -613,17 +650,22 @@ export default function CanteenPOSPage() {
                       <h4 className="font-bold text-gray-800 text-sm">{table.name}</h4>
                       <span className="text-[10px] text-gray-400">{table.capacity} Seats</span>
                     </div>
-                    <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${badgeColor}`}>
+                    <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                      table.status === "AVAILABLE" ? "bg-green-50 text-green-700" :
+                      table.status === "OCCUPIED" ? "bg-red-50 text-red-700" :
+                      table.status === "RESERVED" ? "bg-amber-50 text-amber-700" :
+                      "bg-blue-50 text-blue-700"
+                    }`}>
                       {table.status}
                     </span>
                   </div>
 
                   <div className="my-2 text-xs font-semibold text-gray-600">
                     {table.status === "OCCUPIED" ? (
-                      <div className="space-y-1">
+                      <div className="space-y-1 text-left">
                         <div className="flex justify-between">
                           <span className="text-gray-400 font-normal">Active Bill:</span>
-                          <span className="text-red-600 font-bold">₹{table.currentBill}</span>
+                          <span className="text-red-650 font-bold">₹{table.currentBill}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400 font-normal">Duration:</span>
@@ -740,15 +782,6 @@ export default function CanteenPOSPage() {
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Recent Orders</h3>
                 <p className="text-[10px] text-gray-400">Showing last 8 active order tickets</p>
               </div>
-              <button
-                onClick={() => {
-                  if (currentRole === "kitchen") setActiveTab("kitchen");
-                  else setActiveTab("pos");
-                }}
-                className="p-1 bg-blue-50 text-blue-700 border border-blue-200/50 hover:bg-blue-100 rounded-lg text-[10px] font-bold px-2 py-1 transition-all flex items-center gap-1"
-              >
-                Go to POS <ArrowRight className="w-3.5 h-3.5" />
-              </button>
             </div>
 
             <div className="flex-grow overflow-y-auto">
@@ -814,7 +847,6 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 2. POS
   const renderPOS = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch min-h-[calc(100vh-170px)]">
@@ -847,7 +879,7 @@ export default function CanteenPOSPage() {
                   onClick={() => setPosCategory(cat)}
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase whitespace-nowrap transition-all cursor-pointer ${
                     posCategory === cat
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                      ? "bg-blue-600 text-white shadow-md"
                       : "bg-gray-50 text-gray-500 border border-gray-100 hover:bg-gray-100"
                   }`}
                 >
@@ -857,7 +889,6 @@ export default function CanteenPOSPage() {
             </div>
           </div>
 
-          {/* Items grid */}
           <div className="flex-grow overflow-y-auto pr-1">
             {filteredMenu.length === 0 ? (
               <div className="h-full flex flex-col justify-center items-center text-gray-300">
@@ -872,7 +903,6 @@ export default function CanteenPOSPage() {
                     onClick={() => handleAddToCart(item)}
                     className="group border border-gray-100 rounded-2xl p-3 flex flex-col justify-between cursor-pointer hover:border-blue-400 hover:shadow-md transition-all bg-white relative overflow-hidden select-none"
                   >
-                    {/* Item Variety badge */}
                     <span className={`absolute top-2 left-2 text-[7px] font-bold px-1.5 py-0.5 rounded-full uppercase z-10 shadow-sm ${
                       item.variety === "Jain" ? "bg-green-50 text-green-700 border border-green-200" :
                       item.variety === "Spicy" ? "bg-orange-50 text-orange-700 border border-orange-200" :
@@ -882,7 +912,6 @@ export default function CanteenPOSPage() {
                       {item.variety}
                     </span>
 
-                    {/* Food Photo representation */}
                     <div className="w-full h-24 rounded-xl bg-gray-50 mb-2 flex items-center justify-center text-2xl overflow-hidden relative">
                       {item.image ? (
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
@@ -911,15 +940,14 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Center Panel: Table Allocations & Customer info & Running Order list */}
+        {/* Center Panel */}
         <div className="lg:col-span-4 bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-[650px]">
           <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-50 pb-2">
             Running Order Allocations
           </h3>
 
           <div className="space-y-4 flex-grow overflow-y-auto pr-1">
-            {/* Table Selector */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 text-left">
               <label className="text-[10px] font-bold uppercase text-gray-400">Allocate Seating Table</label>
               <select
                 value={posSelectedTable}
@@ -948,8 +976,7 @@ export default function CanteenPOSPage() {
               </select>
             </div>
 
-            {/* Customer info */}
-            <div className="grid grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-2 gap-3.5 text-left">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold uppercase text-gray-400 block">Customer Name</label>
                 <input
@@ -969,7 +996,6 @@ export default function CanteenPOSPage() {
                   onChange={(e) => {
                     const val = e.target.value;
                     setPosCustomerPhone(val);
-                    // Simple search autocomplete from customers mock database
                     const match = customers.find((c) => c.phone === val || c.phone.includes(val) && val.length > 5);
                     if (match) {
                       setPosCustomerName(match.name);
@@ -980,14 +1006,13 @@ export default function CanteenPOSPage() {
               </div>
             </div>
 
-            {/* Running Cart items list */}
-            <div className="border-t border-gray-50 pt-4 space-y-3">
+            <div className="border-t border-gray-50 pt-4 space-y-3 text-left">
               <label className="text-[10px] font-bold uppercase text-gray-400 block">Order Items</label>
 
               {cart.length === 0 ? (
                 <div className="py-16 text-center text-gray-300 text-xs">
                   <ShoppingCart className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                  <p>Cart is currently empty.</p>
+                  <p>Cart is empty.</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
@@ -1001,24 +1026,23 @@ export default function CanteenPOSPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleUpdateCartQty(c.item.id, -1)}
-                            className="text-gray-400 hover:text-red-500 p-0.5 rounded"
+                            className="text-gray-400 hover:text-red-500 p-0.5 rounded cursor-pointer"
                           >
                             <MinusCircle className="w-4 h-4" />
                           </button>
                           <span className="font-bold text-gray-800 w-4 text-center">{c.qty}</span>
                           <button
                             onClick={() => handleUpdateCartQty(c.item.id, 1)}
-                            className="text-gray-400 hover:text-blue-500 p-0.5 rounded"
+                            className="text-gray-400 hover:text-blue-500 p-0.5 rounded cursor-pointer"
                           >
                             <PlusCircle className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
 
-                      {/* Custom note per food item */}
                       <input
                         type="text"
-                        placeholder="Add cooking notes (e.g. Less ghee, Spicy)..."
+                        placeholder="Add cooking notes..."
                         value={c.notes || ""}
                         onChange={(e) => handleUpdateItemNote(c.item.id, e.target.value)}
                         className="w-full text-[9px] p-1 bg-white border border-gray-100 rounded outline-none text-gray-500 focus:border-blue-400"
@@ -1031,30 +1055,28 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Right Panel: Checkout, discount, taxes, billing buttons */}
+        {/* Right Panel */}
         <div className="lg:col-span-3 bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between h-[650px]">
           <div>
             <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-50 pb-2">
               Cart Summary & Payments
             </h3>
 
-            {/* Cart summary calculations */}
             {(() => {
               const subtotal = cart.reduce((sum, c) => sum + c.item.price * c.qty, 0);
-              const tax = Math.round(subtotal * 0.05); // 5% GST
-              const serviceCharge = Math.round(subtotal * 0.025); // 2.5% Service Charge
+              const tax = Math.round(subtotal * 0.05);
+              const serviceCharge = Math.round(subtotal * 0.025);
               const discount = Number(posDiscount) || 0;
               const total = Math.max(0, subtotal + tax + serviceCharge - discount);
 
               return (
                 <div className="space-y-4">
-                  {/* Notes & Discount Inputs */}
-                  <div className="space-y-3 font-sans text-xs">
+                  <div className="space-y-3 font-sans text-xs text-left">
                     <div className="space-y-1">
-                      <span className="text-[9px] font-bold uppercase text-gray-400">Order Notes / Kitchen Instructions</span>
+                      <span className="text-[9px] font-bold uppercase text-gray-400">Order Notes</span>
                       <textarea
                         rows={2}
-                        placeholder="Type general order comments..."
+                        placeholder="Type comments..."
                         value={posOrderNote}
                         onChange={(e) => setPosOrderNote(e.target.value)}
                         className="w-full p-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:bg-white focus:border-blue-400 resize-none text-gray-600"
@@ -1062,7 +1084,7 @@ export default function CanteenPOSPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] font-bold uppercase text-gray-400">Add Discount (₹ Amount)</span>
+                      <span className="text-[9px] font-bold uppercase text-gray-400">Discount (₹)</span>
                       <div className="flex gap-1 relative">
                         <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><Percent className="w-3.5 h-3.5" /></span>
                         <input
@@ -1076,14 +1098,13 @@ export default function CanteenPOSPage() {
                     </div>
                   </div>
 
-                  {/* Calculations details */}
-                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2 text-xs font-sans text-gray-500">
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2 text-xs font-sans text-gray-500 text-left">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
                       <span className="font-semibold text-gray-800">₹{subtotal}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>VAT / GST (5%):</span>
+                      <span>GST (5%):</span>
                       <span className="font-semibold text-gray-800">₹{tax}</span>
                     </div>
                     <div className="flex justify-between">
@@ -1098,7 +1119,7 @@ export default function CanteenPOSPage() {
                     )}
                     <div className="border-t border-gray-200/50 my-2 pt-2 flex justify-between font-bold text-sm text-gray-800">
                       <span>Net Total:</span>
-                      <span className="text-blue-600">₹{total}</span>
+                      <span className="text-blue-600 font-bold">₹{total}</span>
                     </div>
                   </div>
                 </div>
@@ -1107,8 +1128,7 @@ export default function CanteenPOSPage() {
           </div>
 
           <div className="space-y-4">
-            {/* Payment selections */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 text-left">
               <label className="text-[9px] font-bold uppercase text-gray-400 block">Select Payment Method</label>
               <div className="grid grid-cols-3 gap-2 text-[10px] font-bold">
                 {["UPI", "CASH", "CARD"].map((method) => (
@@ -1127,37 +1147,36 @@ export default function CanteenPOSPage() {
               </div>
             </div>
 
-            {/* Checkouts buttons depending on roles */}
             <div className="space-y-2.5">
-              {currentRole === "receptionist" && (
+              {activeStaff?.assignedRole === "receptionist" && (
                 <button
-                  onClick={() => handlePosCheckout(false)} // Save order as UNPAID (payment pending at cashier)
-                  className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md shadow-amber-100"
+                  onClick={() => handlePosCheckout(false)}
+                  className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md"
                 >
                   <Printer className="w-4 h-4" /> Generate Token (Pay Cashier)
                 </button>
               )}
 
-              {currentRole === "cashier" && (
+              {activeStaff?.assignedRole === "cashier" && (
                 <button
-                  onClick={() => handlePosCheckout(true)} // Save directly as PAID
-                  className="w-full py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md shadow-green-100"
+                  onClick={() => handlePosCheckout(true)}
+                  className="w-full py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md"
                 >
                   <Check className="w-4 h-4" /> Collect & Save Bill
                 </button>
               )}
 
-              {currentRole === "manager" && (
+              {activeStaff?.assignedRole === "manager" && (
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handlePosCheckout(false)}
-                    className="py-2.5 rounded-xl border border-amber-500 hover:bg-amber-50 text-amber-600 font-bold text-[10px] transition-colors flex items-center justify-center gap-1"
+                    className="py-2.5 rounded-xl border border-amber-500 hover:bg-amber-50 text-amber-600 font-bold text-[10px] transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5" /> Hold Token
                   </button>
                   <button
                     onClick={() => handlePosCheckout(true)}
-                    className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] transition-colors flex items-center justify-center gap-1 shadow-md shadow-blue-100"
+                    className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] transition-colors flex items-center justify-center gap-1 shadow-md cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" /> Pay Now
                   </button>
@@ -1170,7 +1189,6 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 3. ORDERS REGISTER
   const renderOrders = () => {
     return (
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4 min-h-[500px] flex flex-col">
@@ -1179,17 +1197,15 @@ export default function CanteenPOSPage() {
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Canteen Order Ledger</h3>
             <p className="text-[11px] text-gray-400">Database of all token receipts issued today</p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <div className="relative flex-grow sm:flex-grow-0">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><Search className="w-3.5 h-3.5" /></span>
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={globalSearch}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                className="w-full sm:w-60 pl-8 pr-4 py-1.5 border border-gray-100 rounded-xl text-xs bg-gray-50 outline-none focus:bg-white"
-              />
-            </div>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><Search className="w-3.5 h-3.5" /></span>
+            <input
+              type="text"
+              placeholder="Search orders..."
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              className="w-60 pl-8 pr-4 py-1.5 border border-gray-100 rounded-xl text-xs bg-gray-50 outline-none focus:bg-white"
+            />
           </div>
         </div>
 
@@ -1210,60 +1226,53 @@ export default function CanteenPOSPage() {
             <tbody className="divide-y divide-gray-50">
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-gray-400 italic">No orders found.</td>
+                  <td colSpan={8} className="py-12 text-center text-gray-400 italic font-semibold">No orders found.</td>
                 </tr>
               ) : (
-                filteredOrders.map((o) => {
-                  const payBadge =
-                    o.paymentStatus === "PAID"
-                      ? "bg-green-50 text-green-700 border-green-200"
-                      : "bg-red-50 text-red-700 border-red-200";
-
-                  const orderStatusBadge =
-                    o.status === "COMPLETED" ? "bg-gray-100 text-gray-700" :
-                    o.status === "READY_TO_SERVE" ? "bg-green-50 text-green-700" :
-                    o.status === "PREPARING" ? "bg-blue-50 text-blue-700" :
-                    o.status === "CANCELLED" ? "bg-red-100 text-red-600" :
-                    "bg-amber-50 text-amber-700";
-
-                  return (
-                    <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-3 font-bold text-gray-800 font-mono">{o.tokenNumber}</td>
-                      <td className="py-3 text-gray-400 text-[10px]">{o.date} • {o.timestamp}</td>
-                      <td className="py-3">
-                        <p className="font-semibold text-gray-700">{o.customerName}</p>
-                        <span className="text-[10px] text-gray-400">{o.customerPhone}</span>
-                      </td>
-                      <td className="py-3 text-gray-600 font-semibold">{o.tableName}</td>
-                      <td className="py-3 font-bold text-gray-800">₹{o.total}</td>
-                      <td className="py-3">
-                        <span className={`text-[8px] font-bold px-2 py-0.5 border rounded uppercase ${payBadge}`}>
-                          {o.paymentStatus}
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded uppercase ${orderStatusBadge}`}>
-                          {o.status.replace(/_/g, " ")}
-                        </span>
-                      </td>
-                      <td className="py-3 text-right space-x-2">
-                        <button
-                          onClick={() => setSelectedOrder(o)}
-                          className="px-2.5 py-1 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          Invoice
-                        </button>
-                        <button
-                          onClick={() => setReceiptOrder(o)}
-                          className="px-2 py-1 text-[10px] text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg"
-                          title="Print Receipt"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
+                filteredOrders.map((o) => (
+                  <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3 font-bold text-gray-800 font-mono">{o.tokenNumber}</td>
+                    <td className="py-3 text-gray-400 text-[10px]">{o.date} • {o.timestamp}</td>
+                    <td className="py-3">
+                      <p className="font-semibold text-gray-700">{o.customerName}</p>
+                      <span className="text-[10px] text-gray-400">{o.customerPhone}</span>
+                    </td>
+                    <td className="py-3 text-gray-600 font-semibold">{o.tableName}</td>
+                    <td className="py-3 font-bold text-gray-800">₹{o.total}</td>
+                    <td className="py-3">
+                      <span className={`text-[8px] font-bold px-2 py-0.5 border rounded uppercase ${
+                        o.paymentStatus === "PAID" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"
+                      }`}>
+                        {o.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <span className={`text-[8px] font-bold px-2 py-0.5 rounded uppercase ${
+                        o.status === "COMPLETED" ? "bg-gray-100 text-gray-700" :
+                        o.status === "READY_TO_SERVE" ? "bg-green-50 text-green-700 animate-pulse" :
+                        o.status === "PREPARING" ? "bg-blue-50 text-blue-700" :
+                        o.status === "CANCELLED" ? "bg-red-50 text-red-650" :
+                        "bg-amber-50 text-amber-700"
+                      }`}>
+                        {o.status.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right space-x-2">
+                      <button
+                        onClick={() => setSelectedOrder(o)}
+                        className="px-2.5 py-1 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg cursor-pointer"
+                      >
+                        Invoice
+                      </button>
+                      <button
+                        onClick={() => setReceiptOrder(o)}
+                        className="px-2 py-1 text-[10px] text-gray-650 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -1272,11 +1281,9 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 4. TABLE MANAGEMENT
   const renderTables = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Visual layouts & stats (8 cols) */}
         <div className="lg:col-span-8 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
           <div className="flex justify-between items-center border-b border-gray-50 pb-3">
             <div>
@@ -1285,7 +1292,7 @@ export default function CanteenPOSPage() {
             </div>
             <button
               onClick={() => setShowAddTableModal(true)}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Add Table
             </button>
@@ -1309,7 +1316,7 @@ export default function CanteenPOSPage() {
                   </span>
                 </div>
 
-                <div className="text-xs text-gray-600 font-semibold my-2">
+                <div className="text-xs text-gray-650 font-semibold my-2 text-left">
                   {t.status === "OCCUPIED" ? (
                     <div>
                       <p className="text-[10px] text-gray-400 font-normal">Current Bill: <b className="text-red-500 font-bold">₹{t.currentBill}</b></p>
@@ -1322,18 +1329,8 @@ export default function CanteenPOSPage() {
 
                 <div className="flex justify-between items-center border-t border-gray-50 pt-2 text-[9px] font-bold">
                   <div className="flex gap-1.5">
-                    <button
-                      onClick={() => handleUpdateTableStatus(t.id, "AVAILABLE")}
-                      className="text-green-600 hover:underline"
-                    >
-                      Free
-                    </button>
-                    <button
-                      onClick={() => handleUpdateTableStatus(t.id, "OCCUPIED")}
-                      className="text-red-600 hover:underline"
-                    >
-                      Occupy
-                    </button>
+                    <button onClick={() => handleUpdateTableStatus(t.id, "AVAILABLE")} className="text-green-600 hover:underline cursor-pointer">Free</button>
+                    <button onClick={() => handleUpdateTableStatus(t.id, "OCCUPIED")} className="text-red-650 hover:underline cursor-pointer">Occupy</button>
                   </div>
 
                   <button
@@ -1344,7 +1341,7 @@ export default function CanteenPOSPage() {
                         saveState("canteen_tables", updated);
                       }
                     }}
-                    className="text-gray-300 hover:text-red-500 transition-colors"
+                    className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -1354,22 +1351,20 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Side Panel Actions: Merge, Split, Analytics (4 cols) */}
         <div className="lg:col-span-4 bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-6">
           <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-2">
             Operations & Analytics
           </h3>
 
-          {/* Merge tables simulation */}
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 text-left">
             <span className="text-[10px] font-bold uppercase text-gray-400 block">Merge Seating Tables</span>
-            <div className="grid grid-cols-2 gap-2 text-xs font-sans text-gray-600">
+            <div className="grid grid-cols-2 gap-2 text-xs font-sans text-gray-650">
               <select className="p-2 border border-gray-100 rounded-xl bg-gray-50 outline-none" id="merge-tbl-1">
-                <option value="">Select Table A</option>
+                <option value="">Table A</option>
                 {tables.map(t=> <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
               <select className="p-2 border border-gray-100 rounded-xl bg-gray-50 outline-none" id="merge-tbl-2">
-                <option value="">Select Table B</option>
+                <option value="">Table B</option>
                 {tables.map(t=> <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
@@ -1381,20 +1376,16 @@ export default function CanteenPOSPage() {
                   alert("Please select two different tables to merge.");
                   return;
                 }
-                const name1 = tables.find(t=>t.id===el1.value)?.name;
-                const name2 = tables.find(t=>t.id===el2.value)?.name;
-                alert(`Tables ${name1} and ${name2} merged successfully! Seating capacity updated to 10 guests.`);
+                alert("Tables merged successfully!");
               }}
-              className="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-xl text-xs hover:bg-blue-100 transition-colors"
+              className="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-xl text-xs hover:bg-blue-100 transition-colors cursor-pointer"
             >
               Combine Tables
             </button>
           </div>
 
-          {/* Analytics block */}
-          <div className="space-y-4 pt-4 border-t border-gray-100">
+          <div className="space-y-4 pt-4 border-t border-gray-100 text-left">
             <span className="text-[10px] font-bold uppercase text-gray-400 block">Table Analytics</span>
-            
             <div className="space-y-3 text-xs font-sans text-gray-500">
               <div className="flex justify-between">
                 <span>Peak Occupancy Time:</span>
@@ -1404,20 +1395,12 @@ export default function CanteenPOSPage() {
                 <span>Avg Occupied Time:</span>
                 <span className="font-bold text-gray-800">38 mins</span>
               </div>
-              <div className="flex justify-between">
-                <span>Table Turn Ratio:</span>
-                <span className="font-bold text-gray-800">4.2 times/table today</span>
+              <div className="flex justify-between text-[10px] font-bold pt-2">
+                <span>CURRENT FLOOR UTILIZATION</span>
+                <span className="text-blue-600">37.5%</span>
               </div>
-
-              {/* Progress bar */}
-              <div className="space-y-1 pt-2">
-                <div className="flex justify-between text-[10px] font-bold">
-                  <span>CURRENT FLOOR UTILIZATION</span>
-                  <span className="text-blue-600">37.5%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full" style={{ width: "37.5%" }}></div>
-                </div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-600 rounded-full" style={{ width: "37.5%" }}></div>
               </div>
             </div>
           </div>
@@ -1426,11 +1409,9 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 5. TABLE BOOKINGS
   const renderBookings = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch min-h-[500px]">
-        {/* Reservations Timeline Grid (8 cols) */}
         <div className="lg:col-span-8 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center border-b border-gray-50 pb-3 mb-4">
@@ -1440,7 +1421,7 @@ export default function CanteenPOSPage() {
               </div>
               <button
                 onClick={() => setShowBookingModal(true)}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> New Reservation
               </button>
@@ -1471,7 +1452,7 @@ export default function CanteenPOSPage() {
                       <td className="py-3">
                         <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${
                           b.status === "SEATED" ? "bg-green-50 text-green-700" :
-                          b.status === "CANCELLED" ? "bg-red-50 text-red-700" :
+                          b.status === "CANCELLED" ? "bg-red-50 text-red-750" :
                           "bg-amber-50 text-amber-700"
                         }`}>
                           {b.status}
@@ -1482,13 +1463,13 @@ export default function CanteenPOSPage() {
                           <>
                             <button
                               onClick={() => handleSeatBooking(b.id)}
-                              className="px-2 py-1 text-[9px] font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
+                              className="px-2 py-1 text-[9px] font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors cursor-pointer"
                             >
                               Seat
                             </button>
                             <button
                               onClick={() => handleCancelBooking(b.id)}
-                              className="px-2 py-1 text-[9px] font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors"
+                              className="px-2 py-1 text-[9px] font-bold text-red-650 bg-red-50 hover:bg-red-100 rounded transition-colors cursor-pointer"
                             >
                               Cancel
                             </button>
@@ -1501,23 +1482,20 @@ export default function CanteenPOSPage() {
               </table>
             </div>
           </div>
-
-          <div className="border-t border-gray-50 pt-4 mt-6 text-[10px] text-gray-400 italic">
-            * Note: Reservations will hold tables automatically 30 minutes prior to booking slot.
+          <div className="border-t border-gray-50 pt-4 mt-6 text-[10px] text-gray-400 italic text-left">
+            * Note: Reservations hold tables automatically 30 minutes prior to booking slot.
           </div>
         </div>
 
-        {/* Booking slot calendar list representation (4 cols) */}
         <div className="lg:col-span-4 bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-4">
           <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-2">
             Schedule Overview
           </h3>
-
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 text-left">
             {["11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"].map((tSlot) => {
               const matched = bookings.filter((b) => b.time.includes(tSlot.split(":")[0]) && b.status === "CONFIRMED");
               return (
-                <div key={tSlot} className="flex justify-between items-center text-xs font-sans p-2 border border-gray-50 rounded-xl bg-gray-50/50">
+                <div key={tSlot} className="flex justify-between items-center text-xs font-sans p-2.5 border border-gray-50 rounded-xl bg-gray-50/50">
                   <span className="font-bold text-gray-600">{tSlot}</span>
                   {matched.length > 0 ? (
                     <div className="text-right">
@@ -1536,11 +1514,9 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 6. MENU MANAGEMENT
   const renderMenu = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Menu Items lists table (8 cols) */}
         <div className="lg:col-span-8 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
           <div className="flex justify-between items-center border-b border-gray-50 pb-3">
             <div>
@@ -1549,7 +1525,7 @@ export default function CanteenPOSPage() {
             </div>
             <button
               onClick={() => setShowAddMenuModal(true)}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Add Food Item
             </button>
@@ -1590,7 +1566,7 @@ export default function CanteenPOSPage() {
                           setMenu(updated);
                           saveState("canteen_menu", updated);
                         }}
-                        className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-colors border ${
+                        className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-colors border cursor-pointer ${
                           m.available 
                             ? "bg-green-50 text-green-700 border-green-200" 
                             : "bg-red-50 text-red-700 border-red-200"
@@ -1602,13 +1578,13 @@ export default function CanteenPOSPage() {
                     <td className="py-2.5 text-right">
                       <button
                         onClick={() => {
-                          if (confirm(`Delete ${m.name} from menu?`)) {
+                          if (confirm(`Delete ${m.name}?`)) {
                             const updated = menu.filter(item => item.id !== m.id);
                             setMenu(updated);
                             saveState("canteen_menu", updated);
                           }
                         }}
-                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                        className="text-gray-300 hover:text-red-500 transition-colors p-1 cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -1620,20 +1596,17 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Menu Combos & Add-ons configuration (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Combos list card */}
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-2 flex justify-between items-center">
               <span>Combo Offers</span>
-              <span className="text-[8px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded uppercase font-bold">2 active</span>
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-3 text-left">
               {menu.filter(m=>m.category === "Combos").map(c => (
                 <div key={c.id} className="flex justify-between items-center text-xs font-sans p-2.5 border border-gray-50 rounded-xl bg-gray-50/50">
                   <div>
                     <h5 className="font-bold text-gray-700">{c.name}</h5>
-                    <span className="text-[9px] text-gray-400">Regular bundle pricing</span>
+                    <span className="text-[9px] text-gray-400">Combo bundle</span>
                   </div>
                   <span className="font-bold text-blue-600">₹{c.price}</span>
                 </div>
@@ -1641,18 +1614,15 @@ export default function CanteenPOSPage() {
             </div>
           </div>
 
-          {/* Add-ons list card */}
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-2 flex justify-between items-center">
-              <span>Add-on Toppings</span>
-              <span className="text-[8px] bg-green-50 text-green-600 px-2 py-0.5 rounded uppercase font-bold">2 active</span>
+            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-2">
+              Add-on Toppings
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-3 text-left">
               {menu.filter(m=>m.category === "Add-ons").map(a => (
                 <div key={a.id} className="flex justify-between items-center text-xs font-sans p-2.5 border border-gray-50 rounded-xl bg-gray-50/50">
                   <div>
                     <h5 className="font-bold text-gray-700">{a.name}</h5>
-                    <span className="text-[9px] text-gray-400">Excludes standard GST</span>
                   </div>
                   <span className="font-bold text-blue-600">+ ₹{a.price}</span>
                 </div>
@@ -1664,11 +1634,9 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 7. INVENTORY MODULE
   const renderInventory = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Stock Ledger list (8 cols) */}
         <div className="lg:col-span-8 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-5">
           <div className="flex justify-between items-center border-b border-gray-50 pb-3">
             <div>
@@ -1677,7 +1645,7 @@ export default function CanteenPOSPage() {
             </div>
             <button
               onClick={() => setShowWasteModal(true)}
-              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1"
+              className="px-3 py-1.5 bg-red-650 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 cursor-pointer"
             >
               <AlertTriangle className="w-3.5 h-3.5" /> Log Waste Loss
             </button>
@@ -1702,7 +1670,7 @@ export default function CanteenPOSPage() {
 
                   return (
                     <tr key={invItem.id} className={`hover:bg-gray-50/50 transition-colors ${isLow ? "bg-red-50/20" : ""}`}>
-                      <td className="py-2.5">
+                      <td className="py-2.5 text-left">
                         <p className="font-bold text-gray-800">{invItem.name}</p>
                         {isLow && <span className="text-[8px] bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded uppercase mt-0.5 inline-block">Low stock warning</span>}
                       </td>
@@ -1711,20 +1679,20 @@ export default function CanteenPOSPage() {
                         {invItem.stock} {invItem.unit}
                       </td>
                       <td className="py-2.5 text-gray-400 font-semibold">{invItem.minStock} {invItem.unit}</td>
-                      <td className="py-2.5 text-gray-600">{supName}</td>
+                      <td className="py-2.5 text-gray-650">{supName}</td>
                       <td className="py-2.5 text-right">
                         <button
                           onClick={() => {
-                            const newStock = prompt(`Update stock level of ${invItem.name}:`, String(invItem.stock));
+                            const newStock = prompt(`Update stock:`, String(invItem.stock));
                             if (newStock !== null) {
                               const updated = inventory.map(item => item.id === invItem.id ? { ...item, stock: Number(newStock) || 0 } : item);
                               setInventory(updated);
                               saveState("canteen_inventory", updated);
                             }
                           }}
-                          className="px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded text-[9px] font-bold text-gray-700 transition-colors border border-gray-100"
+                          className="px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded text-[9px] font-bold text-gray-700 transition-colors border border-gray-100 cursor-pointer"
                         >
-                          Modify Stock
+                          Modify
                         </button>
                       </td>
                     </tr>
@@ -1735,9 +1703,7 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Suppliers & Waste Logs details (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Supplier Directory */}
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-2">
               Food Distributors
@@ -1747,7 +1713,6 @@ export default function CanteenPOSPage() {
                 <div key={sup.id} className="p-3 border border-gray-50 rounded-2xl bg-gray-50/50 space-y-1 text-left">
                   <h5 className="font-bold text-gray-700">{sup.name}</h5>
                   <p className="text-[10px] text-gray-400">Phone: {sup.phone}</p>
-                  <p className="text-[10px] text-gray-400 truncate">Email: {sup.email}</p>
                   <div className="flex gap-1.5 flex-wrap pt-1.5">
                     {sup.itemsSupplied.map((tag, idx) => (
                       <span key={idx} className="text-[8px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold">{tag}</span>
@@ -1757,47 +1722,28 @@ export default function CanteenPOSPage() {
               ))}
             </div>
           </div>
-
-          {/* Waste register list */}
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-2">
-              Recent Waste Log Losses
-            </h3>
-            <div className="space-y-3">
-              {wasteLogs.map((log) => (
-                <div key={log.id} className="flex justify-between items-center text-xs font-sans p-2.5 border border-gray-50 rounded-xl bg-gray-50/50">
-                  <div>
-                    <h5 className="font-bold text-gray-700">{log.name}</h5>
-                    <span className="text-[9px] text-red-500 font-bold">{log.qty} {log.unit} • {log.reason}</span>
-                  </div>
-                  <span className="font-bold text-red-600">₹{log.cost}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     );
   };
 
-  // 8. CUSTOMERS DATABASE
   const renderCustomers = () => {
     return (
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4 min-h-[500px]">
         <div>
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Devotee Customer Directory</h3>
-          <p className="text-[11px] text-gray-400">History and statistics of canteen visitors</p>
+          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Devotee Customer User Directory</h3>
+          <p className="text-[11px] text-gray-400">History and statistics of customer users booking food or tables</p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs font-sans text-left">
             <thead>
               <tr className="border-b border-gray-50 text-gray-400 uppercase font-bold text-[9px] pb-2.5">
-                <th className="pb-2.5">Customer Name</th>
+                <th className="pb-2.5">User/Devotee Name</th>
                 <th className="pb-2.5">Contact Number</th>
-                <th className="pb-2.5">Total Visits</th>
-                <th className="pb-2.5">Total Contributed (INR)</th>
-                <th className="pb-2.5">Last Visit Date</th>
+                <th className="pb-2.5">Visits / Orders</th>
+                <th className="pb-2.5">Total Contributions</th>
+                <th className="pb-2.5">Last Check-in</th>
                 <th className="pb-2.5 text-right">Operations</th>
               </tr>
             </thead>
@@ -1806,7 +1752,7 @@ export default function CanteenPOSPage() {
                 <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="py-3 font-bold text-gray-800">{c.name}</td>
                   <td className="py-3 text-gray-500 font-semibold font-mono">{c.phone}</td>
-                  <td className="py-3 font-bold text-gray-800">{c.totalOrders} check-ins</td>
+                  <td className="py-3 font-bold text-gray-800">{c.totalOrders} visits</td>
                   <td className="py-3 font-bold text-blue-600">₹{c.totalSpent.toLocaleString("en-IN")}</td>
                   <td className="py-3 text-gray-400 font-semibold">{c.lastVisit}</td>
                   <td className="py-3 text-right">
@@ -1816,7 +1762,7 @@ export default function CanteenPOSPage() {
                         setPosCustomerPhone(c.phone);
                         setActiveTab("pos");
                       }}
-                      className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
+                      className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm cursor-pointer"
                     >
                       New Order
                     </button>
@@ -1830,7 +1776,6 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 9. KITCHEN DISPLAY SYSTEM (KDS)
   const renderKDS = () => {
     const newOrders = orders.filter((o) => o.status === "NEW");
     const prepOrders = orders.filter((o) => o.status === "PREPARING");
@@ -1839,7 +1784,6 @@ export default function CanteenPOSPage() {
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5 min-h-[calc(100vh-170px)] items-stretch">
-        {/* Column 1: New Orders */}
         <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm flex flex-col h-[650px] border-t-4 border-t-amber-500">
           <div className="flex justify-between items-center border-b border-gray-50 pb-2 mb-3">
             <span className="text-[10px] font-bold uppercase text-amber-600 flex items-center gap-1.5">
@@ -1875,7 +1819,7 @@ export default function CanteenPOSPage() {
                   {o.notes && <p className="text-[8px] bg-amber-100 text-amber-800 p-1 rounded font-semibold italic">Notes: {o.notes}</p>}
                   <button
                     onClick={() => handleUpdateOrderStatus(o.id, "PREPARING")}
-                    className="w-full mt-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold text-center transition-colors shadow-sm"
+                    className="w-full mt-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold text-center transition-colors shadow-sm cursor-pointer"
                   >
                     Start Preparing
                   </button>
@@ -1885,7 +1829,6 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Column 2: Preparing */}
         <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm flex flex-col h-[650px] border-t-4 border-t-blue-500">
           <div className="flex justify-between items-center border-b border-gray-50 pb-2 mb-3">
             <span className="text-[10px] font-bold uppercase text-blue-600 flex items-center gap-1.5">
@@ -1921,7 +1864,7 @@ export default function CanteenPOSPage() {
                   {o.notes && <p className="text-[8px] bg-blue-50 text-blue-800 p-1 rounded font-semibold italic">Notes: {o.notes}</p>}
                   <button
                     onClick={() => handleUpdateOrderStatus(o.id, "READY_TO_SERVE")}
-                    className="w-full mt-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold text-center transition-colors shadow-sm"
+                    className="w-full mt-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold text-center transition-colors shadow-sm cursor-pointer"
                   >
                     Mark Ready to Serve
                   </button>
@@ -1931,11 +1874,10 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Column 3: Ready to Serve */}
         <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm flex flex-col h-[650px] border-t-4 border-t-green-500">
           <div className="flex justify-between items-center border-b border-gray-50 pb-2 mb-3">
             <span className="text-[10px] font-bold uppercase text-green-600 flex items-center gap-1.5">
-              <CheckCircle className="w-3.5 h-3.5 text-green-500 animate-pulse" /> Ready to Serve
+              <CheckCircle className="w-3.5 h-3.5 text-green-500" /> Ready to Serve
             </span>
             <span className="text-[10px] font-bold bg-green-50 text-green-700 px-2 py-0.5 rounded">
               {readyOrders.length}
@@ -1966,7 +1908,7 @@ export default function CanteenPOSPage() {
                   </ul>
                   <button
                     onClick={() => handleUpdateOrderStatus(o.id, "COMPLETED")}
-                    className="w-full mt-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[10px] font-bold text-center transition-colors shadow-sm"
+                    className="w-full mt-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[10px] font-bold text-center transition-colors shadow-sm cursor-pointer"
                   >
                     Mark Served & Clear
                   </button>
@@ -1976,8 +1918,7 @@ export default function CanteenPOSPage() {
           </div>
         </div>
 
-        {/* Column 4: Completed */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm flex flex-col h-[650px] border-t-4 border-t-gray-500">
+        <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm flex flex-col h-[650px]">
           <div className="flex justify-between items-center border-b border-gray-50 pb-2 mb-3">
             <span className="text-[10px] font-bold uppercase text-gray-500">Completed Today</span>
             <span className="text-[10px] font-bold bg-gray-50 text-gray-700 px-2 py-0.5 rounded">
@@ -1996,7 +1937,7 @@ export default function CanteenPOSPage() {
                     <span className="text-[9px] text-gray-400">{o.timestamp}</span>
                   </div>
                   <p className="text-gray-500 font-semibold">Table: {o.tableName}</p>
-                  <p className="text-[10px] text-green-600 font-bold">Served and closed successfully</p>
+                  <p className="text-[10px] text-green-600 font-bold">Served and closed</p>
                 </div>
               ))
             )}
@@ -2006,44 +1947,26 @@ export default function CanteenPOSPage() {
     );
   };
 
-  // 10. REPORTS
   const renderReports = () => {
     return (
       <div className="space-y-6">
-        {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Chart */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Weekly Revenue Analytics</h4>
-              <p className="text-[11px] text-gray-400">Total generated revenue over the last 7 days</p>
+              <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider text-left">Weekly Revenue Analytics</h4>
+              <p className="text-[11px] text-gray-400 text-left">Total generated revenue over the last 7 days</p>
             </div>
-
-            {/* Custom SVG Line Chart */}
             <div className="h-56 relative w-full pt-4">
               <svg viewBox="0 0 500 200" className="w-full h-full">
-                {/* Grid lines */}
                 <line x1="40" y1="10" x2="480" y2="10" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="60" x2="480" y2="60" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="110" x2="480" y2="110" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="160" x2="480" y2="160" stroke="#E5E7EB" strokeWidth="1.5" />
-
-                {/* Y Axis text labels */}
                 <text x="5" y="15" fill="#9ca3af" fontSize="9" fontWeight="bold">₹25,000</text>
                 <text x="5" y="65" fill="#9ca3af" fontSize="9" fontWeight="bold">₹15,000</text>
                 <text x="5" y="115" fill="#9ca3af" fontSize="9" fontWeight="bold">₹5,000</text>
                 <text x="15" y="165" fill="#9ca3af" fontSize="9" fontWeight="bold">₹0</text>
-
-                {/* SVG path for chart line */}
-                <path
-                  d="M 50,150 L 120,135 L 190,110 L 260,95 L 330,70 L 400,60 L 470,30"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-
-                {/* Circular dots */}
+                <path d="M 50,150 L 120,135 L 190,110 L 260,95 L 330,70 L 400,60 L 470,30" fill="none" stroke="#3b82f6" strokeWidth="3.5" strokeLinecap="round" />
                 <circle cx="50" cy="150" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
                 <circle cx="120" cy="135" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
                 <circle cx="190" cy="110" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
@@ -2051,8 +1974,6 @@ export default function CanteenPOSPage() {
                 <circle cx="330" cy="70" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
                 <circle cx="400" cy="60" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
                 <circle cx="470" cy="30" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-
-                {/* X Axis text labels */}
                 <text x="40" y="185" fill="#6b7280" fontSize="9" fontWeight="bold">Mon</text>
                 <text x="110" y="185" fill="#6b7280" fontSize="9" fontWeight="bold">Tue</text>
                 <text x="180" y="185" fill="#6b7280" fontSize="9" fontWeight="bold">Wed</text>
@@ -2064,43 +1985,28 @@ export default function CanteenPOSPage() {
             </div>
           </div>
 
-          {/* Category Sales Chart */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Category Sales Breakdown</h4>
-              <p className="text-[11px] text-gray-400">Total item distributions sold by catalog category</p>
+              <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider text-left">Category Sales Breakdown</h4>
+              <p className="text-[11px] text-gray-400 text-left">Total item distributions sold by catalog category</p>
             </div>
-
-            {/* Custom SVG Bar Chart */}
             <div className="h-56 relative w-full pt-4">
               <svg viewBox="0 0 500 200" className="w-full h-full">
-                {/* Horizontal grid lines */}
                 <line x1="40" y1="10" x2="480" y2="10" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="85" x2="480" y2="85" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="160" x2="480" y2="160" stroke="#E5E7EB" strokeWidth="1.5" />
-
-                {/* Bars representation */}
-                {/* Mains */}
                 <rect x="70" y="40" width="35" height="120" fill="#10B981" rx="4" />
                 <text x="75" y="32" fill="#10B981" fontSize="9" fontWeight="bold">₹28.4k</text>
                 <text x="72" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Mains</text>
-
-                {/* Snacks */}
                 <rect x="160" y="70" width="35" height="90" fill="#3B82F6" rx="4" />
                 <text x="165" y="62" fill="#3B82F6" fontSize="9" fontWeight="bold">₹19.2k</text>
                 <text x="162" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Snacks</text>
-
-                {/* Beverages */}
                 <rect x="250" y="90" width="35" height="70" fill="#F59E0B" rx="4" />
                 <text x="255" y="82" fill="#F59E0B" fontSize="9" fontWeight="bold">₹11.8k</text>
                 <text x="245" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Beverages</text>
-
-                {/* Desserts */}
                 <rect x="340" y="115" width="35" height="45" fill="#8B5E34" rx="4" />
                 <text x="348" y="107" fill="#8B5E34" fontSize="9" fontWeight="bold">₹6.4k</text>
                 <text x="336" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Desserts</text>
-
-                {/* Combos */}
                 <rect x="420" y="100" width="35" height="60" fill="#8B5E34" rx="4" />
                 <text x="428" y="92" fill="#8B5E34" fontSize="9" fontWeight="bold">₹9.8k</text>
                 <text x="418" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Combos</text>
@@ -2108,161 +2014,53 @@ export default function CanteenPOSPage() {
             </div>
           </div>
         </div>
-
-        {/* Table reports lists */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <div className="flex justify-between items-center border-b border-gray-50 pb-3 mb-4">
-            <div>
-              <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Top Performing Menu Items</h4>
-              <p className="text-[11px] text-gray-400">Total volume and sales generated from high demand food dishes</p>
-            </div>
-            <button
-              onClick={() => alert("Excel/CSV reports simulation generated inside download folder.")}
-              className="px-3 py-1.5 border border-gray-100 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-600 transition-colors"
-            >
-              Export Report
-            </button>
-          </div>
-
-          <table className="w-full text-xs font-sans text-left">
-            <thead>
-              <tr className="border-b border-gray-50 text-gray-400 font-bold uppercase text-[9px] pb-2">
-                <th className="pb-2">Food Dish Name</th>
-                <th className="pb-2">Category</th>
-                <th className="pb-2">Quantity Sold</th>
-                <th className="pb-2">Avg Unit Price</th>
-                <th className="pb-2 text-right">Total Revenue Generated</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              <tr className="hover:bg-gray-50/50">
-                <td className="py-2.5 font-bold text-gray-800">Pure Veg Masala Dosa</td>
-                <td className="py-2.5 text-gray-500">Snacks</td>
-                <td className="py-2.5 font-bold text-gray-700">142 units</td>
-                <td className="py-2.5">₹120</td>
-                <td className="py-2.5 text-right font-bold text-blue-600">₹17,040</td>
-              </tr>
-              <tr className="hover:bg-gray-50/50">
-                <td className="py-2.5 font-bold text-gray-800">Butter Paneer Masala & Naan</td>
-                <td className="py-2.5 text-gray-500">Mains</td>
-                <td className="py-2.5 font-bold text-gray-700">84 units</td>
-                <td className="py-2.5">₹180</td>
-                <td className="py-2.5 text-right font-bold text-blue-600">₹15,120</td>
-              </tr>
-              <tr className="hover:bg-gray-50/50">
-                <td className="py-2.5 font-bold text-gray-800">Jain Special Khichdi</td>
-                <td className="py-2.5 text-gray-500">Mains</td>
-                <td className="py-2.5 font-bold text-gray-700">62 units</td>
-                <td className="py-2.5">₹150</td>
-                <td className="py-2.5 text-right font-bold text-blue-600">₹9,300</td>
-              </tr>
-              <tr className="hover:bg-gray-50/50">
-                <td className="py-2.5 font-bold text-gray-800">Mango Lassi Sweet</td>
-                <td className="py-2.5 text-gray-500">Beverages</td>
-                <td className="py-2.5 font-bold text-gray-700">110 units</td>
-                <td className="py-2.5">₹70</td>
-                <td className="py-2.5 text-right font-bold text-blue-600">₹7,700</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     );
   };
 
-  // 11. SETTINGS
   const renderSettings = () => {
     return (
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6 max-w-4xl text-left">
         <div>
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Canteen SaaS Settings</h3>
+          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Canteen Settings</h3>
           <p className="text-[11px] text-gray-400">Configure parameters, tax rules, and receipt printer interfaces</p>
         </div>
 
-        <form onSubmit={(e) => { e.preventDefault(); alert("Configuration details saved successfully!"); }} className="space-y-6 font-sans text-xs">
-          {/* Section 1: Business profile */}
+        <form onSubmit={(e) => { e.preventDefault(); alert("Saved!"); }} className="space-y-6 font-sans text-xs">
           <div className="space-y-4">
             <h4 className="text-[10px] uppercase font-bold tracking-wider text-blue-600 border-b border-gray-50 pb-1">Business Credentials</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-gray-400 font-semibold block">Business Name *</label>
-                <input
-                  type="text"
-                  required
-                  defaultValue="SKSS Kampala Canteen"
-                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700"
-                />
+                <input type="text" required defaultValue="SKSS Kampala Canteen" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
               <div className="space-y-1">
                 <label className="text-gray-400 font-semibold block">Store Address Coordinates *</label>
-                <input
-                  type="text"
-                  required
-                  defaultValue="Shree Swaminarayan Complex, Bukoto, Kampala"
-                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700"
-                />
+                <input type="text" required defaultValue="Shree Swaminarayan Complex, Bukoto, Kampala" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
             </div>
           </div>
 
-          {/* Section 2: Taxes */}
           <div className="space-y-4 pt-2">
             <h4 className="text-[10px] uppercase font-bold tracking-wider text-blue-600 border-b border-gray-50 pb-1">GST & Tax Configurations</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1">
                 <label className="text-gray-400 font-semibold block">VAT / GST Rate (%)</label>
-                <input
-                  type="number"
-                  defaultValue="5"
-                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700"
-                />
+                <input type="number" defaultValue="5" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
               <div className="space-y-1">
                 <label className="text-gray-400 font-semibold block">Service Charge Rate (%)</label>
-                <input
-                  type="number"
-                  defaultValue="2.5"
-                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700"
-                />
+                <input type="number" defaultValue="2.5" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
               <div className="space-y-1">
                 <label className="text-gray-400 font-semibold block">Currency Symbol</label>
-                <input
-                  type="text"
-                  defaultValue="₹"
-                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Printer */}
-          <div className="space-y-4 pt-2">
-            <h4 className="text-[10px] uppercase font-bold tracking-wider text-blue-600 border-b border-gray-50 pb-1">Receipt Printer API</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-gray-400 font-semibold block">Thermal Paper Size</label>
-                <select className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold">
-                  <option>80mm (Standard Desktop)</option>
-                  <option>58mm (Handheld POS)</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-gray-400 font-semibold block">Local IP Printer Endpoint</label>
-                <input
-                  type="text"
-                  defaultValue="192.168.1.185"
-                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-mono"
-                />
+                <input type="text" defaultValue="₹" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
             </div>
           </div>
 
           <div className="pt-4 border-t border-gray-50 flex justify-end">
-            <button
-              type="submit"
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
-            >
+            <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors cursor-pointer">
               Save Configuration Settings
             </button>
           </div>
@@ -2271,195 +2069,259 @@ export default function CanteenPOSPage() {
     );
   };
 
+  // --- RENDER LOGIN VIEW ---
+  if (!activeStaff) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] font-sans flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-3xl border border-gray-100 shadow-2xl p-8 text-center relative overflow-hidden">
+          
+          <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-blue-600 to-indigo-500"></div>
+
+          <div className="mb-6">
+            <span className="text-4xl">🕉️</span>
+            <h2 className="text-lg font-bold text-gray-800 mt-3 font-sans">Swami Canteen POS</h2>
+            <p className="text-xs text-gray-400">Secure Terminal Sign In</p>
+          </div>
+
+          {loginError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2 text-left">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLoginSubmit} className="space-y-4 text-left">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> Email Address</label>
+              <input
+                type="email"
+                required
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="staff@swami.com"
+                className="w-full p-3 border border-gray-150 rounded-2xl outline-none bg-gray-50 focus:bg-white focus:border-blue-500 transition-all text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><Lock className="w-3.5 h-3.5" /> Password</label>
+              <input
+                type="password"
+                required
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full p-3 border border-gray-150 rounded-2xl outline-none bg-gray-50 focus:bg-white focus:border-blue-500 transition-all text-xs"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs shadow-lg shadow-blue-100 transition-all mt-6 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Login to POS Terminal</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+
+          {/* Quick Shortcuts for Testing Roles */}
+          <div className="mt-8 pt-6 border-t border-gray-100 text-left">
+            <h4 className="text-[9px] font-bold uppercase text-gray-400 tracking-wider mb-3">Quick Demo Logins (Click to Auto-fill)</h4>
+            <div className="grid grid-cols-2 gap-2 text-[9px]">
+              {[
+                { email: "manager@swami.com", pass: "manager123", label: "Canteen Manager" },
+                { email: "receptionist@swami.com", pass: "receptionist123", label: "Receptionist" },
+                { email: "cashier@swami.com", pass: "cashier123", label: "Cashier" },
+                { email: "kitchen@swami.com", pass: "kitchen123", label: "Kitchen Display" }
+              ].map((demo, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setLoginEmail(demo.email);
+                    setLoginPassword(demo.pass);
+                    setLoginError("");
+                  }}
+                  className="p-2 border border-gray-100 rounded-xl bg-gray-50/50 hover:bg-blue-50 hover:border-blue-200 transition-all text-left truncate cursor-pointer font-sans"
+                >
+                  <span className="font-bold text-gray-700 block">{demo.label}</span>
+                  <span className="text-gray-400 block text-[8px]">{demo.email}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- RENDER MAIN LAYOUT FOR AUTHENTICATED STAFF ---
+  const userRole = activeStaff.assignedRole;
+
   return (
     <div className="min-h-screen bg-[#FAF7F2] font-sans flex text-gray-800">
       
-      {/* 1. SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-white border-r border-gray-100 shrink-0 flex flex-col justify-between hidden lg:flex">
-        <div>
-          {/* Logo brand */}
-          <div className="h-16 px-6 border-b border-gray-50 flex items-center gap-2">
-            <span className="text-2xl">🕉️</span>
-            <div className="text-left">
-              <h1 className="text-xs font-bold uppercase tracking-wider text-gray-800 font-sans">Swami POS</h1>
-              <p className="text-[9px] text-gray-400 font-semibold">Canteen SaaS Desk</p>
+      {/* 1. SIDEBAR NAVIGATION - Hide if kitchen staff */}
+      {userRole !== "kitchen" && (
+        <aside className="w-64 bg-white border-r border-gray-100 shrink-0 flex flex-col justify-between hidden lg:flex">
+          <div>
+            <div className="h-16 px-6 border-b border-gray-50 flex items-center gap-2">
+              <span className="text-2xl">🕉️</span>
+              <div className="text-left">
+                <h1 className="text-xs font-bold uppercase tracking-wider text-gray-800 font-sans">Swami POS</h1>
+                <p className="text-[9px] text-gray-400 font-semibold">{activeStaff.name}</p>
+              </div>
             </div>
+
+            <nav className="p-4 space-y-1">
+              {[
+                { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["manager"] },
+                { id: "pos", label: "Counter POS", icon: ShoppingCart, roles: ["manager", "receptionist", "cashier"] },
+                { id: "orders", label: "Orders Register", icon: ClipboardList, roles: ["manager", "receptionist", "cashier"] },
+                { id: "tables", label: "Table Layout", icon: Grid, roles: ["manager"] },
+                { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"] },
+                { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"] },
+                { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"] },
+                { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"] },
+                { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"] },
+                { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"] },
+                { id: "settings", label: "System Settings", icon: Settings, roles: ["manager"] }
+              ].map((link) => {
+                if (!link.roles.includes(userRole)) return null;
+                const isActive = activeTab === link.id;
+
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => setActiveTab(link.id as any)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
+                      isActive
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <link.icon className="w-4 h-4" />
+                      <span>{link.label}</span>
+                    </span>
+
+                    {link.id === "kitchen" && (
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600":"bg-blue-50 text-blue-600"}`}>
+                        {orders.filter(o=>o.status==="NEW"||o.status==="PREPARING").length}
+                      </span>
+                    )}
+                    {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-red-600":"bg-red-50 text-red-600"}`}>
+                        {getInventoryAlertsCount()}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
 
-          {/* Navigation Links list */}
-          <nav className="p-4 space-y-1">
-            {[
-              { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["manager"] },
-              { id: "pos", label: "Counter POS", icon: ShoppingCart, roles: ["manager", "receptionist", "cashier"] },
-              { id: "orders", label: "Orders Register", icon: ClipboardList, roles: ["manager", "receptionist", "cashier"] },
-              { id: "tables", label: "Table Layout", icon: Grid, roles: ["manager"] },
-              { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"] },
-              { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"] },
-              { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"] },
-              { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"] },
-              { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"] },
-              { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"] },
-              { id: "settings", label: "System Settings", icon: Settings, roles: ["manager"] }
-            ].map((link) => {
-              // Restrict tab visibility if role doesn't have permissions
-              if (!link.roles.includes(currentRole)) return null;
+          <div className="p-4 border-t border-gray-50 space-y-2">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-red-50 hover:bg-red-100 text-red-650 text-[10px] font-bold uppercase rounded-xl transition-all border border-red-100 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Log Out
+            </button>
+            <a
+              href="/dashboard/canteen"
+              className="w-full flex items-center justify-center py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded-xl transition-all border border-gray-100"
+            >
+              ↩️ Exit to ERP Admin
+            </a>
+          </div>
+        </aside>
+      )}
 
-              const isActive = activeTab === link.id;
-
-              return (
-                <button
-                  key={link.id}
-                  onClick={() => setActiveTab(link.id as any)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
-                    isActive
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <link.icon className="w-4 h-4" />
-                    <span>{link.label}</span>
-                  </span>
-
-                  {/* Add visual badge counts to make it feel alive! */}
-                  {link.id === "kitchen" && (
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600":"bg-blue-50 text-blue-600"}`}>
-                      {orders.filter(o=>o.status==="NEW"||o.status==="PREPARING").length}
-                    </span>
-                  )}
-                  {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-red-600":"bg-red-50 text-red-600"}`}>
-                      {getInventoryAlertsCount()}
-                    </span>
-                  )}
-                  {link.id === "tables" && (
-                    <span className="text-[9px] text-gray-400 font-normal lowercase">
-                      {getActiveTablesCount()} active
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Back Link to admin dashboard */}
-        <div className="p-4 border-t border-gray-50">
-          <a
-            href="/dashboard/canteen"
-            className="w-full flex items-center justify-center py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded-xl transition-all border border-gray-100"
-          >
-            ↩️ Exit to ERP Admin
-          </a>
-        </div>
-      </aside>
-
-      {/* 2. MAIN APPLICATION WORKSPACE */}
+      {/* 2. MAIN APP CONTENT PANEL */}
       <div className="flex-grow flex flex-col h-screen overflow-hidden">
-        {/* Header toolbar panel */}
+        
+        {/* Header Toolbar */}
         <header className="h-16 bg-white border-b border-gray-100 px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
           
-          {/* Left profile name & clock */}
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline-block text-[11px] font-bold text-gray-400 font-mono">
+            <span className="text-[11px] font-bold text-gray-400 font-mono">
               🕒 {dateTime}
             </span>
           </div>
 
-          {/* Center search bar */}
-          <div className="relative w-64 max-w-xs hidden sm:block">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><Search className="w-3.5 h-3.5" /></span>
-            <input
-              type="text"
-              placeholder="Search POS globally..."
-              value={globalSearch}
-              onChange={(e) => {
-                const val = e.target.value;
-                setGlobalSearch(val);
-                if (val && activeTab !== "orders" && activeTab !== "dashboard") {
-                  setActiveTab("orders");
-                }
-              }}
-              className="w-full pl-8 pr-4 py-1.5 border border-gray-100 rounded-xl text-xs bg-gray-50 outline-none focus:bg-white"
-            />
-          </div>
-
-          {/* Right quick role switcher & notifications */}
-          <div className="flex items-center gap-4 relative">
-            {/* Quick role switcher */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-bold uppercase text-gray-400">Terminal Role:</span>
-              <select
-                value={currentRole}
-                onChange={(e) => handleRoleChange(e.target.value as POSRole)}
-                className="p-1 px-2 border border-gray-100 bg-gray-50 hover:bg-white rounded-xl text-[10px] font-bold uppercase outline-none text-gray-700"
-              >
-                <option value="manager">Canteen Manager</option>
-                <option value="receptionist">Receptionist</option>
-                <option value="cashier">Cashier Desk</option>
-                <option value="kitchen">Kitchen Staff</option>
-              </select>
+          {/* Quick Active Staff details */}
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Terminal User</span>
+              <span className="text-xs font-bold text-gray-800">{activeStaff.name} ({activeStaff.assignedRole.toUpperCase()})</span>
             </div>
 
-            {/* Notification bell */}
-            <div className="relative">
+            {/* Logout button for KDS / Kitchen which doesn't have sidebar */}
+            {userRole === "kitchen" && (
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-1.5 border border-gray-100 hover:bg-gray-50 rounded-xl transition-all relative cursor-pointer"
+                onClick={handleLogout}
+                className="p-1 px-3 bg-red-50 hover:bg-red-100 border border-red-150 rounded-xl text-red-650 text-[10px] font-bold uppercase cursor-pointer flex items-center gap-1.5"
               >
-                <Bell className="w-4 h-4 text-gray-500" />
-                {notifications.filter(n=>!n.read).length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white font-bold text-[8px] flex items-center justify-center">
-                    {notifications.filter(n=>!n.read).length}
-                  </span>
-                )}
+                <LogOut className="w-3.5 h-3.5" /> Sign Out
               </button>
+            )}
 
-              {/* Notification Popup Dropdown */}
-              <AnimatePresence>
-                {showNotifications && (
-                  <>
-                    <div className="fixed inset-0 z-25" onClick={() => setShowNotifications(false)}></div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-72 rounded-2xl bg-white border border-gray-100 shadow-xl z-30 overflow-hidden text-left"
-                    >
-                      <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center text-[10px] font-bold uppercase text-gray-500">
-                        <span>Terminal Alerts</span>
-                        <button
-                          onClick={() => {
-                            setNotifications(notifications.map(n=>({...n, read: true})));
-                          }}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Clear all
-                        </button>
-                      </div>
-                      <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
-                        {notifications.map((n) => (
-                          <div key={n.id} className={`p-3 text-[11px] font-sans ${n.read ? "bg-white" : "bg-blue-50/20"}`}>
-                            <p className="font-bold text-gray-800">{n.title}</p>
-                            <p className="text-gray-500 text-[10px] mt-0.5">{n.message}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
+            {/* Notification center */}
+            {userRole !== "kitchen" && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-1.5 border border-gray-100 hover:bg-gray-50 rounded-xl transition-all relative cursor-pointer"
+                >
+                  <Bell className="w-4 h-4 text-gray-500" />
+                  {notifications.filter(n=>!n.read).length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white font-bold text-[8px] flex items-center justify-center">
+                      {notifications.filter(n=>!n.read).length}
+                    </span>
+                  )}
+                </button>
 
-            {/* Profile avatar representation */}
+                <AnimatePresence>
+                  {showNotifications && (
+                    <>
+                      <div className="fixed inset-0 z-25" onClick={() => setShowNotifications(false)}></div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 mt-2 w-72 rounded-2xl bg-white border border-gray-100 shadow-xl z-30 overflow-hidden text-left"
+                      >
+                        <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center text-[10px] font-bold uppercase text-gray-500">
+                          <span>Terminal Alerts</span>
+                          <button
+                            onClick={() => setNotifications(notifications.map(n=>({...n, read: true})))}
+                            className="text-blue-600 hover:underline"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
+                          {notifications.map((n) => (
+                            <div key={n.id} className={`p-3 text-[11px] font-sans ${n.read ? "bg-white" : "bg-blue-50/20"}`}>
+                              <p className="font-bold text-gray-800">{n.title}</p>
+                              <p className="text-gray-500 text-[10px] mt-0.5">{n.message}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-md">
-              {currentRole.slice(0, 1).toUpperCase()}
+              {activeStaff.name.slice(0, 1).toUpperCase()}
             </div>
 
           </div>
         </header>
 
-        {/* Outer scrollable viewport */}
         <main className="flex-grow p-6 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -2487,7 +2349,7 @@ export default function CanteenPOSPage() {
 
       {/* --- POPUP MODALS IN OVERLAYS --- */}
 
-      {/* 1. ORDER DETAILS / INVOICE PREVIEW MODAL */}
+      {/* 1. ORDER DETAILS */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 border border-gray-100 shadow-2xl relative text-left">
@@ -2498,7 +2360,7 @@ export default function CanteenPOSPage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-150 pb-2.5 mb-4">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b pb-2.5 mb-4">
               Order Token: {selectedOrder.tokenNumber}
             </h4>
 
@@ -2522,12 +2384,11 @@ export default function CanteenPOSPage() {
                 </div>
               </div>
 
-              {/* Items ordered list */}
               <div className="border-t border-gray-100 pt-3 space-y-2">
                 <span className="text-[9px] font-bold uppercase text-gray-400 block">Ordered Items</span>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 font-sans">
                   {selectedOrder.items.map((i, idx) => (
-                    <div key={idx} className="flex justify-between font-semibold">
+                    <div key={idx} className="flex justify-between font-bold">
                       <span>{i.item.name} x {i.qty}</span>
                       <span>₹{i.item.price * i.qty}</span>
                     </div>
@@ -2535,7 +2396,6 @@ export default function CanteenPOSPage() {
                 </div>
               </div>
 
-              {/* Totals math calculations */}
               <div className="border-t border-gray-100 pt-3 space-y-1.5 text-[11px] text-gray-500">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
@@ -2550,40 +2410,38 @@ export default function CanteenPOSPage() {
                   <span>₹{selectedOrder.serviceCharge}</span>
                 </div>
                 {selectedOrder.discount > 0 && (
-                  <div className="flex justify-between text-red-500 font-semibold">
+                  <div className="flex justify-between text-red-500 font-bold">
                     <span>Discount:</span>
                     <span>- ₹{selectedOrder.discount}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-sm text-gray-800 pt-1.5 border-t border-gray-50">
-                  <span>NET TOTAL AMOUNT:</span>
+                  <span>NET TOTAL:</span>
                   <span className="text-blue-600 font-bold">₹{selectedOrder.total}</span>
                 </div>
               </div>
 
-              {/* Payment methods */}
               <div className="bg-gray-50 p-3 rounded-2xl flex justify-between items-center mt-3 border border-gray-100 text-[10px] font-bold">
                 <span className="text-gray-500">PAYMENT STATUS</span>
                 <span className={`px-2 py-0.5 rounded uppercase ${
-                  selectedOrder.paymentStatus === "PAID" ? "bg-green-50 text-green-700":"bg-red-50 text-red-700"
+                  selectedOrder.paymentStatus === "PAID" ? "bg-green-50 text-green-700 font-bold":"bg-red-50 text-red-700 font-bold"
                 }`}>
                   {selectedOrder.paymentStatus} ({selectedOrder.paymentMethod})
                 </span>
               </div>
             </div>
 
-            {/* Actions: advance states or refund */}
             <div className="flex gap-2.5 mt-5 border-t border-gray-50 pt-4">
-              {selectedOrder.paymentStatus === "PENDING" && currentRole !== "kitchen" && (
+              {selectedOrder.paymentStatus === "PENDING" && activeStaff.assignedRole === "cashier" && (
                 <button
                   onClick={() => {
-                    const updated = orders.map(o => o.id === selectedOrder.id ? { ...o, paymentStatus: "PAID" as const, paymentMethod: "UPI" as const } : o);
+                    const updated = orders.map(o => o.id === selectedOrder.id ? { ...o, paymentStatus: "PAID" as const, paymentMethod: "CASH" as const } : o);
                     setOrders(updated);
                     saveState("canteen_orders", updated);
                     setSelectedOrder(null);
-                    alert("Bill payment settled successfully!");
+                    alert("Payment settled!");
                   }}
-                  className="flex-grow py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold text-center transition-colors shadow-md"
+                  className="flex-grow py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold text-center transition-colors shadow-md cursor-pointer"
                 >
                   Collect Cashier Payment
                 </button>
@@ -2593,9 +2451,9 @@ export default function CanteenPOSPage() {
                   onClick={() => {
                     handleUpdateOrderStatus(selectedOrder.id, "CANCELLED");
                     setSelectedOrder(null);
-                    alert("Order token cancelled.");
+                    alert("Token cancelled.");
                   }}
-                  className="py-2 px-3 border border-red-500 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold text-center transition-colors"
+                  className="py-2 px-3 border border-red-500 text-red-650 hover:bg-red-50 rounded-xl text-xs font-bold text-center transition-colors cursor-pointer"
                 >
                   Cancel Order
                 </button>
@@ -2605,7 +2463,7 @@ export default function CanteenPOSPage() {
         </div>
       )}
 
-      {/* 2. PRINT RECEIPT DIALOG MODAL */}
+      {/* 2. PRINT THERMAL RECEIPT */}
       {receiptOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl relative text-left">
@@ -2616,12 +2474,10 @@ export default function CanteenPOSPage() {
               <X className="w-4 h-4" />
             </button>
 
-            {/* Thermal Print Receipt Simulation layout */}
             <div className="border border-gray-150 p-4 rounded-xl bg-gray-50 text-xs font-mono text-gray-800 space-y-3.5 leading-normal shadow-inner max-h-[480px] overflow-y-auto">
-              <div className="text-center border-b border-gray-200 pb-3">
+              <div className="text-center border-b border-gray-250 pb-3">
                 <h4 className="font-bold text-sm tracking-wider uppercase">SKSS Kampala Canteen</h4>
                 <p className="text-[10px] text-gray-400 font-sans mt-0.5">Bukoto Complex, Kampala</p>
-                <p className="text-[9px] text-gray-400 font-sans">Swaminarayan Annakoot Seva</p>
               </div>
 
               <div className="space-y-1 text-[11px]">
@@ -2675,7 +2531,7 @@ export default function CanteenPOSPage() {
                     <span>- ₹{receiptOrder.discount}</span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-sm border-t border-gray-200/60 pt-1.5 mt-1.5">
+                <div className="flex justify-between font-bold text-sm border-t border-gray-200 pt-1.5 mt-1.5">
                   <span>TOTAL AMOUNT:</span>
                   <span className="text-blue-600 font-bold">₹{receiptOrder.total}</span>
                 </div>
@@ -2690,10 +2546,10 @@ export default function CanteenPOSPage() {
             <div className="mt-4 flex gap-2 justify-end">
               <button
                 onClick={() => {
-                  alert("Bill reprint sent to terminal printer queue!");
+                  alert("Thermal print simulated!");
                   setReceiptOrder(null);
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-100 flex items-center gap-1.5"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-4 h-4" /> Print Thermal Ticket
               </button>
@@ -2702,7 +2558,7 @@ export default function CanteenPOSPage() {
         </div>
       )}
 
-      {/* 3. NEW RESERVATION MODAL */}
+      {/* 3. NEW RESERVATION */}
       {showBookingModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 border border-gray-100 shadow-2xl relative text-left">
@@ -2713,7 +2569,7 @@ export default function CanteenPOSPage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-100 pb-2.5 mb-4">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b pb-2.5 mb-4">
               Add Table Reservation
             </h4>
 
@@ -2759,7 +2615,7 @@ export default function CanteenPOSPage() {
                     required
                     className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold"
                   >
-                    {tables.map(t=> <option key={t.id} value={t.id}>{t.name} ({t.capacity} Seats)</option>)}
+                    {tables.map(t=> <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 </div>
               </div>
@@ -2788,16 +2644,13 @@ export default function CanteenPOSPage() {
                     <option>01:30 PM</option>
                     <option>02:00 PM</option>
                     <option>02:30 PM</option>
-                    <option>07:00 PM</option>
-                    <option>07:30 PM</option>
-                    <option>08:00 PM</option>
                   </select>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors cursor-pointer"
               >
                 Schedule Table Reservation
               </button>
@@ -2806,7 +2659,7 @@ export default function CanteenPOSPage() {
         </div>
       )}
 
-      {/* 4. ADD TABLE MODAL */}
+      {/* 4. ADD TABLE */}
       {showAddTableModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-sm p-6 border border-gray-100 shadow-2xl relative text-left">
@@ -2817,7 +2670,7 @@ export default function CanteenPOSPage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-100 pb-2.5 mb-4">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b pb-2.5 mb-4">
               Add Seating Table
             </h4>
 
@@ -2841,7 +2694,7 @@ export default function CanteenPOSPage() {
                 saveState("canteen_tables", updated);
                 setShowAddTableModal(false);
               }}
-              className="space-y-4 font-sans text-xs text-gray-600"
+              className="space-y-4 font-sans text-xs text-gray-650"
             >
               <div>
                 <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Table Label / Name *</label>
@@ -2868,7 +2721,7 @@ export default function CanteenPOSPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors cursor-pointer"
               >
                 Create Seating Table
               </button>
@@ -2877,7 +2730,7 @@ export default function CanteenPOSPage() {
         </div>
       )}
 
-      {/* 5. ADD MENU ITEM MODAL */}
+      {/* 5. ADD MENU ITEM */}
       {showAddMenuModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-sm p-6 border border-gray-100 shadow-2xl relative text-left">
@@ -2888,8 +2741,8 @@ export default function CanteenPOSPage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-100 pb-2.5 mb-4">
-              Add Food Item to Menu
+            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b pb-2.5 mb-4">
+              Add Food Item
             </h4>
 
             <form
@@ -2917,7 +2770,7 @@ export default function CanteenPOSPage() {
                 saveState("canteen_menu", updated);
                 setShowAddMenuModal(false);
               }}
-              className="space-y-4 font-sans text-xs text-gray-600"
+              className="space-y-4 font-sans text-xs text-gray-650"
             >
               <div>
                 <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Food Item Name *</label>
@@ -2925,7 +2778,7 @@ export default function CanteenPOSPage() {
                   type="text"
                   required
                   name="foodName"
-                  placeholder="e.g. Garlic Naan Platter"
+                  placeholder="e.g. Swaminarayan Khichdi"
                   className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700"
                 />
               </div>
@@ -2973,7 +2826,7 @@ export default function CanteenPOSPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors cursor-pointer"
               >
                 Create Food Item
               </button>
@@ -2982,7 +2835,7 @@ export default function CanteenPOSPage() {
         </div>
       )}
 
-      {/* 6. LOG WASTE LOSS MODAL */}
+      {/* 6. LOG WASTE */}
       {showWasteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-sm p-6 border border-gray-100 shadow-2xl relative text-left">
@@ -2993,7 +2846,7 @@ export default function CanteenPOSPage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-100 pb-2.5 mb-4">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b pb-2.5 mb-4">
               Log Raw Material Waste
             </h4>
 
@@ -3018,12 +2871,10 @@ export default function CanteenPOSPage() {
                   date: new Date().toISOString().split("T")[0]
                 };
 
-                // Update waste log state
                 const updatedLogs = [newLog, ...wasteLogs];
                 setWasteLogs(updatedLogs);
                 saveState("canteen_wastelogs", updatedLogs);
 
-                // Deduct from inventory if matched
                 const matchedInv = inventory.find(i=>i.name.toLowerCase() === name.toLowerCase());
                 if (matchedInv) {
                   const updatedInv = inventory.map(item => item.id === matchedInv.id ? { ...item, stock: Math.max(0, item.stock - qty) } : item);
@@ -3032,9 +2883,9 @@ export default function CanteenPOSPage() {
                 }
 
                 setShowWasteModal(false);
-                alert("Waste loss logged successfully.");
+                alert("Logged!");
               }}
-              className="space-y-4 font-sans text-xs text-gray-600"
+              className="space-y-4 font-sans text-xs text-gray-655"
             >
               <div>
                 <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Item / Ingredient Name *</label>
@@ -3050,42 +2901,20 @@ export default function CanteenPOSPage() {
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
                   <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Wasted Quantity *</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    name="wasteQty"
-                    placeholder="e.g. 2.5"
-                    className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold"
-                  />
+                  <input type="number" step="0.1" required name="wasteQty" placeholder="e.g. 2" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Estimated Cost Loss *</label>
-                  <input
-                    type="number"
-                    required
-                    name="wasteCost"
-                    placeholder="e.g. 150"
-                    className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold"
-                  />
+                  <input type="number" required name="wasteCost" placeholder="e.g. 100" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold" />
                 </div>
               </div>
 
               <div>
                 <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Reason for Waste *</label>
-                <input
-                  type="text"
-                  required
-                  name="wasteReason"
-                  placeholder="e.g. Spoilage, Spillage"
-                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700"
-                />
+                <input type="text" required name="wasteReason" placeholder="e.g. Spoilage" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors"
-              >
+              <button type="submit" className="w-full py-2.5 bg-red-650 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors cursor-pointer">
                 Log Waste & Adjust Inventory
               </button>
             </form>

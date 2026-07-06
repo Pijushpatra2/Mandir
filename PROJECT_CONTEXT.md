@@ -36,16 +36,36 @@ These roles access `/dashboard` paths and toggle dashboard UI sections:
 ├── /gallery            --> Masonry grid layout with photo/video categorizations
 ├── /live-darshan       --> Mock YouTube live player, interactive mock devotee chat
 ├── /contact            --> Feedback fields, general information, Google Map mock
+├── /canteenPOS         --> Swami POS Canteen SaaS Desk login page
+│   ├── /dashboard      --> Canteen analytics dashboard & live floor seating layout
+│   ├── /pos            --> Counter POS billing terminal & shopping cart
+│   ├── /orders         --> Active & past order tickets register
+│   ├── /tables         --> Table status layout & capacity updates
+│   ├── /bookings       --> Table reservation scheduler
+│   ├── /menu           --> Food catalog & variety directory
+│   ├── /inventory      --> Stock tracking, supplier listings, & raw waste log
+│   ├── /customers      --> Devotee customer CRM registry
+│   ├── /kitchen        --> Kitchen Display System (KDS) order status queue
+│   ├── /reports        --> Sales analytics, average ticket, & PDF/Excel exports
+│   └── /settings       --> Configuration for rules and notification timings
 └── /dashboard          --> Admin dashboard shell
-    ├── /members        --> Member grids, search filters, family profiles, print layouts
-    ├── /donations      --> Transaction tables, export controls, campaign stats charts
-    ├── /bookings       --> Master Pooja & Hall bookings list with slot modification
-    ├── /events         --> Festival and event editing, registrations list
-    ├── /gallery        --> Asset media upload and sorting simulator
-    ├── /inventory      --> Digital register tracking gold, silver, property assets
-    ├── /accounting     --> Account balances charts, general ledger sheet, Tally export controls
-    ├── /reports        --> Report builders (Membership, Donations, Hall Bookings)
-    └── /settings       --> Configuration for temple rules, timing limits, notification setups
+    ├── /accounting     --> Double-entry journal views & Tally XML exports
+    ├── /bookings       --> Hall bookings scheduler and pooja slot registers
+    ├── /canteen        --> Simpler client canteen POS terminal dashboard
+    ├── /categories     --> Catalog item types & subcategories manager
+    ├── /coupons        --> Discount promo coupons list manager
+    ├── /customers      --> CRM devotee profiles list & spends metrics
+    ├── /donations      --> Campign contributions registry and donor lists
+    ├── /events         --> Festival register and timeline logs
+    ├── /gallery        --> Asset media upload manager simulator
+    ├── /inventory      --> Digital register tracking physical temple assets
+    ├── /members        --> Devotee members database with ID card generator
+    ├── /orders         --> E-commerce store checkout orders catalog
+    ├── /products       --> Gift shop item stocks listings manager
+    ├── /reports        --> High-level analytical reports generator
+    ├── /reviews        --> Public review feedback approvals board
+    └── /settings       --> Config panel for temple guidelines, timings, & settings
+
 ```
 
 ---

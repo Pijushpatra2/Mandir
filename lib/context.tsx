@@ -72,6 +72,22 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Helper to map DB roles and scopes to valid frontend UserRole identifiers
+export const mapDbRoleToUserRole = (dbRole: string, scope?: string | null): UserRole => {
+  const clean = (dbRole || "").toLowerCase().trim();
+  if (clean === "super_admin" || clean === "superadmin") {
+    return "SUPER_ADMIN";
+  }
+  if (clean === "module_admin" || clean === "moduleadmin") {
+    return "SUPER_ADMIN"; // Or map to other specific roles if needed
+  }
+  if (clean === "trustee") return "TRUSTEE";
+  if (clean === "accountant") return "ACCOUNTANT";
+  if (clean === "booking_manager") return "BOOKING_MANAGER";
+  if (clean === "content_manager") return "CONTENT_MANAGER";
+  return "SUPER_ADMIN"; // default fallback for admin accounts
+};
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole>("DEVOTEE");
   const [members, setMembers] = useState<MemberRecord[]>([]);
@@ -94,6 +110,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Load initial mock data on mount
   useEffect(() => {
+    // Restore admin user session from localStorage if present
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("admin_user");
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          if (parsed.role) {
+            setUserRole(mapDbRoleToUserRole(parsed.role, parsed.moduleScope));
+          }
+        } catch (e) {}
+      }
+    }
+
     setMembers(mockMembers);
     setDonations(mockDonations);
     setHallBookings(mockHallBookings);

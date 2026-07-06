@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp, UserRole } from "@/lib/context";
 import { cn } from "@/lib/utils";
+import { clearAdminTokens } from "@/lib/authStorage";
+import { OfflineProvider } from "@/lib/offline/OfflineContext";
 import {
   LayoutDashboard,
   Users,
@@ -27,7 +29,8 @@ import {
   Package,
   Tag,
   Star,
-  Coffee
+  Coffee,
+  LogOut
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -36,9 +39,35 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { userRole, setUserRole, notifications } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const isLoginPage = pathname === "/dashboard/login";
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Guard: Redirect unauthenticated admins to the login route
+  useEffect(() => {
+    if (isLoginPage) {
+      setIsAuthenticated(false);
+      return;
+    }
+
+    const token = localStorage.getItem("admin_access_token");
+    if (!token) {
+      router.push("/dashboard/login");
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, [pathname, isLoginPage, router]);
+
+  const handleLogout = () => {
+    clearAdminTokens();
+    localStorage.removeItem("admin_user");
+    setUserRole("DEVOTEE");
+    router.push("/dashboard/login");
+  };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -60,6 +89,7 @@ export default function DashboardLayout({
     { label: "Inventory", href: "/dashboard/inventory", icon: Archive, roles: ["SUPER_ADMIN", "TRUSTEE", "BOOKING_MANAGER"] },
     { label: "Accounting", href: "/dashboard/accounting", icon: IndianRupee, roles: ["SUPER_ADMIN", "ACCOUNTANT"] },
     { label: "Reports", href: "/dashboard/reports", icon: FileSpreadsheet, roles: ["SUPER_ADMIN", "TRUSTEE", "ACCOUNTANT"] },
+    { label: "Staff Roster", href: "/dashboard/admins", icon: Shield, roles: ["SUPER_ADMIN"] },
     { label: "Settings", href: "/dashboard/settings", icon: Settings, roles: ["SUPER_ADMIN"] },
   ];
 
@@ -72,8 +102,26 @@ export default function DashboardLayout({
 
   const currentMenu = userRole === "DEVOTEE" ? devoteeMenu : adminMenu;
 
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-[#0A0704] flex items-center justify-center font-jakarta">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-[#A89F91] uppercase tracking-widest">
+            Securing Connection...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-bg-warm flex font-jakarta">
+    <OfflineProvider>
+      <div className="min-h-screen bg-bg-warm flex font-jakarta">
       
       {/* 1. SIDEBAR (Desktop) */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-primary-gold/15 bg-white shrink-0">
@@ -208,10 +256,17 @@ export default function DashboardLayout({
             </div>
 
             {/* Profile Avatar / Settings Shortcut */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-gold to-secondary-bronze flex items-center justify-center text-white font-bold text-sm shadow-md">
                 U
               </div>
+              <button
+                onClick={handleLogout}
+                title="Sign Out"
+                className="p-2 rounded-xl border border-primary-gold/25 hover:bg-error-red/5 hover:border-error-red/30 hover:text-error-red transition-all cursor-pointer text-secondary-bronze"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
 
           </div>
@@ -295,5 +350,6 @@ export default function DashboardLayout({
       </AnimatePresence>
 
     </div>
+    </OfflineProvider>
   );
 }

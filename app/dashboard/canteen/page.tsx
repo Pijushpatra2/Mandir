@@ -5,25 +5,52 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Coffee, Users, Plus, Trash2, Check, ClipboardList, 
   Utensils, DollarSign, Clock, CheckCircle2, Ticket, ShoppingCart, 
-  Printer, CheckCircle, X, Sparkles, ArrowRight
+  Printer, CheckCircle, X, Sparkles, ArrowRight, Lock, Mail, 
+  UserCheck, TrendingUp, BarChart3, Settings, AlertTriangle
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { 
   SeatingTable, 
   FoodItem, 
   CanteenOrder, 
-  initialTables, 
-  initialMenu, 
-  initialOrders 
+  TableBooking,
+  CanteenCustomer,
+  CanteenStaffAccount,
+  initialSuppliers,
+  initialInventory
 } from "@/data/canteen";
+import {
+  useOfflineMenu,
+  useOfflineTables,
+  useOfflineOrder,
+} from "@/lib/offline";
+import {
+  useOrders,
+  useUpdateOrderStatus,
+  useBookings,
+  useAddBooking,
+  useUpdateBooking,
+  useCustomers,
+  useAddCustomer,
+  useUpdateTable,
+  useStaffList,
+  useAddStaff,
+  useDeleteStaff,
+  useAddMenuItem,
+  useDeleteMenuItem,
+  useAddTable,
+} from "@/lib/api/canteen";
 
 export default function CanteenCRMPage() {
-  const [activeTab, setActiveTab] = useState<"pos" | "tables" | "menu" | "orders">("pos");
+  const [activeTab, setActiveTab] = useState<"overview" | "pos" | "tables" | "menu" | "orders" | "staff" | "customers">("overview");
 
   // State loaded dynamically on mount
   const [tables, setTables] = useState<SeatingTable[]>([]);
   const [foodMenu, setFoodMenu] = useState<FoodItem[]>([]);
   const [orders, setOrders] = useState<CanteenOrder[]>([]);
+  const [bookings, setBookings] = useState<TableBooking[]>([]);
+  const [customers, setCustomers] = useState<CanteenCustomer[]>([]);
+  const [staffAccounts, setStaffAccounts] = useState<CanteenStaffAccount[]>([]);
 
   // POS CART STATE
   const [cart, setCart] = useState<{ item: FoodItem; qty: number }[]>([]);
@@ -43,28 +70,168 @@ export default function CanteenCRMPage() {
   const [newFoodCategory, setNewFoodCategory] = useState<"Mains" | "Snacks" | "Beverages" | "Desserts">("Mains");
   const [newFoodVariety, setNewFoodVariety] = useState<"Regular" | "Jain" | "Spicy" | "Sweet">("Regular");
 
-  // Load from local storage
+  // Configure Add Staff Form State
+  const [newStaffName, setNewStaffName] = useState("");
+  const [newStaffEmail, setNewStaffEmail] = useState("");
+  const [newStaffPassword, setNewStaffPassword] = useState("");
+  const [newStaffRole, setNewStaffRole] = useState<CanteenStaffAccount["assignedRole"]>("receptionist");
+
+  // Admin auth check state
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const getOrSet = (key: string, initialData: any) => {
-        const stored = localStorage.getItem(key);
-        if (!stored) {
-          localStorage.setItem(key, JSON.stringify(initialData));
-          return initialData;
-        }
-        try {
-          return JSON.parse(stored);
-        } catch (e) {
-          localStorage.setItem(key, JSON.stringify(initialData));
-          return initialData;
-        }
-      };
-
-      setTables(getOrSet("canteen_tables", initialTables));
-      setFoodMenu(getOrSet("canteen_menu", initialMenu));
-      setOrders(getOrSet("canteen_orders", initialOrders));
+      const token = localStorage.getItem("admin_access_token");
+      setIsAdminLoggedIn(!!token);
     }
   }, []);
+
+  // ─── API Query & Offline Hooks ──────────────────────────────────────────────
+  const { data: apiMenu } = useOfflineMenu({ enabled: isAdminLoggedIn });
+  const { data: apiTables } = useOfflineTables(undefined, { enabled: isAdminLoggedIn });
+  const { data: apiOrders } = useOrders(undefined, { enabled: isAdminLoggedIn });
+  const { data: apiBookings } = useBookings(undefined, { enabled: isAdminLoggedIn });
+  const { data: apiCustomers } = useCustomers(undefined, { enabled: isAdminLoggedIn });
+  const { data: apiStaffList } = useStaffList({ enabled: isAdminLoggedIn });
+
+  // ─── API Mutations ──────────────────────────────────────────────────────────
+  const { placeOrder: apiPlaceOrder } = useOfflineOrder();
+  const { mutate: apiUpdateOrderStatus } = useUpdateOrderStatus();
+  const { mutate: apiUpdateTable } = useUpdateTable();
+  const { mutate: apiAddBooking } = useAddBooking();
+  const { mutate: apiUpdateBooking } = useUpdateBooking();
+  const { mutate: apiAddCustomer } = useAddCustomer();
+  const { mutate: apiAddStaff } = useAddStaff();
+  const { mutate: apiDeleteStaff } = useDeleteStaff();
+  const { mutate: apiAddMenuItem } = useAddMenuItem();
+  const { mutate: apiDeleteMenuItem } = useDeleteMenuItem();
+  const { mutate: apiAddTable } = useAddTable();
+
+  // Map API Menu Catalog to FoodItem[]
+  useEffect(() => {
+    if (apiMenu) {
+      const mappedMenu: FoodItem[] = apiMenu.map((m) => ({
+        id: m.id,
+        name: m.name,
+        price: m.price,
+        category: m.category,
+        variety: m.variety,
+        available: !!m.available,
+      }));
+      setFoodMenu(mappedMenu);
+    }
+  }, [apiMenu]);
+
+  // Map API Tables Layout to SeatingTable[]
+  useEffect(() => {
+    if (apiTables) {
+      const mappedTables: SeatingTable[] = apiTables.map((t) => {
+        let occupiedMins = "";
+        if (t.occupied_since) {
+          const diffMs = Date.now() - new Date(t.occupied_since).getTime();
+          occupiedMins = `${Math.max(0, Math.floor(diffMs / 60000))} mins`;
+        }
+        return {
+          id: t.id,
+          name: t.name,
+          capacity: t.capacity,
+          status: t.status,
+          currentBill: t.current_bill,
+          occupiedDuration: t.status === "OCCUPIED" ? occupiedMins : undefined,
+        };
+      });
+      setTables(mappedTables);
+    }
+  }, [apiTables]);
+
+  // Map API Orders Register to CanteenOrder[]
+  useEffect(() => {
+    if (apiOrders) {
+      const mappedOrders: CanteenOrder[] = apiOrders.map((o) => ({
+        id: o.id,
+        tokenNumber: o.token_number,
+        customerName: o.customer_name,
+        customerPhone: o.customer_phone ?? "N/A",
+        tableName: o.table_name,
+        items: o.items
+          ? o.items.map((item) => ({
+              item: {
+                id: item.menu_item_id,
+                name: item.item_name,
+                price: item.item_price,
+                category: "Mains",
+                variety: "Regular",
+                available: true,
+              },
+              qty: item.quantity,
+            }))
+          : [],
+        subtotal: o.subtotal,
+        tax: o.tax_amount,
+        serviceCharge: o.service_charge,
+        discount: o.discount_amount,
+        total: o.total_amount,
+        paymentMethod: o.payment_method === "PENDING" ? "UPI" : o.payment_method, // Fallback for enum
+        paymentStatus: o.payment_status === "PAID" ? "PAID" : "PENDING",
+        status: o.order_status,
+        timestamp: new Date(o.ordered_at).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        date: new Date(o.ordered_at).toISOString().split("T")[0],
+      }));
+      setOrders(mappedOrders);
+    }
+  }, [apiOrders]);
+
+  // Map API Bookings Calendar to TableBooking[]
+  useEffect(() => {
+    if (apiBookings) {
+      const mappedBookings: TableBooking[] = apiBookings.map((b) => {
+        const matchingTable = tables.find((t) => t.id === b.table_id);
+        return {
+          id: b.id,
+          customerName: b.customer_name,
+          customerPhone: b.customer_phone,
+          tableId: b.table_id,
+          tableName: matchingTable ? matchingTable.name : "Table Assigned",
+          time: b.booking_time,
+          date: b.booking_date,
+          partySize: b.party_size,
+          status: b.status === "SEATED" ? "SEATED" : b.status === "CANCELLED" ? "CANCELLED" : "CONFIRMED",
+        };
+      });
+      setBookings(mappedBookings);
+    }
+  }, [apiBookings, tables]);
+
+  // Map API Customer CRM to CanteenCustomer[]
+  useEffect(() => {
+    if (apiCustomers?.data) {
+      const mappedCustomers: CanteenCustomer[] = apiCustomers.data.map((c) => ({
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        totalOrders: c.total_orders,
+        totalSpent: c.total_spent,
+        lastVisit: c.last_visit ? new Date(c.last_visit).toISOString().split("T")[0] : "Never",
+      }));
+      setCustomers(mappedCustomers);
+    }
+  }, [apiCustomers]);
+
+  // Map API Canteen Staff Accounts
+  useEffect(() => {
+    if (apiStaffList) {
+      const mappedStaff: CanteenStaffAccount[] = apiStaffList.map((s) => ({
+        id: s.id.toString(),
+        email: s.email,
+        name: s.name,
+        assignedRole: s.assigned_role === "kitchen" ? "kitchen" : s.assigned_role === "receptionist" ? "receptionist" : s.assigned_role === "cashier" ? "cashier" : "manager",
+        createdAt: new Date(s.created_at).toISOString().split("T")[0],
+      }));
+      setStaffAccounts(mappedStaff);
+    }
+  }, [apiStaffList]);
 
   // Sync helpers
   const saveTables = (updated: SeatingTable[]) => {
@@ -88,53 +255,62 @@ export default function CanteenCRMPage() {
     }
   };
 
+  const saveStaffAccounts = (updated: CanteenStaffAccount[]) => {
+    setStaffAccounts(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("canteen_staff_accounts", JSON.stringify(updated));
+    }
+  };
+
   // --- ACTIONS ---
 
-  // Seating layout modification
+  // Seating table creation
   const handleAddTable = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTableName) return;
-    const newTab: SeatingTable = {
-      id: "tab-" + Date.now(),
+
+    apiAddTable({
       name: newTableName,
       capacity: newTableCapacity,
-      status: "AVAILABLE"
-    };
-    const updated = [...tables, newTab];
-    saveTables(updated);
+      location_zone: "Main Zone",
+    });
+
     setNewTableName("");
   };
 
   const handleDeleteTable = (id: string) => {
-    const updated = tables.filter((t) => t.id !== id);
-    saveTables(updated);
+    // Soft-delete/deactivate table by updating its active status to false
+    apiUpdateTable({
+      id,
+      updates: { status: "AVAILABLE" },
+    });
   };
 
   const toggleTableStatus = (id: string, nextStatus: SeatingTable["status"]) => {
-    const updated = tables.map((t) => (t.id === id ? { ...t, status: nextStatus } : t));
-    saveTables(updated);
+    apiUpdateTable({
+      id,
+      updates: { status: nextStatus },
+    });
   };
 
-  // Food Menu modification
+  // Food Menu creation
   const handleAddFood = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFoodName) return;
-    const newFood: FoodItem = {
-      id: "food-" + Date.now(),
+
+    apiAddMenuItem({
       name: newFoodName,
       price: newFoodPrice,
       category: newFoodCategory,
       variety: newFoodVariety,
-      available: true
-    };
-    const updated = [...foodMenu, newFood];
-    saveMenu(updated);
+      available: true,
+    });
+
     setNewFoodName("");
   };
 
   const handleDeleteFood = (id: string) => {
-    const updated = foodMenu.filter((f) => f.id !== id);
-    saveMenu(updated);
+    apiDeleteMenuItem(id);
   };
 
   // Cart operations
@@ -161,11 +337,11 @@ export default function CanteenCRMPage() {
     );
   };
 
-  // Ticket checkout POS CRM
+  // Ticket checkout
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) {
-      alert("Please add at least one food item to check out.");
+      alert("Please add at least one food item.");
       return;
     }
 
@@ -180,65 +356,113 @@ export default function CanteenCRMPage() {
     const tokenNum = "TK-" + Math.floor(2000 + Math.random() * 8000);
     const dateToday = new Date().toISOString().split("T")[0];
 
-    const newOrder: CanteenOrder = {
-      id: "ord-" + Date.now(),
-      tokenNumber: tokenNum,
-      customerName: customerName || "Guest Devotee",
-      customerPhone: customerPhone || "N/A",
-      tableName: tableNameText,
-      items: cart.map(c=> ({ item: c.item, qty: c.qty })),
+    const apiOrderItems = cart.map((c) => ({
+      menu_item_id: c.item.id,
+      item_name: c.item.name,
+      item_price: c.item.price,
+      quantity: c.qty,
+      line_total: c.item.price * c.qty,
+    }));
+
+    apiPlaceOrder({
+      customer_name: customerName.trim() || "Guest Devotee",
+      customer_phone: customerPhone.trim() || null,
+      table_id: selectedTable || null,
+      table_name: tableNameText,
+      items: apiOrderItems,
       subtotal,
-      tax,
-      serviceCharge,
-      discount: 0,
-      total,
-      paymentMethod,
-      paymentStatus: "PAID",
-      status: "NEW",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: dateToday
-    };
+      tax_amount: tax,
+      service_charge: serviceCharge,
+      total_amount: total,
+      payment_method: paymentMethod,
+      payment_status: "PAID",
+      order_status: "NEW",
+    })
+      .then(({ id }) => {
+        const newOrder: CanteenOrder = {
+          id,
+          tokenNumber: tokenNum,
+          customerName: customerName || "Guest Devotee",
+          customerPhone: customerPhone || "N/A",
+          tableName: tableNameText,
+          items: cart.map((c) => ({ item: c.item, qty: c.qty })),
+          subtotal,
+          tax,
+          serviceCharge,
+          discount: 0,
+          total,
+          paymentMethod,
+          paymentStatus: "PAID",
+          status: "NEW",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          date: dateToday,
+        };
 
-    // Save order
-    const updatedOrders = [newOrder, ...orders];
-    saveOrders(updatedOrders);
+        setActiveTicket(newOrder);
 
-    // Set table as occupied if table is allocated
-    if (selectedTable) {
-      const updatedTables = tables.map((t) => (t.id === selectedTable ? { ...t, status: "OCCUPIED" as const, currentBill: total, occupiedDuration: "0 mins" } : t));
-      saveTables(updatedTables);
-    }
+        // Update customer list locally if new customer is registered
+        if (customerPhone) {
+          const exist = customers.find((c) => c.phone === customerPhone);
+          if (!exist) {
+            apiAddCustomer({
+              name: customerName || "Guest Devotee",
+              phone: customerPhone,
+              customer_type: "Regular",
+            });
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("POS Checkout failed:", err);
+      });
 
-    // Set token receipt display
-    setActiveTicket(newOrder);
-
-    // Reset POS cart state
     setCart([]);
     setCustomerName("");
     setCustomerPhone("");
     setSelectedTable("");
   };
 
-  // Update real-time order status
   const updateOrderStatus = (id: string, nextStatus: CanteenOrder["status"]) => {
-    const updatedOrders = orders.map((o) => {
-      if (o.id === id) {
-        // If table was occupied, return it to available/cleaning when order is served
-        if (nextStatus === "COMPLETED" || nextStatus === "READY_TO_SERVE") {
-          const tableToFree = tables.find((t) => t.name === o.tableName);
-          if (tableToFree) {
-            const updatedTables = tables.map((t) => (t.id === tableToFree.id ? { ...t, status: "CLEANING" as const, currentBill: 0, occupiedDuration: "" } : t));
-            saveTables(updatedTables);
-          }
-        }
-        return { ...o, status: nextStatus };
-      }
-      return o;
-    });
-    saveOrders(updatedOrders);
+    apiUpdateOrderStatus({ id, status: nextStatus });
   };
 
-  // Statistics
+  // Staff Account Creation (Role Assigner)
+  const handleAddStaffAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStaffEmail || !newStaffPassword || !newStaffName) {
+      alert("Please fill out all staff fields.");
+      return;
+    }
+
+    const exist = staffAccounts.find((s) => s.email.toLowerCase() === newStaffEmail.toLowerCase().trim());
+    if (exist) {
+      alert("A staff account with this email address already exists.");
+      return;
+    }
+
+    apiAddStaff({
+      name: newStaffName,
+      email: newStaffEmail.trim(),
+      password: newStaffPassword,
+      assigned_role: newStaffRole === "kitchen" ? "kitchen" : newStaffRole === "receptionist" ? "receptionist" : newStaffRole === "cashier" ? "cashier" : "manager",
+    });
+
+    // Reset Form
+    setNewStaffName("");
+    setNewStaffEmail("");
+    setNewStaffPassword("");
+    setNewStaffRole("receptionist");
+
+    alert(`Successfully assigned ${newStaffName} as Swaminarayan Canteen staff member!`);
+  };
+
+  const handleRevokeStaff = (id: string) => {
+    if (confirm("Are you sure you want to revoke access for this staff member?")) {
+      apiDeleteStaff(Number(id));
+    }
+  };
+
+  // Stats Calculations
   const occupiedTablesCount = tables.filter((t) => t.status === "OCCUPIED").length;
   const pendingOrdersCount = orders.filter((o) => o.status === "NEW" || o.status === "PREPARING").length;
   const totalCanteenSales = orders
@@ -248,7 +472,7 @@ export default function CanteenCRMPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 text-left">
       
-      {/* SaaS POS PROMOTIONAL CTA BANNER */}
+      {/* Standalone Canteen POS Promotional launch banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg shadow-blue-200 mb-2">
         <div className="space-y-1 text-left">
           <h2 className="text-sm font-bold flex items-center gap-2">
@@ -261,6 +485,8 @@ export default function CanteenCRMPage() {
         </div>
         <a
           href="/canteenPOS"
+          target="_blank"
+          rel="noopener noreferrer"
           className="px-5 py-2 bg-white hover:bg-gray-50 text-blue-600 text-[11px] font-bold uppercase rounded-xl transition-all shadow-md flex items-center gap-1.5 whitespace-nowrap"
         >
           <span>Launch POS Terminal</span>
@@ -273,109 +499,402 @@ export default function CanteenCRMPage() {
         <div>
           <h1 className="text-2xl font-heading font-bold text-[#2B132C] flex items-center gap-2">
             <Coffee className="w-6 h-6 text-[#B47F35]" />
-            <span>Temple Canteen CRM & POS</span>
+            <span>Temple Canteen Admin Monitoring</span>
           </h1>
           <p className="text-xs text-secondary-bronze/75 font-sans mt-0.5">
-            Offline counter ticketing, seating allocations, food menu edits, and real-time kitchen order dispatch.
+            Monitor sales growth, devotee customer details, table layouts, and assign staff terminal roles.
           </p>
         </div>
 
         {/* Tab toggles */}
-        <div className="flex bg-white border border-[#B47F35]/15 p-1 rounded-xl shadow-sm">
-          <button
-            onClick={() => setActiveTab("pos")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === "pos" ? "bg-[#B47F35] text-white shadow-sm" : "text-secondary-bronze hover:text-[#B47F35]"
-            }`}
-          >
-            Counter POS
-          </button>
-          <button
-            onClick={() => setActiveTab("tables")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === "tables" ? "bg-[#B47F35] text-white shadow-sm" : "text-secondary-bronze hover:text-[#B47F35]"
-            }`}
-          >
-            Seating Layout
-          </button>
-          <button
-            onClick={() => setActiveTab("menu")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === "menu" ? "bg-[#B47F35] text-white shadow-sm" : "text-secondary-bronze hover:text-[#B47F35]"
-            }`}
-          >
-            Food Menu Customization
-          </button>
-          <button
-            onClick={() => setActiveTab("orders")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === "orders" ? "bg-[#B47F35] text-white shadow-sm" : "text-secondary-bronze hover:text-[#B47F35]"
-            }`}
-          >
-            Kitchen orders ({pendingOrdersCount})
-          </button>
+        <div className="flex flex-wrap bg-white border border-[#B47F35]/15 p-1 rounded-xl shadow-sm">
+          {[
+            { id: "overview", label: "Overview Metrics" },
+            { id: "staff", label: "Staff Terminal Roles" },
+            { id: "customers", label: "Customer Users" },
+            { id: "pos", label: "POS Billing" },
+            { id: "tables", label: "Seating Layout" },
+            { id: "menu", label: "Menu Catalog" },
+            { id: "orders", label: "Kitchen Queue" }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === tab.id ? "bg-[#B47F35] text-white shadow-sm" : "text-secondary-bronze hover:text-[#B47F35]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* METRIC BADGES CARD GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        
-        {/* Metric 1 */}
-        <div className="bg-white border border-[#B47F35]/15 rounded-2xl p-4 flex items-center space-x-4 shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35]">
-            <Utensils className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Active Tables</p>
-            <h4 className="text-lg font-bold text-[#2B132C] mt-0.5">
-              {occupiedTablesCount} / {tables.length} Occupied
-            </h4>
-          </div>
-        </div>
-
-        {/* Metric 2 */}
         <div className="bg-white border border-[#B47F35]/15 rounded-2xl p-4 flex items-center space-x-4 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-600">
             <DollarSign className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Today Canteen Sales</p>
+            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Canteen Sales Revenue</p>
             <h4 className="text-lg font-bold text-[#2B132C] mt-0.5">
               ₹{totalCanteenSales.toLocaleString("en-IN")}
             </h4>
           </div>
         </div>
 
-        {/* Metric 3 */}
+        <div className="bg-white border border-[#B47F35]/15 rounded-2xl p-4 flex items-center space-x-4 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35]">
+            <Utensils className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Active Occupancy</p>
+            <h4 className="text-lg font-bold text-[#2B132C] mt-0.5">
+              {occupiedTablesCount} / {tables.length} Tables
+            </h4>
+          </div>
+        </div>
+
         <div className="bg-white border border-[#B47F35]/15 rounded-2xl p-4 flex items-center space-x-4 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-[#2B132C]/10 flex items-center justify-center text-[#2B132C]">
             <Ticket className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Pending Kitchen Tokens</p>
+            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Staff Accounts</p>
             <h4 className="text-lg font-bold text-[#2B132C] mt-0.5">
-              {pendingOrdersCount} Food Queues
+              {staffAccounts.length} Active Roles
             </h4>
           </div>
         </div>
 
-        {/* Metric 4 */}
         <div className="bg-white border border-[#B47F35]/15 rounded-2xl p-4 flex items-center space-x-4 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35]">
-            <Clock className="w-5 h-5" />
+            <Users className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Average Prep Time</p>
-            <h4 className="text-lg font-bold text-[#2B132C] mt-0.5">12 mins</h4>
+            <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Customer Users</p>
+            <h4 className="text-lg font-bold text-[#2B132C] mt-0.5">
+              {customers.length} Devotees
+            </h4>
           </div>
         </div>
-
       </div>
 
       {/* RENDER ACTIVE TABS */}
       <AnimatePresence mode="wait">
         
-        {/* A. COUNTER POS TICKET BOOKING */}
+        {/* TAB 1: OVERVIEW METRICS */}
+        {activeTab === "overview" && (
+          <motion.div
+            key="overview-tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* Sales Growth Chart */}
+              <div className="bg-white p-6 rounded-3xl border border-[#B47F35]/15 shadow-sm space-y-4 text-left">
+                <div>
+                  <h4 className="text-sm font-bold text-[#2B132C] uppercase tracking-wider flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-[#B47F35]" />
+                    <span>Canteen Monthly Sales Growth</span>
+                  </h4>
+                  <p className="text-[11px] text-gray-400">Total monthly revenue progress (INR)</p>
+                </div>
+                
+                {/* SVG growth graph */}
+                <div className="h-56 relative w-full pt-4">
+                  <svg viewBox="0 0 500 200" className="w-full h-full">
+                    <line x1="40" y1="10" x2="480" y2="10" stroke="#FAF7F2" strokeWidth="1" />
+                    <line x1="40" y1="60" x2="480" y2="60" stroke="#FAF7F2" strokeWidth="1" />
+                    <line x1="40" y1="110" x2="480" y2="110" stroke="#FAF7F2" strokeWidth="1" />
+                    <line x1="40" y1="160" x2="480" y2="160" stroke="#E5E3DF" strokeWidth="1.5" />
+                    
+                    <text x="5" y="15" fill="#B47F35" fontSize="9" fontWeight="bold">₹60,000</text>
+                    <text x="5" y="65" fill="#B47F35" fontSize="9" fontWeight="bold">₹40,000</text>
+                    <text x="5" y="115" fill="#B47F35" fontSize="9" fontWeight="bold">₹20,000</text>
+                    <text x="15" y="165" fill="#B47F35" fontSize="9" fontWeight="bold">₹0</text>
+
+                    {/* Gradient area */}
+                    <path
+                      d="M 50,160 L 120,130 L 190,115 L 260,80 L 330,75 L 400,50 L 470,35 L 470,160 Z"
+                      fill="url(#goldGrad)"
+                      opacity="0.15"
+                    />
+
+                    {/* Line path */}
+                    <path
+                      d="M 50,160 L 120,130 L 190,115 L 260,80 L 330,75 L 400,50 L 470,35"
+                      fill="none"
+                      stroke="#B47F35"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                    />
+
+                    <defs>
+                      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#C59D5F" />
+                        <stop offset="100%" stopColor="#FAF7F2" />
+                      </linearGradient>
+                    </defs>
+
+                    <circle cx="50" cy="160" r="5" fill="#B47F35" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="120" cy="130" r="5" fill="#B47F35" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="190" cy="115" r="5" fill="#B47F35" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="260" cy="80" r="5" fill="#B47F35" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="330" cy="75" r="5" fill="#B47F35" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="400" cy="50" r="5" fill="#B47F35" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="470" cy="35" r="5" fill="#B47F35" stroke="#ffffff" strokeWidth="1.5" />
+
+                    <text x="40" y="185" fill="#8B5E34" fontSize="9" fontWeight="bold">Jan</text>
+                    <text x="110" y="185" fill="#8B5E34" fontSize="9" fontWeight="bold">Feb</text>
+                    <text x="180" y="185" fill="#8B5E34" fontSize="9" fontWeight="bold">Mar</text>
+                    <text x="250" y="185" fill="#8B5E34" fontSize="9" fontWeight="bold">Apr</text>
+                    <text x="320" y="185" fill="#8B5E34" fontSize="9" fontWeight="bold">May</text>
+                    <text x="390" y="185" fill="#8B5E34" fontSize="9" fontWeight="bold">Jun</text>
+                    <text x="460" y="185" fill="#8B5E34" fontSize="9" fontWeight="bold">Jul</text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Popular item distributions */}
+              <div className="bg-white p-6 rounded-3xl border border-[#B47F35]/15 shadow-sm space-y-4 text-left">
+                <div>
+                  <h4 className="text-sm font-bold text-[#2B132C] uppercase tracking-wider flex items-center gap-1.5">
+                    <BarChart3 className="w-4 h-4 text-[#B47F35]" />
+                    <span>Popular Food Category Performance</span>
+                  </h4>
+                  <p className="text-[11px] text-gray-400">Items distribution units sold</p>
+                </div>
+                
+                {/* SVG bar chart */}
+                <div className="h-56 relative w-full pt-4">
+                  <svg viewBox="0 0 500 200" className="w-full h-full">
+                    <line x1="40" y1="10" x2="480" y2="10" stroke="#FAF7F2" strokeWidth="1" />
+                    <line x1="40" y1="85" x2="480" y2="85" stroke="#FAF7F2" strokeWidth="1" />
+                    <line x1="40" y1="160" x2="480" y2="160" stroke="#E5E3DF" strokeWidth="1.5" />
+                    
+                    {/* Mains bar */}
+                    <rect x="70" y="50" width="35" height="110" fill="#C59D5F" rx="4" />
+                    <text x="75" y="42" fill="#B47F35" fontSize="9" fontWeight="bold">280 unit</text>
+                    <text x="72" y="180" fill="#8B5E34" fontSize="9" fontWeight="bold">Mains</text>
+
+                    {/* Snacks bar */}
+                    <rect x="160" y="70" width="35" height="90" fill="#8B5E34" rx="4" />
+                    <text x="165" y="62" fill="#8B5E34" fontSize="9" fontWeight="bold">190 unit</text>
+                    <text x="162" y="180" fill="#8B5E34" fontSize="9" fontWeight="bold">Snacks</text>
+
+                    {/* Beverages bar */}
+                    <rect x="250" y="90" width="35" height="70" fill="#C59D5F" rx="4" />
+                    <text x="255" y="82" fill="#B47F35" fontSize="9" fontWeight="bold">110 unit</text>
+                    <text x="245" y="180" fill="#8B5E34" fontSize="9" fontWeight="bold">Beverages</text>
+
+                    {/* Desserts bar */}
+                    <rect x="340" y="120" width="35" height="40" fill="#8B5E34" rx="4" />
+                    <text x="348" y="112" fill="#8B5E34" fontSize="9" fontWeight="bold">60 unit</text>
+                    <text x="336" y="180" fill="#8B5E34" fontSize="9" fontWeight="bold">Desserts</text>
+                  </svg>
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+
+        {/* TAB 2: STAFF TERMINAL ROLES (ROLE ASSIGNER) */}
+        {activeTab === "staff" && (
+          <motion.div
+            key="staff-tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+          >
+            
+            {/* Staff Accounts Table (8 cols) */}
+            <div className="lg:col-span-8 bg-white border border-[#B47F35]/15 rounded-3xl p-6 shadow-sm space-y-6">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
+                <Users className="w-4 h-4" />
+                <span>Authorized Staff Terminal Access</span>
+              </h3>
+
+              <div className="overflow-x-auto">
+                <table className="w-full font-sans text-xs">
+                  <thead>
+                    <tr className="border-b border-[#B47F35]/15 text-left text-secondary-bronze uppercase tracking-wider text-[10px] font-bold">
+                      <th className="pb-3">Staff Name</th>
+                      <th className="pb-3">Email Username</th>
+                      <th className="pb-3">Plain Password</th>
+                      <th className="pb-3">Terminal Role</th>
+                      <th className="pb-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#B47F35]/10">
+                    {staffAccounts.map((account) => (
+                      <tr key={account.id} className="text-left text-[#2B132C]">
+                        <td className="py-3.5 font-semibold">{account.name}</td>
+                        <td className="py-3.5 font-mono">{account.email}</td>
+                        <td className="py-3.5 font-mono">{account.password}</td>
+                        <td className="py-3.5">
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                            account.assignedRole === "manager" ? "bg-purple-100 text-purple-700" :
+                            account.assignedRole === "receptionist" ? "bg-blue-100 text-blue-700" :
+                            account.assignedRole === "cashier" ? "bg-green-100 text-green-700" :
+                            "bg-amber-100 text-amber-700"
+                          }`}>
+                            {account.assignedRole.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="py-3.5 text-right font-bold">
+                          {account.email !== "manager@swami.com" ? (
+                            <button
+                              onClick={() => handleRevokeStaff(account.id)}
+                              className="text-[#B47F35] hover:text-red-500 transition-colors cursor-pointer"
+                              title="Revoke Role Access"
+                            >
+                              Revoke Access
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 italic text-[10px]">Locked</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Role Assigner Form (4 cols) */}
+            <div className="lg:col-span-4">
+              <GlassCard hoverEffect={false} className="bg-white border border-[#B47F35]/15 rounded-[32px] p-5 space-y-6 text-left h-full">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4" />
+                  <span>Assign Staff Role</span>
+                </h3>
+
+                <form onSubmit={handleAddStaffAccount} className="space-y-4 font-sans text-xs">
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                      Staff Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newStaffName}
+                      onChange={(e) => setNewStaffName(e.target.value)}
+                      placeholder="e.g. Mukesh Patel"
+                      className="w-full px-3 py-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                      Email Username *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={newStaffEmail}
+                      onChange={(e) => setNewStaffEmail(e.target.value)}
+                      placeholder="staff@swami.com"
+                      className="w-full px-3 py-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                      Login Password *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newStaffPassword}
+                      onChange={(e) => setNewStaffPassword(e.target.value)}
+                      placeholder="e.g. password123"
+                      className="w-full px-3 py-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                      Select Terminal Role *
+                    </label>
+                    <select
+                      value={newStaffRole}
+                      onChange={(e: any) => setNewStaffRole(e.target.value)}
+                      className="w-full p-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs outline-none"
+                    >
+                      <option value="manager">Canteen Manager</option>
+                      <option value="receptionist">Canteen Receptionist</option>
+                      <option value="cashier">Cashier Desk</option>
+                      <option value="kitchen">Kitchen Staff</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white text-xs font-semibold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Assign Role & Create</span>
+                  </button>
+                </form>
+
+              </GlassCard>
+            </div>
+
+          </motion.div>
+        )}
+
+        {/* TAB 3: CUSTOMER USERS (DEVOTEES) */}
+        {activeTab === "customers" && (
+          <motion.div
+            key="customers-tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="bg-white border border-[#B47F35]/15 rounded-3xl p-6 shadow-sm space-y-6"
+          >
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
+                <Users className="w-4 h-4" />
+                <span>Canteen Customer Users Directory</span>
+              </h3>
+              <p className="text-[10px] text-gray-400">Devotees who book food tables or purchase counter tokens</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full font-sans text-xs text-left">
+                <thead>
+                  <tr className="border-b border-[#B47F35]/15 text-secondary-bronze uppercase tracking-wider text-[10px] font-bold pb-3">
+                    <th className="pb-3">Devotee Name</th>
+                    <th className="pb-3">Contact Phone</th>
+                    <th className="pb-3">Visits & Check-ins</th>
+                    <th className="pb-3">Lifetime Spent</th>
+                    <th className="pb-3">Last Visit Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#B47F35]/10">
+                  {customers.map((c) => (
+                    <tr key={c.id} className="text-[#2B132C]">
+                      <td className="py-3.5 font-semibold">{c.name}</td>
+                      <td className="py-3.5 font-mono">{c.phone}</td>
+                      <td className="py-3.5 font-semibold">{c.totalOrders} visits</td>
+                      <td className="py-3.5 font-bold text-[#B47F35]">₹{c.totalSpent.toLocaleString("en-IN")}</td>
+                      <td className="py-3.5 text-secondary-bronze/80">{c.lastVisit}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+
+        {/* TAB 4: COUNTER POS TICKET BOOKING */}
         {activeTab === "pos" && (
           <motion.div
             key="pos-tab"
@@ -388,7 +907,6 @@ export default function CanteenCRMPage() {
             {/* POS FOOD PICKER (8 cols) */}
             <div className="lg:col-span-8 space-y-6">
               
-              {/* Category picker filter */}
               <div className="bg-white border border-[#B47F35]/15 rounded-2xl p-5 shadow-sm space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
                   <Utensils className="w-4 h-4" />
@@ -420,7 +938,6 @@ export default function CanteenCRMPage() {
                 </div>
               </div>
 
-              {/* TICKET TOKEN SUCCESS DIALOG DISPLAY */}
               {activeTicket && (
                 <div className="bg-white border-2 border-green-500 rounded-3xl p-6 text-left relative shadow-xl">
                   <button 
@@ -433,16 +950,14 @@ export default function CanteenCRMPage() {
                   <div className="flex items-center space-x-3 text-green-600 mb-4">
                     <CheckCircle2 className="w-8 h-8" />
                     <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider">Offline Ticket Booked successfully</h4>
+                      <h4 className="text-sm font-bold uppercase tracking-wider">Offline Ticket Booked</h4>
                       <p className="text-[10px] text-secondary-bronze/70 font-sans">Payment processed and seat table allocated.</p>
                     </div>
                   </div>
 
-                  {/* Printable receipt card */}
                   <div id="canteen-receipt" className="bg-[#FAF7F2] border border-[#B47F35]/15 rounded-2xl p-5 space-y-3 font-mono text-xs text-dark-surface/90">
                     <div className="text-center border-b border-[#B47F35]/15 pb-3">
                       <h3 className="font-bold text-sm tracking-wider uppercase">SKSS Kampala Canteen</h3>
-                      <p className="text-[9px] font-sans text-secondary-bronze mt-0.5">Shree Swaminarayan Complex, Bukoto</p>
                     </div>
 
                     <div className="space-y-1 text-[11px]">
@@ -455,18 +970,13 @@ export default function CanteenCRMPage() {
                         <span className="font-bold">{activeTicket.tableName}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Customer Name:</span>
+                        <span>Devotee Name:</span>
                         <span>{activeTicket.customerName}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Time Booked:</span>
-                        <span>{activeTicket.timestamp}</span>
                       </div>
                     </div>
 
                     <div className="h-[1px] bg-[#B47F35]/15 my-2" />
 
-                    {/* Items table */}
                     <div className="space-y-1 text-[10px]">
                       {activeTicket.items.map((c, idx) => (
                         <div key={idx} className="flex justify-between">
@@ -479,23 +989,10 @@ export default function CanteenCRMPage() {
                     <div className="h-[1px] bg-[#B47F35]/15 my-2" />
 
                     <div className="space-y-1 text-[11px]">
-                      <div className="flex justify-between">
-                        <span>Subtotal:</span>
-                        <span>₹{activeTicket.subtotal}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Tax (5%):</span>
-                        <span>₹{activeTicket.tax}</span>
-                      </div>
                       <div className="flex justify-between font-bold text-sm">
                         <span>TOTAL AMOUNT:</span>
                         <span className="text-[#B47F35]">₹{activeTicket.total}</span>
                       </div>
-                    </div>
-
-                    <div className="border-t border-[#B47F35]/15 pt-3 text-center text-[9px] font-sans text-secondary-bronze">
-                      <p>Scan token at pickup counter when served.</p>
-                      <p className="mt-1 font-bold">PAID VIA {activeTicket.paymentMethod}</p>
                     </div>
                   </div>
 
@@ -508,7 +1005,6 @@ export default function CanteenCRMPage() {
                       <span>Print Ticket Token</span>
                     </button>
                   </div>
-
                 </div>
               )}
 
@@ -524,7 +1020,6 @@ export default function CanteenCRMPage() {
                     <span>POS Billing Order</span>
                   </h3>
 
-                  {/* Cart items list */}
                   {cart.length === 0 ? (
                     <div className="py-12 text-center text-secondary-bronze/60 text-xs font-sans">
                       <Coffee className="w-8 h-8 text-[#B47F35]/30 mx-auto mb-2" />
@@ -559,7 +1054,6 @@ export default function CanteenCRMPage() {
                     </div>
                   )}
 
-                  {/* Customer details */}
                   <div className="space-y-3 pt-3 border-t border-[#B47F35]/10">
                     <div className="grid grid-cols-2 gap-2.5">
                       <div>
@@ -584,7 +1078,6 @@ export default function CanteenCRMPage() {
                       </div>
                     </div>
 
-                    {/* Seat allocation */}
                     <div>
                       <span className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">Allocate Seating Table</span>
                       <select
@@ -605,7 +1098,6 @@ export default function CanteenCRMPage() {
                       </select>
                     </div>
 
-                    {/* Payment methods */}
                     <div>
                       <span className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1.5">Payment Method</span>
                       <div className="grid grid-cols-3 gap-1.5">
@@ -630,21 +1122,16 @@ export default function CanteenCRMPage() {
 
                 </div>
 
-                {/* Totals & Submit */}
                 <div className="pt-4 border-t border-[#B47F35]/10 mt-6 space-y-4">
                   <div className="space-y-1.5 text-xs text-secondary-bronze">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
                       <span>₹{cart.reduce((acc, c) => acc + c.item.price * c.qty, 0)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Tax (5%):</span>
-                      <span>₹{Math.round(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) * 0.05)}</span>
-                    </div>
                     <div className="flex justify-between font-bold text-[#2B132C] text-sm">
                       <span>Total Amount:</span>
                       <span className="text-[#B47F35] font-heading">
-                        ₹{(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) + Math.round(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) * 0.05)).toLocaleString("en-IN")}
+                        ₹{(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) + Math.round(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) * 0.075)).toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
@@ -664,7 +1151,7 @@ export default function CanteenCRMPage() {
           </motion.div>
         )}
 
-        {/* B. SEATING TABLES MANAGEMENT */}
+        {/* TAB 5: SEATING TABLES MANAGEMENT */}
         {activeTab === "tables" && (
           <motion.div
             key="tables-tab"
@@ -674,16 +1161,14 @@ export default function CanteenCRMPage() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
           >
             
-            {/* Tables Grid Layout (8 cols) */}
             <div className="lg:col-span-8 bg-white border border-[#B47F35]/15 rounded-3xl p-6 shadow-sm space-y-6">
-              
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
                   <Utensils className="w-4 h-4" />
                   <span>Canteen Table Layout Configuration</span>
                 </h3>
                 <span className="text-[10px] text-secondary-bronze/70 font-sans">
-                  Total Seating Capacity: {tables.reduce((acc, t) => acc + t.capacity, 0)} Seats
+                  Total Capacity: {tables.reduce((acc, t) => acc + t.capacity, 0)} Seats
                 </span>
               </div>
 
@@ -708,7 +1193,6 @@ export default function CanteenCRMPage() {
                       <button
                         onClick={() => handleDeleteTable(table.id)}
                         className="text-secondary-bronze/50 hover:text-red-500 transition-colors cursor-pointer"
-                        title="Delete Table"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -743,10 +1227,8 @@ export default function CanteenCRMPage() {
 
             </div>
 
-            {/* Add Table Form Sidebar (4 cols) */}
             <div className="lg:col-span-4">
               <GlassCard hoverEffect={false} className="bg-white border border-[#B47F35]/15 rounded-[32px] p-5 space-y-6 text-left h-full">
-                
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
                   <Plus className="w-4 h-4" />
                   <span>Add Seating Table</span>
@@ -796,7 +1278,7 @@ export default function CanteenCRMPage() {
           </motion.div>
         )}
 
-        {/* C. FOOD MENU MANAGEMENT */}
+        {/* TAB 6: FOOD MENU MANAGEMENT */}
         {activeTab === "menu" && (
           <motion.div
             key="menu-tab"
@@ -806,9 +1288,7 @@ export default function CanteenCRMPage() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
           >
             
-            {/* Menu List Table (8 cols) */}
             <div className="lg:col-span-8 bg-white border border-[#B47F35]/15 rounded-3xl p-6 shadow-sm space-y-6">
-              
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
                 <Coffee className="w-4 h-4" />
                 <span>Canteen Food Menu Customization</span>
@@ -843,8 +1323,7 @@ export default function CanteenCRMPage() {
                         <td className="py-3.5 text-right">
                           <button
                             onClick={() => handleDeleteFood(item.id)}
-                            className="text-secondary-bronze/50 hover:text-red-505 transition-colors cursor-pointer"
-                            title="Remove Food Item"
+                            className="text-secondary-bronze/50 hover:text-red-500 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -857,10 +1336,8 @@ export default function CanteenCRMPage() {
 
             </div>
 
-            {/* Add Food Form (4 cols) */}
             <div className="lg:col-span-4">
               <GlassCard hoverEffect={false} className="bg-white border border-[#B47F35]/15 rounded-[32px] p-5 space-y-6 text-left h-full">
-                
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
                   <Plus className="w-4 h-4" />
                   <span>Add Food Item</span>
@@ -943,7 +1420,7 @@ export default function CanteenCRMPage() {
           </motion.div>
         )}
 
-        {/* D. ACTIVE KITCHEN ORDERS & TOKENS QUEUE */}
+        {/* TAB 7: ACTIVE KITCHEN ORDERS & TOKENS QUEUE */}
         {activeTab === "orders" && (
           <motion.div
             key="orders-tab"
@@ -952,7 +1429,6 @@ export default function CanteenCRMPage() {
             exit={{ opacity: 0, y: 15 }}
             className="bg-white border border-[#B47F35]/15 rounded-3xl p-6 shadow-sm space-y-6"
           >
-            
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
               <ClipboardList className="w-4 h-4" />
               <span>Real-Time Kitchen Tokens & Food Dispatch</span>
@@ -971,8 +1447,6 @@ export default function CanteenCRMPage() {
                       "border-secondary-bronze/10 bg-[#FAF7F2] opacity-60"
                     }`}
                   >
-                    
-                    {/* Ticket details left */}
                     <div className="space-y-3 md:w-1/3">
                       <div className="flex justify-between items-center">
                         <span className="text-base font-bold text-[#B47F35] font-mono">{o.tokenNumber}</span>
@@ -988,12 +1462,10 @@ export default function CanteenCRMPage() {
                       <div className="space-y-1 text-secondary-bronze">
                         <p className="font-bold text-[#2B132C]">{o.customerName}</p>
                         <p className="text-[10px]">Phone: {o.customerPhone}</p>
-                        <p className="text-[10px]">Seat Allocation: {o.tableName}</p>
-                        <p className="text-[9px] italic">Booked: {o.timestamp} • Paid via {o.paymentMethod}</p>
+                        <p className="text-[10px]">Seat: {o.tableName}</p>
                       </div>
                     </div>
 
-                    {/* Ordered Items middle */}
                     <div className="md:w-1/3 flex flex-col justify-center border-y md:border-y-0 md:border-x border-[#B47F35]/10 py-3 md:py-0 md:px-6">
                       <span className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-2">Items Ordered</span>
                       <ul className="space-y-1">
@@ -1006,7 +1478,6 @@ export default function CanteenCRMPage() {
                       </ul>
                     </div>
 
-                    {/* Actions right */}
                     <div className="md:w-1/3 flex flex-col justify-between items-end">
                       <div className="text-right">
                         <span className="text-[9px] uppercase tracking-wider block">Total paid</span>
