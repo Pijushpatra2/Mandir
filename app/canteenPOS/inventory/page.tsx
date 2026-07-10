@@ -118,7 +118,7 @@ export default function InventoryPage() {
                   <h5 className="font-bold text-gray-700">{log.name}</h5>
                   <span className="text-[9px] text-red-500 font-bold">{log.qty} {log.unit} • {log.reason}</span>
                 </div>
-                <span className="font-bold text-red-600">₹{log.cost}</span>
+                <span className="font-bold text-red-600">UGX {log.cost}</span>
               </div>
             ))}
           </div>

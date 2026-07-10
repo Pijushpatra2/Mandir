@@ -19,7 +19,7 @@ export const mockNotifications: SystemNotification[] = [
   {
     id: "not-2",
     title: "High Donation Received",
-    message: "Sanjay Shah donated ₹50,000 cash towards Nitya Annadan Seva campaign.",
+    message: "Sanjay Shah donated UGX 50,000 cash towards Nitya Annadan Seva campaign.",
     timestamp: "2026-06-20T11:30:00Z",
     read: false,
     category: "donation"

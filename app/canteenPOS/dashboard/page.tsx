@@ -42,34 +42,34 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Today's Revenue</span>
+            <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Today's Revenue</span>
             <span className="p-1 bg-green-50 text-green-600 rounded-lg">
               <TrendingUp className="w-4 h-4" />
             </span>
           </div>
-          <h4 className="text-xl font-bold text-gray-800 mt-2">₹{getTodaySales().toLocaleString("en-IN")}</h4>
+          <h4 className="text-2xl font-bold text-gray-800 mt-2">UGX {getTodaySales().toLocaleString("en-UG")}</h4>
           <p className="text-[10px] text-green-500 mt-1 font-semibold">12% from yesterday</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Orders</span>
+            <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Total Orders</span>
             <span className="p-1 bg-blue-50 text-blue-600 rounded-lg">
               <ClipboardList className="w-4 h-4" />
             </span>
           </div>
-          <h4 className="text-xl font-bold text-gray-800 mt-2">{getTodayOrdersCount()} Tickets</h4>
+          <h4 className="text-2xl font-bold text-gray-800 mt-2">{getTodayOrdersCount().toLocaleString("en-UG")} Tickets</h4>
           <p className="text-[10px] text-gray-500 mt-1">Cashier speed avg: 2.1m</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Active Tables</span>
+            <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Active Tables</span>
             <span className="p-1 bg-red-50 text-red-600 rounded-lg">
               <Grid className="w-4 h-4" />
             </span>
           </div>
-          <h4 className="text-xl font-bold text-gray-800 mt-2">
+          <h4 className="text-2xl font-bold text-gray-800 mt-2">
             {getActiveTablesCount()} / {tables.length}
           </h4>
           <p className="text-[10px] text-red-500 mt-1 font-semibold">Peak load: 85%</p>
@@ -77,12 +77,12 @@ export default function DashboardPage() {
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Reservations</span>
+            <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Reservations</span>
             <span className="p-1 bg-amber-50 text-amber-600 rounded-lg">
               <Calendar className="w-4 h-4" />
             </span>
           </div>
-          <h4 className="text-xl font-bold text-gray-800 mt-2">{getUpcomingBookingsCount()} Booked</h4>
+          <h4 className="text-2xl font-bold text-gray-800 mt-2">{getUpcomingBookingsCount()} Booked</h4>
           <p className="text-[10px] text-amber-500 mt-1 font-semibold">
             {bookings.filter((b) => b.status === "CONFIRMED").length} total upcoming
           </p>
@@ -90,23 +90,23 @@ export default function DashboardPage() {
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Average Value</span>
+            <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Average Value</span>
             <span className="p-1 bg-purple-50 text-purple-600 rounded-lg">
               <ShoppingCart className="w-4 h-4" />
             </span>
           </div>
-          <h4 className="text-xl font-bold text-gray-800 mt-2">₹{getAverageOrderValue()}</h4>
+          <h4 className="text-2xl font-bold text-gray-800 mt-2">UGX {getAverageOrderValue().toLocaleString("en-UG")}</h4>
           <p className="text-[10px] text-gray-500 mt-1">Annadan sponsors active</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md border-l-4 border-l-red-500">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-red-500">Stock Alerts</span>
+            <span className="text-xs uppercase font-bold tracking-wider text-red-500">Stock Alerts</span>
             <span className="p-1 bg-red-50 text-red-500 rounded-lg">
               <AlertTriangle className="w-4 h-4" />
             </span>
           </div>
-          <h4 className="text-xl font-bold text-gray-800 mt-2">{getInventoryAlertsCount()} Low Items</h4>
+          <h4 className="text-2xl font-bold text-gray-800 mt-2">{getInventoryAlertsCount()} Low Items</h4>
           <p className="text-[10px] text-red-500 mt-1 font-semibold">Immediate reorder needed</p>
         </div>
       </div>
@@ -149,39 +149,39 @@ export default function DashboardPage() {
               "bg-blue-50 text-blue-700";
 
             return (
-              <div key={table.id} className={`bg-white border-2 rounded-2xl p-4 transition-all shadow-sm flex flex-col justify-between h-40 ${cardBorder}`}>
+              <div key={table.id} className={`bg-white border-2 rounded-2xl p-4 transition-all shadow-sm flex flex-col justify-between h-44 ${cardBorder}`}>
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-bold text-gray-800 text-sm">{table.name}</h4>
-                    <span className="text-[10px] text-gray-400">{table.capacity} Seats</span>
+                    <h4 className="font-bold text-gray-800 text-base">{table.name}</h4>
+                    <span className="text-xs text-gray-400 font-medium">{table.capacity} Seats</span>
                   </div>
-                  <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${badgeColor}`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${badgeColor}`}>
                     {table.status}
                   </span>
                 </div>
 
-                <div className="my-2 text-xs font-semibold text-gray-600">
+                <div className="my-2.5 text-xs font-semibold text-gray-600">
                   {table.status === "OCCUPIED" ? (
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs">
                         <span className="text-gray-400 font-normal">Active Bill:</span>
-                        <span className="text-red-600 font-bold">₹{table.currentBill}</span>
+                        <span className="text-red-650 font-bold text-sm">UGX {(Number(table.currentBill) || 0).toLocaleString("en-UG")}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-xs">
                         <span className="text-gray-400 font-normal">Duration:</span>
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-gray-400" /> {table.occupiedDuration}</span>
+                        <span className="flex items-center gap-1.5 text-gray-700"><Clock className="w-3.5 h-3.5 text-gray-400" /> {table.occupiedDuration}</span>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-gray-300 text-[10px] italic">Table is currently empty</p>
+                    <p className="text-gray-300 text-xs italic">Table is currently empty</p>
                   )}
                 </div>
 
-                <div className="flex gap-1.5 justify-end border-t border-gray-55 pt-2 text-[8px] font-bold">
+                <div className="flex gap-2 justify-end border-t border-gray-55 pt-2 text-[10px] font-bold">
                   {table.status !== "AVAILABLE" && (
                     <button
                       onClick={() => handleUpdateTableStatus(table.id, "AVAILABLE")}
-                      className="px-2 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded transition-colors border-none cursor-pointer"
+                      className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded transition-colors border-none cursor-pointer"
                     >
                       Free
                     </button>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
                   {table.status === "AVAILABLE" && (
                     <button
                       onClick={() => handleUpdateTableStatus(table.id, "OCCUPIED")}
-                      className="px-2 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded transition-colors border-none cursor-pointer"
+                      className="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded transition-colors border-none cursor-pointer"
                     >
                       Occupy
                     </button>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                   {table.status !== "CLEANING" && (
                     <button
                       onClick={() => handleUpdateTableStatus(table.id, "CLEANING")}
-                      className="px-2 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded transition-colors border-none cursor-pointer"
+                      className="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded transition-colors border-none cursor-pointer"
                     >
                       Clean
                     </button>
@@ -328,7 +328,7 @@ export default function DashboardPage() {
                         <span className="text-[9px] text-gray-400">{o.customerName}</span>
                       </td>
                       <td className="py-2.5 font-semibold text-gray-700">{o.tableName}</td>
-                      <td className="py-2.5 font-bold text-gray-800">₹{o.total}</td>
+                      <td className="py-2.5 font-bold text-gray-800">UGX {o.total}</td>
                       <td className="py-2.5">
                         <span className={`text-[8px] font-bold px-2 py-0.5 rounded border uppercase ${payBadge}`}>
                           {o.paymentStatus}

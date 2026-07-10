@@ -56,7 +56,7 @@ export default function MenuPage() {
                       {m.variety}
                     </span>
                   </td>
-                  <td className="py-2.5 font-bold text-blue-600">₹{m.price}</td>
+                  <td className="py-2.5 font-bold text-blue-600">UGX {m.price}</td>
                   <td className="py-2.5 text-center">
                     <button
                       onClick={() => {
@@ -109,7 +109,7 @@ export default function MenuPage() {
                   <h5 className="font-bold text-gray-700">{c.name}</h5>
                   <span className="text-[9px] text-gray-400">Regular bundle pricing</span>
                 </div>
-                <span className="font-bold text-blue-600">₹{c.price}</span>
+                <span className="font-bold text-blue-600">UGX {c.price}</span>
               </div>
             ))}
           </div>
@@ -128,7 +128,7 @@ export default function MenuPage() {
                   <h5 className="font-bold text-gray-700">{a.name}</h5>
                   <span className="text-[9px] text-gray-400">Excludes standard GST</span>
                 </div>
-                <span className="font-bold text-blue-600">+ ₹{a.price}</span>
+                <span className="font-bold text-blue-600">+ UGX {a.price}</span>
               </div>
             ))}
           </div>

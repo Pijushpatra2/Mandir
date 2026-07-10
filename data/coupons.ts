@@ -14,7 +14,7 @@ export const mockCoupons: Coupon[] = [
     value: 10,
     minSpend: 500,
     active: true,
-    description: "10% OFF on purchases above ₹500",
+    description: "10% OFF on purchases above UGX 500",
   },
   {
     code: "FESTIVE20",
@@ -22,7 +22,7 @@ export const mockCoupons: Coupon[] = [
     value: 20,
     minSpend: 2000,
     active: true,
-    description: "20% OFF on purchases above ₹2000",
+    description: "20% OFF on purchases above UGX 2000",
   },
   {
     code: "WELCOME50",
@@ -30,7 +30,7 @@ export const mockCoupons: Coupon[] = [
     value: 150,
     minSpend: 1000,
     active: true,
-    description: "Flat ₹150 OFF on purchases above ₹1000",
+    description: "Flat UGX 150 OFF on purchases above UGX 1000",
   },
   {
     code: "BHAKTI300",
@@ -38,7 +38,7 @@ export const mockCoupons: Coupon[] = [
     value: 300,
     minSpend: 3000,
     active: true,
-    description: "Flat ₹300 OFF on orders above ₹3000",
+    description: "Flat UGX 300 OFF on orders above UGX 3000",
   },
   {
     code: "SACRED5",

@@ -8,8 +8,8 @@ export default function ReportsPage() {
   const { orders, customers, getTodaySales, getTodayOrdersCount, getAverageOrderValue } = useCanteen();
 
   const completedOrders = orders.filter(o => o.status === "COMPLETED");
-  const totalRevenue = orders.filter(o => o.paymentStatus === "PAID").reduce((sum, o) => sum + o.total, 0);
-  const pendingAmount = orders.filter(o => o.paymentStatus === "PENDING").reduce((sum, o) => sum + o.total, 0);
+  const totalRevenue = orders.filter(o => o.paymentStatus === "PAID").reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const pendingAmount = orders.filter(o => o.paymentStatus === "PENDING").reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
   // Category-wise breakdown from all orders
   const itemSales: Record<string, { qty: number; revenue: number }> = {};
@@ -33,7 +33,7 @@ export default function ReportsPage() {
             <span className="text-[10px] font-bold uppercase text-gray-400">Total Revenue</span>
             <IndianRupee className="w-4 h-4 text-green-500" />
           </div>
-          <h4 className="text-xl font-black text-gray-900">₹{totalRevenue.toLocaleString("en-IN")}</h4>
+          <h4 className="text-xl font-black text-gray-900">UGX {totalRevenue.toLocaleString("en-IN")}</h4>
           <p className="text-[9px] text-green-600 font-bold mt-1">All settled payments</p>
         </div>
 
@@ -42,7 +42,7 @@ export default function ReportsPage() {
             <span className="text-[10px] font-bold uppercase text-gray-400">Today's Sales</span>
             <TrendingUp className="w-4 h-4 text-blue-500" />
           </div>
-          <h4 className="text-xl font-black text-gray-900">₹{getTodaySales().toLocaleString("en-IN")}</h4>
+          <h4 className="text-xl font-black text-gray-900">UGX {getTodaySales().toLocaleString("en-IN")}</h4>
           <p className="text-[9px] text-blue-600 font-bold mt-1">{getTodayOrdersCount()} orders today</p>
         </div>
 
@@ -51,7 +51,7 @@ export default function ReportsPage() {
             <span className="text-[10px] font-bold uppercase text-gray-400">Avg Order Value</span>
             <ShoppingCart className="w-4 h-4 text-purple-500" />
           </div>
-          <h4 className="text-xl font-black text-gray-900">₹{getAverageOrderValue()}</h4>
+          <h4 className="text-xl font-black text-gray-900">UGX {getAverageOrderValue()}</h4>
           <p className="text-[9px] text-purple-600 font-bold mt-1">Per transaction</p>
         </div>
 
@@ -60,7 +60,7 @@ export default function ReportsPage() {
             <span className="text-[10px] font-bold uppercase text-red-500">Pending Amount</span>
             <Users className="w-4 h-4 text-red-400" />
           </div>
-          <h4 className="text-xl font-black text-gray-900">₹{pendingAmount.toLocaleString("en-IN")}</h4>
+          <h4 className="text-xl font-black text-gray-900">UGX {pendingAmount.toLocaleString("en-IN")}</h4>
           <p className="text-[9px] text-red-500 font-bold mt-1">Uncollected bills</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function ReportsPage() {
                       <span className="font-bold text-gray-800">{name}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-black text-blue-600">₹{data.revenue}</span>
+                      <span className="font-black text-blue-600">UGX {data.revenue}</span>
                       <span className="text-gray-400 text-[9px] ml-2">({data.qty} sold)</span>
                     </div>
                   </div>
@@ -107,15 +107,16 @@ export default function ReportsPage() {
             </h3>
             {["CASH", "UPI", "CARD", "PENDING"].map(method => {
               const count = orders.filter(o => o.paymentMethod === method).length;
-              const revenue = orders.filter(o => o.paymentMethod === method).reduce((s, o) => s + o.total, 0);
+              const revenue = orders.filter(o => o.paymentMethod === method).reduce((s, o) => s + (Number(o.total) || 0), 0);
               const colors: Record<string, string> = { CASH: "bg-green-50 text-green-700", UPI: "bg-blue-50 text-blue-700", CARD: "bg-violet-50 text-violet-700", PENDING: "bg-red-50 text-red-700" };
+              const label = method === "UPI" ? "Mobile Money" : method;
               return (
                 <div key={method} className={`flex justify-between items-center p-2.5 rounded-xl ${colors[method]}`}>
                   <div>
-                    <span className="text-[10px] font-black uppercase">{method}</span>
+                    <span className="text-[10px] font-black uppercase">{label}</span>
                     <p className="text-[9px] opacity-70">{count} transactions</p>
                   </div>
-                  <span className="font-black text-sm">₹{revenue.toLocaleString("en-IN")}</span>
+                  <span className="font-black text-sm">UGX {revenue.toLocaleString("en-UG")}</span>
                 </div>
               );
             })}

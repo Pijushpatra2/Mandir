@@ -23,7 +23,7 @@ export interface FoodItem {
   id: string;
   name: string;
   price: number;
-  category: "Mains" | "Snacks" | "Beverages" | "Desserts" | "Combos" | "Add-ons";
+  category: string;
   variety: "Regular" | "Jain" | "Spicy" | "Sweet";
   available: boolean;
   image?: string;

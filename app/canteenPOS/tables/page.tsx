@@ -51,7 +51,7 @@ export default function TablesPage() {
               <div className="text-xs text-gray-600 font-semibold my-2">
                 {t.status === "OCCUPIED" ? (
                   <div>
-                    <p className="text-[10px] text-gray-400 font-normal">Current Bill: <b className="text-red-500 font-bold">₹{t.currentBill}</b></p>
+                    <p className="text-[10px] text-gray-400 font-normal">Current Bill: <b className="text-red-500 font-bold">UGX {t.currentBill}</b></p>
                     <p className="text-[10px] text-gray-400 font-normal">Active Since: <b className="text-gray-800 font-bold">{t.occupiedDuration}</b></p>
                   </div>
                 ) : (

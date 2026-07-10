@@ -242,7 +242,7 @@ export default function DonationsPage() {
                       <User className="w-3.5 h-3.5 text-[#B47F35]" />
                       <span className="font-bold text-dark-surface">Rajesh Sharma</span>
                     </div>
-                    <span className="text-secondary-bronze/70">Donated ₹1,101</span>
+                    <span className="text-secondary-bronze/70">Donated UGX 1,101</span>
                   </div>
                   <div className="h-[1px] bg-[#B47F35]/10" />
                   <div className="text-[10px] flex justify-between items-center font-sans">
@@ -250,7 +250,7 @@ export default function DonationsPage() {
                       <User className="w-3.5 h-3.5 text-[#B47F35]" />
                       <span className="font-bold text-dark-surface">Priya Patel</span>
                     </div>
-                    <span className="text-secondary-bronze/70">Donated ₹501</span>
+                    <span className="text-secondary-bronze/70">Donated UGX 501</span>
                   </div>
                   <div className="h-[1px] bg-[#B47F35]/10" />
                   <div className="text-[10px] flex justify-between items-center font-sans">
@@ -258,7 +258,7 @@ export default function DonationsPage() {
                       <User className="w-3.5 h-3.5 text-[#B47F35]" />
                       <span className="font-bold text-dark-surface">Anonymous</span>
                     </div>
-                    <span className="text-secondary-bronze/70">Donated ₹5,101</span>
+                    <span className="text-secondary-bronze/70">Donated UGX 5,101</span>
                   </div>
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function DonationsPage() {
                     Total Donations
                   </h4>
                   <p className="text-2xl font-heading font-bold text-[#2B132C]">
-                    ₹{liveDonorsCount.toLocaleString("en-IN")}
+                    UGX {liveDonorsCount.toLocaleString("en-IN")}
                   </p>
                 </div>
                 
@@ -429,7 +429,7 @@ export default function DonationsPage() {
                             : "border-primary-gold/15 bg-white text-secondary-bronze"
                         }`}
                       >
-                        ₹{val.toLocaleString()}
+                        UGX {val.toLocaleString()}
                       </button>
                     ))}
                     <button
@@ -448,8 +448,7 @@ export default function DonationsPage() {
                   {/* Custom input or summary */}
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-secondary-bronze">
-                      ₹
-                    </span>
+                      UGX                     </span>
                     <input
                       type="number"
                       value={showCustomAmountInput ? customAmountText : amount}
@@ -459,7 +458,7 @@ export default function DonationsPage() {
                       className="w-full pl-7 pr-4 py-2.5 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-xl text-xs font-bold text-dark-surface focus:outline-none focus:border-[#B47F35] disabled:opacity-75"
                     />
                   </div>
-                  <p className="text-[9px] text-[#B47F35]/70 italic">* You can enter any amount above ₹100</p>
+                  <p className="text-[9px] text-[#B47F35]/70 italic">* You can enter any amount above UGX 100</p>
                 </div>
 
                 {/* 3. Personal Information */}
@@ -701,7 +700,7 @@ export default function DonationsPage() {
                   {/* Summary */}
                   <div className="flex justify-between items-center text-xs font-bold pt-3 text-[#2B132C]">
                     <span>Amount Payable:</span>
-                    <span className="text-[#B47F35] font-heading text-sm font-bold">₹{amount.toLocaleString("en-IN")}</span>
+                    <span className="text-[#B47F35] font-heading text-sm font-bold">UGX {amount.toLocaleString("en-IN")}</span>
                   </div>
 
                 </div>
@@ -715,7 +714,7 @@ export default function DonationsPage() {
                   className="w-full py-3 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white text-xs font-semibold shadow-md transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>Pay ₹{amount.toLocaleString("en-IN")} Securely</span>
+                  <span>Pay UGX {amount.toLocaleString("en-IN")} Securely</span>
                 </button>
                 <p className="text-[8px] text-[#2B132C]/60 text-center uppercase tracking-wider font-bold block w-full">
                   You will be redirected to complete the payment
@@ -766,11 +765,11 @@ export default function DonationsPage() {
           {/* 5 Impact Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
             {[
-              { type: "general", title: "Daily Pujas", desc: "Support daily pujas and rituals for divine blessings.", rateText: "₹501 / Day", rate: 501, img: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "annadanam", title: "Annadanam", desc: "Provide meals to devotees and those in need.", rateText: "₹1,101 / Meal Service", rate: 1101, img: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "festival", title: "Festival Celebrations", desc: "Support grand celebrations and cultural traditions.", rateText: "₹2,101 / Festival", rate: 2101, img: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "gau", title: "Gau Seva", desc: "Care and protection of cows.", rateText: "₹1,101 / Month", rate: 1101, img: "https://images.unsplash.com/photo-1583373834249-137a86892a50?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "maintenance", title: "Temple Maintenance", desc: "Preserve and maintain our sacred temple.", rateText: "₹5,101 / Support", rate: 5101, img: "https://images.unsplash.com/photo-1545128485-c400e7702796?auto=format&fit=crop&w=180&h=130&q=80" }
+              { type: "general", title: "Daily Pujas", desc: "Support daily pujas and rituals for divine blessings.", rateText: "UGX 501 / Day", rate: 501, img: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=180&h=130&q=80" },
+              { type: "annadanam", title: "Annadanam", desc: "Provide meals to devotees and those in need.", rateText: "UGX 1,101 / Meal Service", rate: 1101, img: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=180&h=130&q=80" },
+              { type: "festival", title: "Festival Celebrations", desc: "Support grand celebrations and cultural traditions.", rateText: "UGX 2,101 / Festival", rate: 2101, img: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=180&h=130&q=80" },
+              { type: "gau", title: "Gau Seva", desc: "Care and protection of cows.", rateText: "UGX 1,101 / Month", rate: 1101, img: "https://images.unsplash.com/photo-1583373834249-137a86892a50?auto=format&fit=crop&w=180&h=130&q=80" },
+              { type: "maintenance", title: "Temple Maintenance", desc: "Preserve and maintain our sacred temple.", rateText: "UGX 5,101 / Support", rate: 5101, img: "https://images.unsplash.com/photo-1545128485-c400e7702796?auto=format&fit=crop&w=180&h=130&q=80" }
             ].map((item, idx) => (
               <div 
                 key={idx}
@@ -825,7 +824,7 @@ export default function DonationsPage() {
                       </div>
                       
                       <div className="text-right">
-                        <span className="font-bold text-[#B47F35]">₹{donor.amount.toLocaleString("en-IN")}</span>
+                        <span className="font-bold text-[#B47F35]">UGX {donor.amount.toLocaleString("en-IN")}</span>
                         <p className="text-[8px] text-secondary-bronze/60 font-sans mt-0.5 leading-none">Paid</p>
                       </div>
                     </div>

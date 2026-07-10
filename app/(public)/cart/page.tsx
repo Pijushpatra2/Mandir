@@ -58,7 +58,7 @@ export default function CartPage() {
     }
 
     if (subtotal < 100) {
-      setCouponError("Minimum purchase amount to apply coupons is ₹100.");
+      setCouponError("Minimum purchase amount to apply coupons is UGX 100.");
       return;
     }
 
@@ -266,7 +266,7 @@ export default function CartPage() {
                 </div>
                 {shipping > 0 && (
                   <p className="text-[9px] text-primary-gold/80 italic text-right">
-                    Add ₹{999 - (subtotal - discount)} more for FREE shipping
+                    Add UGX {999 - (subtotal - discount)} more for FREE shipping
                   </p>
                 )}
               </div>

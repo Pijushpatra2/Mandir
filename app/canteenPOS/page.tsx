@@ -54,6 +54,7 @@ import {
   initialStaffAccounts
 } from "@/data/canteen";
 import { useCanteen } from "./context/CanteenContext";
+import { useCategories } from "@/lib/api/canteen";
 
 type POSTab =
   | "dashboard"
@@ -69,6 +70,7 @@ type POSTab =
   | "settings";
 
 export default function CanteenPOSPage() {
+  const { data: apiCategories = [] } = useCategories();
   const { login } = useCanteen();
   // Session & Auth states
   const [activeStaff, setActiveStaff] = useState<CanteenStaffAccount | null>(null);
@@ -106,6 +108,19 @@ export default function CanteenPOSPage() {
   // POS State
   const [posCategory, setPosCategory] = useState<string>("All");
   const [posSearch, setPosSearch] = useState("");
+
+  const menuCategories = Array.from(new Set(menu.map(m => m.category))).filter(Boolean);
+  const categoriesList = Array.from(new Set([
+    "All",
+    ...apiCategories.map(c => c.name),
+    ...menuCategories,
+    "Mains",
+    "Snacks",
+    "Beverages",
+    "Desserts",
+    "Combos",
+    "Add-ons"
+  ]));
   const [cart, setCart] = useState<{ item: FoodItem; qty: number; notes?: string }[]>([]);
   const [posSelectedTable, setPosSelectedTable] = useState<string>("");
   const [posCustomerName, setPosCustomerName] = useState("");
@@ -373,7 +388,7 @@ export default function CanteenPOSPage() {
     const newNotif = {
       id: Date.now(),
       title: "New Order Placed",
-      message: `Token ${tokenNum} generated for ${allocatedTableName}. Total: ₹${total}`,
+      message: `Token ${tokenNum} generated for ${allocatedTableName}. Total: UGX ${total}`,
       type: "success",
       read: false
     };
@@ -511,7 +526,7 @@ export default function CanteenPOSPage() {
   const getTodaySales = () => {
     return orders
       .filter((o) => o.status === "COMPLETED" || (o.paymentStatus === "PAID" && o.status !== "CANCELLED"))
-      .reduce((sum, o) => sum + o.total, 0);
+      .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
   };
 
   const getTodayOrdersCount = () => {
@@ -567,55 +582,55 @@ export default function CanteenPOSPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Today's Revenue</span>
+              <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Today's Revenue</span>
               <span className="p-1 bg-green-50 text-green-600 rounded-lg"><TrendingUp className="w-4 h-4" /></span>
             </div>
-            <h4 className="text-xl font-bold text-gray-800 mt-2">₹{getTodaySales().toLocaleString("en-IN")}</h4>
+            <h4 className="text-2xl font-bold text-gray-800 mt-2">UGX {getTodaySales().toLocaleString("en-UG")}</h4>
             <p className="text-[10px] text-green-500 mt-1 font-semibold">12% from yesterday</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Orders</span>
+              <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Total Orders</span>
               <span className="p-1 bg-blue-50 text-blue-600 rounded-lg"><ClipboardList className="w-4 h-4" /></span>
             </div>
-            <h4 className="text-xl font-bold text-gray-800 mt-2">{getTodayOrdersCount()} Tickets</h4>
+            <h4 className="text-2xl font-bold text-gray-800 mt-2">{getTodayOrdersCount().toLocaleString("en-UG")} Tickets</h4>
             <p className="text-[10px] text-gray-500 mt-1">Cashier speed avg: 2.1m</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Active Tables</span>
+              <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Active Tables</span>
               <span className="p-1 bg-red-50 text-red-600 rounded-lg"><Grid className="w-4 h-4" /></span>
             </div>
-            <h4 className="text-xl font-bold text-gray-800 mt-2">{getActiveTablesCount()} / {tables.length}</h4>
+            <h4 className="text-2xl font-bold text-gray-800 mt-2">{getActiveTablesCount()} / {tables.length}</h4>
             <p className="text-[10px] text-red-500 mt-1 font-semibold">Peak load: 85%</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Reservations</span>
+              <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Reservations</span>
               <span className="p-1 bg-amber-50 text-amber-600 rounded-lg"><Calendar className="w-4 h-4" /></span>
             </div>
-            <h4 className="text-xl font-bold text-gray-800 mt-2">{getUpcomingBookingsCount()} Booked</h4>
+            <h4 className="text-2xl font-bold text-gray-800 mt-2">{getUpcomingBookingsCount()} Booked</h4>
             <p className="text-[10px] text-amber-500 mt-1 font-semibold">{bookings.filter(b=>b.status==="CONFIRMED").length} total upcoming</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex justify-between items-start">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Average Value</span>
+              <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Average Value</span>
               <span className="p-1 bg-purple-50 text-purple-600 rounded-lg"><ShoppingCart className="w-4 h-4" /></span>
             </div>
-            <h4 className="text-xl font-bold text-gray-800 mt-2">₹{getAverageOrderValue()}</h4>
+            <h4 className="text-2xl font-bold text-gray-800 mt-2">UGX {getAverageOrderValue().toLocaleString("en-UG")}</h4>
             <p className="text-[10px] text-gray-500 mt-1">Annadan sponsors active</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm border-l-4 border-l-red-500">
             <div className="flex justify-between items-start">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-red-500">Stock Alerts</span>
+              <span className="text-xs uppercase font-bold tracking-wider text-red-500">Stock Alerts</span>
               <span className="p-1 bg-red-50 text-red-500 rounded-lg"><AlertTriangle className="w-4 h-4" /></span>
             </div>
-            <h4 className="text-xl font-bold text-gray-800 mt-2">{getInventoryAlertsCount()} Low Items</h4>
+            <h4 className="text-2xl font-bold text-gray-800 mt-2">{getInventoryAlertsCount()} Low Items</h4>
             <p className="text-[10px] text-red-500 mt-1 font-semibold">Immediate reorder needed</p>
           </div>
         </div>
@@ -644,13 +659,13 @@ export default function CanteenPOSPage() {
                 "border-blue-100 hover:border-blue-300";
 
               return (
-                <div key={table.id} className={`bg-white border-2 rounded-2xl p-4 transition-all shadow-sm flex flex-col justify-between h-40 ${cardBorder}`}>
+                <div key={table.id} className={`bg-white border-2 rounded-2xl p-4 transition-all shadow-sm flex flex-col justify-between h-44 ${cardBorder}`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-gray-800 text-sm">{table.name}</h4>
-                      <span className="text-[10px] text-gray-400">{table.capacity} Seats</span>
+                      <h4 className="font-bold text-gray-800 text-base">{table.name}</h4>
+                      <span className="text-xs text-gray-400 font-medium">{table.capacity} Seats</span>
                     </div>
-                    <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                       table.status === "AVAILABLE" ? "bg-green-50 text-green-700" :
                       table.status === "OCCUPIED" ? "bg-red-50 text-red-700" :
                       table.status === "RESERVED" ? "bg-amber-50 text-amber-700" :
@@ -660,28 +675,28 @@ export default function CanteenPOSPage() {
                     </span>
                   </div>
 
-                  <div className="my-2 text-xs font-semibold text-gray-600">
+                  <div className="my-2.5 text-xs font-semibold text-gray-600">
                     {table.status === "OCCUPIED" ? (
-                      <div className="space-y-1 text-left">
-                        <div className="flex justify-between">
+                      <div className="space-y-1.5 text-left">
+                        <div className="flex justify-between text-xs">
                           <span className="text-gray-400 font-normal">Active Bill:</span>
-                          <span className="text-red-650 font-bold">₹{table.currentBill}</span>
+                          <span className="text-red-650 font-bold text-sm">UGX {(Number(table.currentBill) || 0).toLocaleString("en-UG")}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-xs">
                           <span className="text-gray-400 font-normal">Duration:</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-gray-400" /> {table.occupiedDuration}</span>
+                          <span className="flex items-center gap-1.5 text-gray-700"><Clock className="w-3.5 h-3.5 text-gray-400" /> {table.occupiedDuration}</span>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-gray-300 text-[10px] italic">Table is currently empty</p>
+                      <p className="text-gray-300 text-xs italic">Table is currently empty</p>
                     )}
                   </div>
 
-                  <div className="flex gap-1.5 justify-end border-t border-gray-50 pt-2 text-[8px] font-bold">
+                  <div className="flex gap-2 justify-end border-t border-gray-50 pt-2 text-[10px] font-bold">
                     {table.status !== "AVAILABLE" && (
                       <button
                         onClick={() => handleUpdateTableStatus(table.id, "AVAILABLE")}
-                        className="px-2 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded transition-colors"
+                        className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded transition-colors"
                       >
                         Free
                       </button>
@@ -689,7 +704,7 @@ export default function CanteenPOSPage() {
                     {table.status === "AVAILABLE" && (
                       <button
                         onClick={() => handleUpdateTableStatus(table.id, "OCCUPIED")}
-                        className="px-2 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded transition-colors"
+                        className="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded transition-colors"
                       >
                         Occupy
                       </button>
@@ -816,7 +831,7 @@ export default function CanteenPOSPage() {
                           <span className="text-[9px] text-gray-400">{o.customerName}</span>
                         </td>
                         <td className="py-2.5 font-semibold text-gray-700">{o.tableName}</td>
-                        <td className="py-2.5 font-bold text-gray-800">₹{o.total}</td>
+                        <td className="py-2.5 font-bold text-gray-800">UGX {o.total}</td>
                         <td className="py-2.5">
                           <span className={`text-[8px] font-bold px-2 py-0.5 rounded border uppercase ${payBadge}`}>
                             {o.paymentStatus}
@@ -873,7 +888,7 @@ export default function CanteenPOSPage() {
 
             {/* Category tabs */}
             <div className="flex gap-1 overflow-x-auto pb-1.5 select-none scrollbar-thin">
-              {["All", "Mains", "Snacks", "Beverages", "Desserts", "Combos", "Add-ons"].map((cat) => (
+              {categoriesList.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setPosCategory(cat)}
@@ -928,7 +943,7 @@ export default function CanteenPOSPage() {
                     <h4 className="font-bold text-gray-800 text-xs truncate group-hover:text-blue-600 transition-colors">{item.name}</h4>
                     
                     <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-gray-50 flex-shrink-0">
-                      <span className="text-xs font-bold text-blue-600">₹{item.price}</span>
+                      <span className="text-xs font-bold text-blue-600">UGX {item.price}</span>
                       <button className="p-1 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg text-blue-600 transition-all">
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -1021,7 +1036,7 @@ export default function CanteenPOSPage() {
                       <div className="flex justify-between items-center text-xs">
                         <div className="text-left">
                           <h4 className="font-bold text-gray-800">{c.item.name}</h4>
-                          <span className="text-[9px] text-gray-400">₹{c.item.price} each</span>
+                          <span className="text-[9px] text-gray-400">UGX {c.item.price} each</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -1084,7 +1099,7 @@ export default function CanteenPOSPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] font-bold uppercase text-gray-400">Discount (₹)</span>
+                      <span className="text-[9px] font-bold uppercase text-gray-400">Discount (UGX )</span>
                       <div className="flex gap-1 relative">
                         <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><Percent className="w-3.5 h-3.5" /></span>
                         <input
@@ -1101,25 +1116,25 @@ export default function CanteenPOSPage() {
                   <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2 text-xs font-sans text-gray-500 text-left">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span className="font-semibold text-gray-800">₹{subtotal}</span>
+                      <span className="font-semibold text-gray-800">UGX {subtotal}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>GST (5%):</span>
-                      <span className="font-semibold text-gray-800">₹{tax}</span>
+                      <span className="font-semibold text-gray-800">UGX {tax}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Service Charge (2.5%):</span>
-                      <span className="font-semibold text-gray-800">₹{serviceCharge}</span>
+                      <span className="font-semibold text-gray-800">UGX {serviceCharge}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-red-500 font-semibold">
                         <span>Discount:</span>
-                        <span>- ₹{discount}</span>
+                        <span>- UGX {discount}</span>
                       </div>
                     )}
                     <div className="border-t border-gray-200/50 my-2 pt-2 flex justify-between font-bold text-sm text-gray-800">
                       <span>Net Total:</span>
-                      <span className="text-blue-600 font-bold">₹{total}</span>
+                      <span className="text-blue-600 font-bold">UGX {total}</span>
                     </div>
                   </div>
                 </div>
@@ -1238,7 +1253,7 @@ export default function CanteenPOSPage() {
                       <span className="text-[10px] text-gray-400">{o.customerPhone}</span>
                     </td>
                     <td className="py-3 text-gray-600 font-semibold">{o.tableName}</td>
-                    <td className="py-3 font-bold text-gray-800">₹{o.total}</td>
+                    <td className="py-3 font-bold text-gray-800">UGX {o.total}</td>
                     <td className="py-3">
                       <span className={`text-[8px] font-bold px-2 py-0.5 border rounded uppercase ${
                         o.paymentStatus === "PAID" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"
@@ -1319,7 +1334,7 @@ export default function CanteenPOSPage() {
                 <div className="text-xs text-gray-650 font-semibold my-2 text-left">
                   {t.status === "OCCUPIED" ? (
                     <div>
-                      <p className="text-[10px] text-gray-400 font-normal">Current Bill: <b className="text-red-500 font-bold">₹{t.currentBill}</b></p>
+                      <p className="text-[10px] text-gray-400 font-normal">Current Bill: <b className="text-red-500 font-bold">UGX {t.currentBill}</b></p>
                       <p className="text-[10px] text-gray-400 font-normal">Active Since: <b className="text-gray-800 font-bold">{t.occupiedDuration}</b></p>
                     </div>
                   ) : (
@@ -1558,7 +1573,7 @@ export default function CanteenPOSPage() {
                         {m.variety}
                       </span>
                     </td>
-                    <td className="py-2.5 font-bold text-blue-600">₹{m.price}</td>
+                    <td className="py-2.5 font-bold text-blue-600">UGX {m.price}</td>
                     <td className="py-2.5 text-center">
                       <button
                         onClick={() => {
@@ -1608,7 +1623,7 @@ export default function CanteenPOSPage() {
                     <h5 className="font-bold text-gray-700">{c.name}</h5>
                     <span className="text-[9px] text-gray-400">Combo bundle</span>
                   </div>
-                  <span className="font-bold text-blue-600">₹{c.price}</span>
+                  <span className="font-bold text-blue-600">UGX {c.price}</span>
                 </div>
               ))}
             </div>
@@ -1624,7 +1639,7 @@ export default function CanteenPOSPage() {
                   <div>
                     <h5 className="font-bold text-gray-700">{a.name}</h5>
                   </div>
-                  <span className="font-bold text-blue-600">+ ₹{a.price}</span>
+                  <span className="font-bold text-blue-600">+ UGX {a.price}</span>
                 </div>
               ))}
             </div>
@@ -1753,7 +1768,7 @@ export default function CanteenPOSPage() {
                   <td className="py-3 font-bold text-gray-800">{c.name}</td>
                   <td className="py-3 text-gray-500 font-semibold font-mono">{c.phone}</td>
                   <td className="py-3 font-bold text-gray-800">{c.totalOrders} visits</td>
-                  <td className="py-3 font-bold text-blue-600">₹{c.totalSpent.toLocaleString("en-IN")}</td>
+                  <td className="py-3 font-bold text-blue-600">UGX {c.totalSpent.toLocaleString("en-IN")}</td>
                   <td className="py-3 text-gray-400 font-semibold">{c.lastVisit}</td>
                   <td className="py-3 text-right">
                     <button
@@ -1962,10 +1977,10 @@ export default function CanteenPOSPage() {
                 <line x1="40" y1="60" x2="480" y2="60" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="110" x2="480" y2="110" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="160" x2="480" y2="160" stroke="#E5E7EB" strokeWidth="1.5" />
-                <text x="5" y="15" fill="#9ca3af" fontSize="9" fontWeight="bold">₹25,000</text>
-                <text x="5" y="65" fill="#9ca3af" fontSize="9" fontWeight="bold">₹15,000</text>
-                <text x="5" y="115" fill="#9ca3af" fontSize="9" fontWeight="bold">₹5,000</text>
-                <text x="15" y="165" fill="#9ca3af" fontSize="9" fontWeight="bold">₹0</text>
+                <text x="5" y="15" fill="#9ca3af" fontSize="9" fontWeight="bold">UGX 25,000</text>
+                <text x="5" y="65" fill="#9ca3af" fontSize="9" fontWeight="bold">UGX 15,000</text>
+                <text x="5" y="115" fill="#9ca3af" fontSize="9" fontWeight="bold">UGX 5,000</text>
+                <text x="15" y="165" fill="#9ca3af" fontSize="9" fontWeight="bold">UGX 0</text>
                 <path d="M 50,150 L 120,135 L 190,110 L 260,95 L 330,70 L 400,60 L 470,30" fill="none" stroke="#3b82f6" strokeWidth="3.5" strokeLinecap="round" />
                 <circle cx="50" cy="150" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
                 <circle cx="120" cy="135" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
@@ -1996,19 +2011,19 @@ export default function CanteenPOSPage() {
                 <line x1="40" y1="85" x2="480" y2="85" stroke="#f3f4f6" strokeWidth="1" />
                 <line x1="40" y1="160" x2="480" y2="160" stroke="#E5E7EB" strokeWidth="1.5" />
                 <rect x="70" y="40" width="35" height="120" fill="#10B981" rx="4" />
-                <text x="75" y="32" fill="#10B981" fontSize="9" fontWeight="bold">₹28.4k</text>
+                <text x="75" y="32" fill="#10B981" fontSize="9" fontWeight="bold">UGX 28.4k</text>
                 <text x="72" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Mains</text>
                 <rect x="160" y="70" width="35" height="90" fill="#3B82F6" rx="4" />
-                <text x="165" y="62" fill="#3B82F6" fontSize="9" fontWeight="bold">₹19.2k</text>
+                <text x="165" y="62" fill="#3B82F6" fontSize="9" fontWeight="bold">UGX 19.2k</text>
                 <text x="162" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Snacks</text>
                 <rect x="250" y="90" width="35" height="70" fill="#F59E0B" rx="4" />
-                <text x="255" y="82" fill="#F59E0B" fontSize="9" fontWeight="bold">₹11.8k</text>
+                <text x="255" y="82" fill="#F59E0B" fontSize="9" fontWeight="bold">UGX 11.8k</text>
                 <text x="245" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Beverages</text>
                 <rect x="340" y="115" width="35" height="45" fill="#8B5E34" rx="4" />
-                <text x="348" y="107" fill="#8B5E34" fontSize="9" fontWeight="bold">₹6.4k</text>
+                <text x="348" y="107" fill="#8B5E34" fontSize="9" fontWeight="bold">UGX 6.4k</text>
                 <text x="336" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Desserts</text>
                 <rect x="420" y="100" width="35" height="60" fill="#8B5E34" rx="4" />
-                <text x="428" y="92" fill="#8B5E34" fontSize="9" fontWeight="bold">₹9.8k</text>
+                <text x="428" y="92" fill="#8B5E34" fontSize="9" fontWeight="bold">UGX 9.8k</text>
                 <text x="418" y="180" fill="#6b7280" fontSize="9" fontWeight="bold">Combos</text>
               </svg>
             </div>
@@ -2054,7 +2069,7 @@ export default function CanteenPOSPage() {
               </div>
               <div className="space-y-1">
                 <label className="text-gray-400 font-semibold block">Currency Symbol</label>
-                <input type="text" defaultValue="₹" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
+                <input type="text" defaultValue="UGX " className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
             </div>
           </div>
@@ -2390,7 +2405,7 @@ export default function CanteenPOSPage() {
                   {selectedOrder.items.map((i, idx) => (
                     <div key={idx} className="flex justify-between font-bold">
                       <span>{i.item.name} x {i.qty}</span>
-                      <span>₹{i.item.price * i.qty}</span>
+                      <span>UGX {i.item.price * i.qty}</span>
                     </div>
                   ))}
                 </div>
@@ -2399,25 +2414,25 @@ export default function CanteenPOSPage() {
               <div className="border-t border-gray-100 pt-3 space-y-1.5 text-[11px] text-gray-500">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>₹{selectedOrder.subtotal}</span>
+                  <span>UGX {selectedOrder.subtotal}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Taxes (5% GST):</span>
-                  <span>₹{selectedOrder.tax}</span>
+                  <span>UGX {selectedOrder.tax}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Service charge (2.5%):</span>
-                  <span>₹{selectedOrder.serviceCharge}</span>
+                  <span>UGX {selectedOrder.serviceCharge}</span>
                 </div>
                 {selectedOrder.discount > 0 && (
                   <div className="flex justify-between text-red-500 font-bold">
                     <span>Discount:</span>
-                    <span>- ₹{selectedOrder.discount}</span>
+                    <span>- UGX {selectedOrder.discount}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-sm text-gray-800 pt-1.5 border-t border-gray-50">
                   <span>NET TOTAL:</span>
-                  <span className="text-blue-600 font-bold">₹{selectedOrder.total}</span>
+                  <span className="text-blue-600 font-bold">UGX {selectedOrder.total}</span>
                 </div>
               </div>
 
@@ -2505,7 +2520,7 @@ export default function CanteenPOSPage() {
                 {receiptOrder.items.map((i, idx) => (
                   <div key={idx} className="flex justify-between">
                     <span>{i.item.name} x {i.qty}</span>
-                    <span>₹{i.item.price * i.qty}</span>
+                    <span>UGX {i.item.price * i.qty}</span>
                   </div>
                 ))}
               </div>
@@ -2515,31 +2530,68 @@ export default function CanteenPOSPage() {
               <div className="space-y-1 text-[11px]">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>₹{receiptOrder.subtotal}</span>
+                  <span>UGX {receiptOrder.subtotal}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>GST / Tax (5%):</span>
-                  <span>₹{receiptOrder.tax}</span>
+                  <span>UGX {receiptOrder.tax}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Service tax (2.5%):</span>
-                  <span>₹{receiptOrder.serviceCharge}</span>
+                  <span>UGX {receiptOrder.serviceCharge}</span>
                 </div>
                 {receiptOrder.discount > 0 && (
                   <div className="flex justify-between text-red-500 font-bold">
                     <span>Discount:</span>
-                    <span>- ₹{receiptOrder.discount}</span>
+                    <span>- UGX {receiptOrder.discount}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-sm border-t border-gray-200 pt-1.5 mt-1.5">
                   <span>TOTAL AMOUNT:</span>
-                  <span className="text-blue-600 font-bold">₹{receiptOrder.total}</span>
+                  <span className="text-blue-600 font-bold">UGX {receiptOrder.total}</span>
                 </div>
               </div>
 
+              {/* Dynamic Stall Token Slips */}
+              {(() => {
+                const itemsByCategory = receiptOrder.items.reduce((groups: Record<string, typeof receiptOrder.items>, item) => {
+                  const cat = item.item.category || "General";
+                  if (!groups[cat]) groups[cat] = [];
+                  groups[cat].push(item);
+                  return groups;
+                }, {});
+
+                return Object.entries(itemsByCategory).map(([category, items]) => (
+                  <div key={category} className="border-t border-dashed border-gray-300 pt-3.5 mt-3.5 text-left">
+                    <div className="text-center font-bold text-[9px] text-gray-400 tracking-wider my-1 uppercase">
+                      - - - TEAR SLIP FOR STALL: {category} - - -
+                    </div>
+                    <div className="border border-gray-200 p-2.5 bg-white rounded-xl space-y-1.5 text-[10px]">
+                      <div className="flex justify-between font-bold">
+                        <span>TOKEN NO: {receiptOrder.tokenNumber}</span>
+                        <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[8px] uppercase tracking-wider">{category}</span>
+                      </div>
+                      <div className="flex justify-between text-[9px] text-gray-400">
+                        <span>Allocation: {receiptOrder.tableName}</span>
+                        <span>{receiptOrder.timestamp}</span>
+                      </div>
+                      <div className="border-t border-gray-100 my-1" />
+                      <div className="space-y-1 font-bold text-gray-800">
+                        {items.map((i, idx) => (
+                          <div key={idx} className="flex justify-between items-start">
+                            <span>{i.item.name} x {i.qty}</span>
+                            {i.notes && <span className="text-[8px] text-amber-600 font-normal block italic">Note: {i.notes}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+
               <div className="border-t border-gray-200 pb-1 mt-3 pt-3 text-center text-[9px] font-sans text-gray-400">
                 <p>Present token copy at pick-up shelf when served.</p>
-                <p className="mt-1 font-bold uppercase text-gray-600">PAID STATUS: {receiptOrder.paymentStatus} ({receiptOrder.paymentMethod})</p>
+                <p className="mt-1 font-bold uppercase text-gray-600">PAID STATUS: {receiptOrder.paymentStatus} ({receiptOrder.paymentMethod === "UPI" ? "Mobile Money" : receiptOrder.paymentMethod})</p>
               </div>
             </div>
 

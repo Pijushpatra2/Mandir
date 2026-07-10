@@ -68,7 +68,7 @@ export default function SettingsPage() {
                   onChange={e => setCurrency(e.target.value)}
                   className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold cursor-pointer"
                 >
-                  <option value="INR">₹ INR</option>
+                  <option value="INR">UGX INR</option>
                   <option value="USD">$ USD</option>
                   <option value="UGX">UGX Shillings</option>
                 </select>

@@ -28,9 +28,9 @@ export default function MembershipPage() {
   ];
 
   const plans = [
-    { type: "Annual", price: "₹1,200 / yr", desc: "Standard community access, monthly newsletters, and digital card status." },
-    { type: "Life", price: "₹25,000 / one-time", desc: "Lifetime devotee portal access, name inscribed on donor boards, and VIP event seating." },
-    { type: "Patron", price: "₹1,00,000 / one-time", desc: "Core trustee-advisory circle invitations, permanent VIP seating, and lifetime priority puja bookings." }
+    { type: "Annual", price: "UGX 1,200 / yr", desc: "Standard community access, monthly newsletters, and digital card status." },
+    { type: "Life", price: "UGX 25,000 / one-time", desc: "Lifetime devotee portal access, name inscribed on donor boards, and VIP event seating." },
+    { type: "Patron", price: "UGX 1,00,000 / one-time", desc: "Core trustee-advisory circle invitations, permanent VIP seating, and lifetime priority puja bookings." }
   ];
 
   const handleOpenRegister = (type: any) => {

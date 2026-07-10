@@ -396,7 +396,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                   {selectedOrder.items.map((i, idx) => (
                     <div key={idx} className="flex justify-between font-semibold">
                       <span>{i.item.name} x {i.qty}</span>
-                      <span>₹{i.item.price * i.qty}</span>
+                      <span>UGX {i.item.price * i.qty}</span>
                     </div>
                   ))}
                 </div>
@@ -406,25 +406,25 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               <div className="border-t border-gray-100 pt-3 space-y-1.5 text-[11px] text-gray-500">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>₹{selectedOrder.subtotal}</span>
+                  <span>UGX {selectedOrder.subtotal}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Taxes (5% GST):</span>
-                  <span>₹{selectedOrder.tax}</span>
+                  <span>UGX {selectedOrder.tax}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Service charge (2.5%):</span>
-                  <span>₹{selectedOrder.serviceCharge}</span>
+                  <span>UGX {selectedOrder.serviceCharge}</span>
                 </div>
                 {selectedOrder.discount > 0 && (
                   <div className="flex justify-between text-red-500 font-semibold">
                     <span>Discount:</span>
-                    <span>- ₹{selectedOrder.discount}</span>
+                    <span>- UGX {selectedOrder.discount}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-sm text-gray-800 pt-1.5 border-t border-gray-50">
                   <span>NET TOTAL AMOUNT:</span>
-                  <span className="text-blue-600 font-bold">₹{selectedOrder.total}</span>
+                  <span className="text-blue-600 font-bold">UGX {selectedOrder.total}</span>
                 </div>
               </div>
 
@@ -516,7 +516,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                 {receiptOrder.items.map((i, idx) => (
                   <div key={idx} className="flex justify-between">
                     <span>{i.item.name} x {i.qty}</span>
-                    <span>₹{i.item.price * i.qty}</span>
+                    <span>UGX {i.item.price * i.qty}</span>
                   </div>
                 ))}
               </div>
@@ -526,31 +526,68 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               <div className="space-y-1 text-[11px]">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>₹{receiptOrder.subtotal}</span>
+                  <span>UGX {receiptOrder.subtotal}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>GST / Tax (5%):</span>
-                  <span>₹{receiptOrder.tax}</span>
+                  <span>UGX {receiptOrder.tax}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Service tax (2.5%):</span>
-                  <span>₹{receiptOrder.serviceCharge}</span>
+                  <span>UGX {receiptOrder.serviceCharge}</span>
                 </div>
                 {receiptOrder.discount > 0 && (
                   <div className="flex justify-between text-red-500 font-bold">
                     <span>Discount:</span>
-                    <span>- ₹{receiptOrder.discount}</span>
+                    <span>- UGX {receiptOrder.discount}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-sm border-t border-gray-200/60 pt-1.5 mt-1.5">
                   <span>TOTAL AMOUNT:</span>
-                  <span className="text-blue-600 font-bold">₹{receiptOrder.total}</span>
+                  <span className="text-blue-600 font-bold">UGX {receiptOrder.total}</span>
                 </div>
               </div>
 
+              {/* Dynamic Stall Token Slips */}
+              {(() => {
+                const itemsByCategory = receiptOrder.items.reduce((groups: Record<string, typeof receiptOrder.items>, item) => {
+                  const cat = item.item.category || "General";
+                  if (!groups[cat]) groups[cat] = [];
+                  groups[cat].push(item);
+                  return groups;
+                }, {});
+
+                return Object.entries(itemsByCategory).map(([category, items]) => (
+                  <div key={category} className="border-t border-dashed border-gray-300 pt-3.5 mt-3.5 text-left">
+                    <div className="text-center font-bold text-[9px] text-gray-400 tracking-wider my-1 uppercase">
+                      - - - TEAR SLIP FOR STALL: {category} - - -
+                    </div>
+                    <div className="border border-gray-200 p-2.5 bg-white rounded-xl space-y-1.5 text-[10px]">
+                      <div className="flex justify-between font-bold">
+                        <span>TOKEN NO: {receiptOrder.tokenNumber}</span>
+                        <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[8px] uppercase tracking-wider">{category}</span>
+                      </div>
+                      <div className="flex justify-between text-[9px] text-gray-400">
+                        <span>Allocation: {receiptOrder.tableName}</span>
+                        <span>{receiptOrder.timestamp}</span>
+                      </div>
+                      <div className="border-t border-gray-100 my-1" />
+                      <div className="space-y-1 font-bold text-gray-800">
+                        {items.map((i, idx) => (
+                          <div key={idx} className="flex justify-between items-start">
+                            <span>{i.item.name} x {i.qty}</span>
+                            {i.notes && <span className="text-[8px] text-amber-600 font-normal block italic">Note: {i.notes}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+
               <div className="border-t border-gray-200 pb-1 mt-3 pt-3 text-center text-[9px] font-sans text-gray-400">
                 <p>Present token copy at pick-up shelf when served.</p>
-                <p className="mt-1 font-bold uppercase text-gray-600">PAID STATUS: {receiptOrder.paymentStatus} ({receiptOrder.paymentMethod})</p>
+                <p className="mt-1 font-bold uppercase text-gray-600">PAID STATUS: {receiptOrder.paymentStatus} ({receiptOrder.paymentMethod === "UPI" ? "Mobile Money" : receiptOrder.paymentMethod})</p>
               </div>
             </div>
 

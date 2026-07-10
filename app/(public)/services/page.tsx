@@ -228,7 +228,7 @@ export default function ServicesPage() {
                         className="w-4.5 h-4.5 rounded text-primary-gold border-primary-gold/25 focus:ring-primary-gold cursor-pointer mt-0.5"
                       />
                       <label htmlFor="pujaContents" className="text-xs font-semibold text-secondary-bronze cursor-pointer select-none">
-                        Include Puja Samagri (Contents) Box (+₹500)
+                        Include Puja Samagri (Contents) Box (+UGX 500)
                         <span className="block text-[10px] font-normal text-secondary-bronze/70 mt-0.5 leading-normal">
                           Includes fresh flowers, holy leaves, coconut, honey, camphor, dhoop, thread, and all Vedic ritual samagri ingredients.
                         </span>
@@ -268,7 +268,7 @@ export default function ServicesPage() {
                       Devotee: <span className="font-bold text-dark-surface">{devoteeName}</span>
                     </p>
                     <p className="text-xs text-secondary-bronze font-sans">
-                      Puja Contents: <span className="font-bold text-dark-surface">{withContents ? "With Puja Samagri (+₹500)" : "Without Samagri (Devotee Brings)"}</span>
+                      Puja Contents: <span className="font-bold text-dark-surface">{withContents ? "With Puja Samagri (+UGX 500)" : "Without Samagri (Devotee Brings)"}</span>
                     </p>
                     <p className="text-xs text-secondary-bronze font-sans pt-2 border-t border-primary-gold/10">
                       Total Amount: <span className="font-bold text-lg text-primary-gold">{formatCurrency(getPoojaTotal())}</span>

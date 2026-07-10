@@ -104,9 +104,9 @@ export default function OrdersPage() {
     order.items.forEach((item, index) => {
       ctx.fillText((index + 1).toString(), 70, currentY);
       ctx.fillText(item.name, 130, currentY);
-      ctx.fillText(`₹${item.price}`, 450, currentY);
+      ctx.fillText(`UGX ${item.price}`, 450, currentY);
       ctx.fillText(item.quantity.toString(), 550, currentY);
-      ctx.fillText(`₹${item.price * item.quantity}`, 650, currentY);
+      ctx.fillText(`UGX ${item.price * item.quantity}`, 650, currentY);
 
       // Underline item
       ctx.strokeStyle = "#FAF0E6";
@@ -123,23 +123,23 @@ export default function OrdersPage() {
     ctx.fillStyle = "#111111";
     ctx.font = "normal 13px sans-serif";
     ctx.fillText("Subtotal:", 500, currentY);
-    ctx.fillText(`₹${order.subtotal}`, 650, currentY);
+    ctx.fillText(`UGX ${order.subtotal}`, 650, currentY);
 
     if (order.discount > 0) {
       currentY += 25;
       ctx.fillStyle = "green";
       ctx.fillText("Discount:", 500, currentY);
-      ctx.fillText(`-₹${order.discount}`, 650, currentY);
+      ctx.fillText(`-UGX ${order.discount}`, 650, currentY);
       ctx.fillStyle = "#111111";
     }
 
     currentY += 25;
     ctx.fillText("GST Tax (5%):", 500, currentY);
-    ctx.fillText(`₹${order.tax}`, 650, currentY);
+    ctx.fillText(`UGX ${order.tax}`, 650, currentY);
 
     currentY += 25;
     ctx.fillText("Shipping Charges:", 500, currentY);
-    ctx.fillText(order.subtotal - order.discount >= 999 ? "FREE" : "₹99", 650, currentY);
+    ctx.fillText(order.subtotal - order.discount >= 999 ? "FREE" : "UGX 99", 650, currentY);
 
     currentY += 35;
     ctx.strokeStyle = "#C59D5F";
@@ -151,7 +151,7 @@ export default function OrdersPage() {
     ctx.font = "bold 15px sans-serif";
     ctx.fillStyle = "#8B5E34";
     ctx.fillText("Total Amount Paid:", 500, currentY);
-    ctx.fillText(`₹${order.total}`, 650, currentY);
+    ctx.fillText(`UGX ${order.total}`, 650, currentY);
 
     // 6. Signature & Footnote
     ctx.fillStyle = "#111111";

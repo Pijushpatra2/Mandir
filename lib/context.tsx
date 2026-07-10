@@ -259,7 +259,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       {
         id: `notif-${Date.now()}`,
         title: "Order Placed Successfully",
-        message: `Your order ${order.id} has been received. Total: ₹${order.total}.`,
+        message: `Your order ${order.id} has been received. Total: UGX ${order.total}.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         read: false,
         category: "booking",

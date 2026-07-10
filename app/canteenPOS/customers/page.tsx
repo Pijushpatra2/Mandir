@@ -36,7 +36,7 @@ export default function CustomersPage() {
                   </td>
                   <td className="py-2.5 text-gray-500 font-semibold">{c.phone}</td>
                   <td className="py-2.5 font-bold text-gray-700">{c.totalVisits}</td>
-                  <td className="py-2.5 font-bold text-blue-600">₹{c.totalSpent?.toLocaleString("en-IN")}</td>
+                  <td className="py-2.5 font-bold text-blue-600">UGX {c.totalSpent?.toLocaleString("en-IN")}</td>
                   <td className="py-2.5 text-gray-400">{c.lastVisit}</td>
                   <td className="py-2.5 text-center">
                     <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${
@@ -93,7 +93,7 @@ export default function CustomersPage() {
                     <p className="font-bold text-gray-800 truncate">{c.name}</p>
                     <p className="text-[9px] text-gray-400">{c.totalVisits} visits</p>
                   </div>
-                  <span className="font-bold text-blue-600 text-[10px]">₹{c.totalSpent?.toLocaleString("en-IN")}</span>
+                  <span className="font-bold text-blue-600 text-[10px]">UGX {c.totalSpent?.toLocaleString("en-IN")}</span>
                 </div>
               ))}
           </div>

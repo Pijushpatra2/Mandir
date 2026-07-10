@@ -92,7 +92,7 @@ export default function OrdersPage() {
                       <span className="text-[10px] text-gray-400">{o.customerPhone}</span>
                     </td>
                     <td className="py-3 text-gray-600 font-semibold">{o.tableName}</td>
-                    <td className="py-3 font-bold text-gray-800">₹{o.total}</td>
+                    <td className="py-3 font-bold text-gray-800">UGX {o.total}</td>
                     <td className="py-3">
                       <span className={`text-[8px] font-bold px-2 py-0.5 border rounded uppercase ${payBadge}`}>
                         {o.paymentStatus}

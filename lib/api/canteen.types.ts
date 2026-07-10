@@ -39,7 +39,7 @@ export interface CanteenTable {
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
 
-export type MenuCategory = 'Mains' | 'Snacks' | 'Beverages' | 'Desserts' | 'Combos' | 'Add-ons';
+export type MenuCategory = string;
 export type MenuVariety  = 'Regular' | 'Jain' | 'Spicy' | 'Sweet';
 
 export interface CanteenMenuItem {

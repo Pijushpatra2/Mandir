@@ -168,8 +168,8 @@ export default function ShopPage() {
                 className="w-full accent-primary-gold cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-secondary-bronze/50 mt-1">
-                <span>₹100</span>
-                <span>₹15,000</span>
+                <span>UGX 100</span>
+                <span>UGX 15,000</span>
               </div>
             </div>
 

@@ -41,3 +41,6 @@ export { useInventory, useLowStock, useAdjustInventory, useLogWaste } from './us
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 export { useTodayReport, useTopCustomers, useReportsSummary } from './useReports';
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+export { useCategories, useAddCategory, useDeleteCategory } from './useCategories';

@@ -14,8 +14,11 @@ import {
   Check
 } from "lucide-react";
 import { useCanteen } from "../context/CanteenContext";
+import { useCategories } from "@/lib/api/canteen";
 
 export default function POSPage() {
+  const { data: apiCategories = [] } = useCategories();
+  
   const {
     posSearch,
     setPosSearch,
@@ -43,6 +46,20 @@ export default function POSPage() {
     handleUpdateItemNote,
     handlePosCheckout
   } = useCanteen();
+
+  // Extract distinct categories from menu as fallback, merging with API list
+  const menuCategories = Array.from(new Set(menu.map(m => m.category))).filter(Boolean);
+  const categoriesList = Array.from(new Set([
+    "All",
+    ...apiCategories.map(c => c.name),
+    ...menuCategories,
+    "Mains",
+    "Snacks",
+    "Beverages",
+    "Desserts",
+    "Combos",
+    "Add-ons"
+  ]));
 
   // Filter Menu Items
   const filteredMenu = menu.filter((item) => {
@@ -76,7 +93,7 @@ export default function POSPage() {
 
           {/* Category tabs */}
           <div className="flex gap-1 overflow-x-auto pb-1.5 select-none scrollbar-thin">
-            {["All", "Mains", "Snacks", "Beverages", "Desserts", "Combos", "Add-ons"].map((cat) => (
+            {categoriesList.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setPosCategory(cat)}
@@ -134,7 +151,7 @@ export default function POSPage() {
                   <h4 className="font-bold text-gray-800 text-xs truncate group-hover:text-blue-600 transition-colors">{item.name}</h4>
                   
                   <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-gray-55 flex-shrink-0">
-                    <span className="text-xs font-bold text-blue-600">₹{item.price}</span>
+                    <span className="text-xs font-bold text-blue-600">UGX {item.price}</span>
                     <button className="p-1 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg text-blue-600 transition-all border-none cursor-pointer">
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -231,7 +248,7 @@ export default function POSPage() {
                     <div className="flex justify-between items-center text-xs">
                       <div className="text-left">
                         <h4 className="font-bold text-gray-800">{c.item.name}</h4>
-                        <span className="text-[9px] text-gray-400">₹{c.item.price} each</span>
+                        <span className="text-[9px] text-gray-400">UGX {c.item.price} each</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -294,7 +311,7 @@ export default function POSPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[9px] font-bold uppercase text-gray-400">Add Discount (₹ Amount)</span>
+                    <span className="text-[9px] font-bold uppercase text-gray-400">Add Discount (UGX Amount)</span>
                     <div className="flex gap-1 relative">
                       <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                         <Percent className="w-3.5 h-3.5" />
@@ -313,25 +330,25 @@ export default function POSPage() {
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2 text-xs font-sans text-gray-500">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span className="font-semibold text-gray-800">₹{subtotal}</span>
+                    <span className="font-semibold text-gray-800">UGX {subtotal}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>VAT / GST (5%):</span>
-                    <span className="font-semibold text-gray-800">₹{tax}</span>
+                    <span className="font-semibold text-gray-800">UGX {tax}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service Charge (2.5%):</span>
-                    <span className="font-semibold text-gray-800">₹{serviceCharge}</span>
+                    <span className="font-semibold text-gray-800">UGX {serviceCharge}</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-red-500 font-semibold">
                       <span>Discount:</span>
-                      <span>- ₹{discount}</span>
+                      <span>- UGX {discount}</span>
                     </div>
                   )}
                   <div className="border-t border-gray-200/50 my-2 pt-2 flex justify-between font-bold text-sm text-gray-800">
                     <span>Net Total:</span>
-                    <span className="text-blue-600">₹{total}</span>
+                    <span className="text-blue-600">UGX {total}</span>
                   </div>
                 </div>
               </div>
@@ -353,7 +370,7 @@ export default function POSPage() {
                       : "border-gray-100 hover:bg-gray-55 text-gray-500 bg-white"
                   }`}
                 >
-                  {method}
+                  {method === "UPI" ? "Mobile Money" : method}
                 </button>
               ))}
             </div>

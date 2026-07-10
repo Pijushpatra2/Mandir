@@ -23,7 +23,7 @@ export default function DashboardOrdersPage() {
   });
 
   // Calculate total e-commerce revenue
-  const totalRevenue = orders.reduce((acc, curr) => acc + curr.total, 0);
+  const totalRevenue = orders.reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
 
   // SVG Chart Mock Data (Jan - Jun Revenue)
   const monthlyRevenue = [
@@ -157,7 +157,7 @@ export default function DashboardOrdersPage() {
                 <div key={idx} className="flex flex-col items-center flex-grow space-y-2 group relative">
                   {/* Tooltip bar value */}
                   <span className="absolute -top-6 text-[9px] font-bold text-primary-gold opacity-0 group-hover:opacity-100 transition-opacity bg-bg-warm px-1.5 py-0.5 rounded border border-primary-gold/10">
-                    ₹{Math.round(m.value)}
+                    UGX {Math.round(m.value)}
                   </span>
                   {/* Bar */}
                   <div

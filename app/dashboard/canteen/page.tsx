@@ -39,10 +39,13 @@ import {
   useAddMenuItem,
   useDeleteMenuItem,
   useAddTable,
+  useCategories,
+  useAddCategory,
+  useDeleteCategory,
 } from "@/lib/api/canteen";
 
 export default function CanteenCRMPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "pos" | "tables" | "menu" | "orders" | "staff" | "customers">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "pos" | "tables" | "menu" | "categories" | "orders" | "staff" | "customers">("overview");
 
   // State loaded dynamically on mount
   const [tables, setTables] = useState<SeatingTable[]>([]);
@@ -67,7 +70,7 @@ export default function CanteenCRMPage() {
   // Configure Add Food Form State
   const [newFoodName, setNewFoodName] = useState("");
   const [newFoodPrice, setNewFoodPrice] = useState<number>(100);
-  const [newFoodCategory, setNewFoodCategory] = useState<"Mains" | "Snacks" | "Beverages" | "Desserts">("Mains");
+  const [newFoodCategory, setNewFoodCategory] = useState<string>("Mains");
   const [newFoodVariety, setNewFoodVariety] = useState<"Regular" | "Jain" | "Spicy" | "Sweet">("Regular");
 
   // Configure Add Staff Form State
@@ -88,6 +91,7 @@ export default function CanteenCRMPage() {
   // ─── API Query & Offline Hooks ──────────────────────────────────────────────
   const { data: apiMenu } = useOfflineMenu({ enabled: isAdminLoggedIn });
   const { data: apiTables } = useOfflineTables(undefined, { enabled: isAdminLoggedIn });
+  const { data: apiCategories = [] } = useCategories({ enabled: isAdminLoggedIn });
   const { data: apiOrders } = useOrders(undefined, { enabled: isAdminLoggedIn });
   const { data: apiBookings } = useBookings(undefined, { enabled: isAdminLoggedIn });
   const { data: apiCustomers } = useCustomers(undefined, { enabled: isAdminLoggedIn });
@@ -104,6 +108,8 @@ export default function CanteenCRMPage() {
   const { mutate: apiDeleteStaff } = useDeleteStaff();
   const { mutate: apiAddMenuItem } = useAddMenuItem();
   const { mutate: apiDeleteMenuItem } = useDeleteMenuItem();
+  const { mutate: apiAddCategory } = useAddCategory();
+  const { mutate: apiDeleteCategory } = useDeleteCategory();
   const { mutate: apiAddTable } = useAddTable();
 
   // Map API Menu Catalog to FoodItem[]
@@ -467,7 +473,11 @@ export default function CanteenCRMPage() {
   const pendingOrdersCount = orders.filter((o) => o.status === "NEW" || o.status === "PREPARING").length;
   const totalCanteenSales = orders
     .filter((o) => o.paymentStatus === "PAID" && o.status !== "CANCELLED")
-    .reduce((acc, o) => acc + o.total, 0);
+    .reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+
+  const adminCategories = apiCategories.length > 0
+    ? apiCategories.map(c => c.name)
+    : ["Mains", "Snacks", "Beverages", "Desserts", "Combos", "Add-ons"];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 text-left">
@@ -515,6 +525,7 @@ export default function CanteenCRMPage() {
             { id: "pos", label: "POS Billing" },
             { id: "tables", label: "Seating Layout" },
             { id: "menu", label: "Menu Catalog" },
+            { id: "categories", label: "Menu Categories" },
             { id: "orders", label: "Kitchen Queue" }
           ].map((tab) => (
             <button
@@ -539,7 +550,7 @@ export default function CanteenCRMPage() {
           <div>
             <p className="text-[10px] uppercase font-bold text-secondary-bronze/70 tracking-wider">Canteen Sales Revenue</p>
             <h4 className="text-lg font-bold text-[#2B132C] mt-0.5">
-              ₹{totalCanteenSales.toLocaleString("en-IN")}
+              UGX {totalCanteenSales.toLocaleString("en-IN")}
             </h4>
           </div>
         </div>
@@ -613,10 +624,10 @@ export default function CanteenCRMPage() {
                     <line x1="40" y1="110" x2="480" y2="110" stroke="#FAF7F2" strokeWidth="1" />
                     <line x1="40" y1="160" x2="480" y2="160" stroke="#E5E3DF" strokeWidth="1.5" />
                     
-                    <text x="5" y="15" fill="#B47F35" fontSize="9" fontWeight="bold">₹60,000</text>
-                    <text x="5" y="65" fill="#B47F35" fontSize="9" fontWeight="bold">₹40,000</text>
-                    <text x="5" y="115" fill="#B47F35" fontSize="9" fontWeight="bold">₹20,000</text>
-                    <text x="15" y="165" fill="#B47F35" fontSize="9" fontWeight="bold">₹0</text>
+                    <text x="5" y="15" fill="#B47F35" fontSize="9" fontWeight="bold">UGX 60,000</text>
+                    <text x="5" y="65" fill="#B47F35" fontSize="9" fontWeight="bold">UGX 40,000</text>
+                    <text x="5" y="115" fill="#B47F35" fontSize="9" fontWeight="bold">UGX 20,000</text>
+                    <text x="15" y="165" fill="#B47F35" fontSize="9" fontWeight="bold">UGX 0</text>
 
                     {/* Gradient area */}
                     <path
@@ -884,7 +895,7 @@ export default function CanteenCRMPage() {
                       <td className="py-3.5 font-semibold">{c.name}</td>
                       <td className="py-3.5 font-mono">{c.phone}</td>
                       <td className="py-3.5 font-semibold">{c.totalOrders} visits</td>
-                      <td className="py-3.5 font-bold text-[#B47F35]">₹{c.totalSpent.toLocaleString("en-IN")}</td>
+                      <td className="py-3.5 font-bold text-[#B47F35]">UGX {c.totalSpent.toLocaleString("en-IN")}</td>
                       <td className="py-3.5 text-secondary-bronze/80">{c.lastVisit}</td>
                     </tr>
                   ))}
@@ -928,7 +939,7 @@ export default function CanteenCRMPage() {
                       </div>
                       
                       <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-primary-gold/10">
-                        <span className="text-xs font-bold text-[#B47F35]">₹{food.price}</span>
+                        <span className="text-xs font-bold text-[#B47F35]">UGX {food.price}</span>
                         <span className="text-[10px] font-bold text-[#B47F35] hover:text-[#8B5E34]">
                           + Add to Cart
                         </span>
@@ -981,7 +992,7 @@ export default function CanteenCRMPage() {
                       {activeTicket.items.map((c, idx) => (
                         <div key={idx} className="flex justify-between">
                           <span>{c.item.name} x {c.qty}</span>
-                          <span>₹{c.item.price * c.qty}</span>
+                          <span>UGX {c.item.price * c.qty}</span>
                         </div>
                       ))}
                     </div>
@@ -991,7 +1002,7 @@ export default function CanteenCRMPage() {
                     <div className="space-y-1 text-[11px]">
                       <div className="flex justify-between font-bold text-sm">
                         <span>TOTAL AMOUNT:</span>
-                        <span className="text-[#B47F35]">₹{activeTicket.total}</span>
+                        <span className="text-[#B47F35]">UGX {activeTicket.total}</span>
                       </div>
                     </div>
                   </div>
@@ -1031,7 +1042,7 @@ export default function CanteenCRMPage() {
                         <div key={c.item.id} className="flex justify-between items-center text-xs font-sans">
                           <div className="text-left space-y-0.5">
                             <h4 className="font-bold text-[#2B132C]">{c.item.name}</h4>
-                            <span className="text-[10px] text-secondary-bronze/65">₹{c.item.price} each</span>
+                            <span className="text-[10px] text-secondary-bronze/65">UGX {c.item.price} each</span>
                           </div>
                           
                           <div className="flex items-center space-x-2.5">
@@ -1126,12 +1137,12 @@ export default function CanteenCRMPage() {
                   <div className="space-y-1.5 text-xs text-secondary-bronze">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>₹{cart.reduce((acc, c) => acc + c.item.price * c.qty, 0)}</span>
+                      <span>UGX {cart.reduce((acc, c) => acc + c.item.price * c.qty, 0)}</span>
                     </div>
                     <div className="flex justify-between font-bold text-[#2B132C] text-sm">
                       <span>Total Amount:</span>
                       <span className="text-[#B47F35] font-heading">
-                        ₹{(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) + Math.round(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) * 0.075)).toLocaleString("en-IN")}
+                        UGX {(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) + Math.round(cart.reduce((acc, c) => acc + c.item.price * c.qty, 0) * 0.075)).toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
@@ -1319,7 +1330,7 @@ export default function CanteenCRMPage() {
                             {item.variety}
                           </span>
                         </td>
-                        <td className="py-3.5 font-bold text-[#B47F35]">₹{item.price}</td>
+                        <td className="py-3.5 font-bold text-[#B47F35]">UGX {item.price}</td>
                         <td className="py-3.5 text-right">
                           <button
                             onClick={() => handleDeleteFood(item.id)}
@@ -1382,10 +1393,9 @@ export default function CanteenCRMPage() {
                         onChange={(e: any) => setNewFoodCategory(e.target.value)}
                         className="w-full p-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs"
                       >
-                        <option value="Mains">Mains</option>
-                        <option value="Snacks">Snacks</option>
-                        <option value="Beverages">Beverages</option>
-                        <option value="Desserts">Desserts</option>
+                        {adminCategories.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
                       </select>
                     </div>
                     <div>
@@ -1417,6 +1427,120 @@ export default function CanteenCRMPage() {
               </GlassCard>
             </div>
 
+          </motion.div>
+        )}
+
+        {/* TAB: CANTEEN FOOD CATEGORIES */}
+        {activeTab === "categories" && (
+          <motion.div
+            key="categories-tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+          >
+            <div className="lg:col-span-8 bg-white border border-[#B47F35]/15 rounded-3xl p-6 shadow-sm space-y-6 text-left">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
+                <Ticket className="w-4 h-4" />
+                <span>Manage Food Categories</span>
+              </h3>
+
+              <div className="overflow-x-auto">
+                <table className="w-full font-sans text-xs">
+                  <thead>
+                    <tr className="border-b border-[#B47F35]/15 text-left text-secondary-bronze uppercase tracking-wider text-[10px] font-bold">
+                      <th className="pb-3">Category Name</th>
+                      <th className="pb-3">Date Added</th>
+                      <th className="pb-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#B47F35]/10">
+                    {apiCategories.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="py-6 text-center text-secondary-bronze/65">
+                          No custom categories found. Seed defaults are loaded in forms.
+                        </td>
+                      </tr>
+                    ) : (
+                      apiCategories.map((cat) => (
+                        <tr key={cat.id} className="hover:bg-[#FAF7F2]/40 transition-colors">
+                          <td className="py-3.5 font-bold text-[#2B132C]">{cat.name}</td>
+                          <td className="py-3.5 text-secondary-bronze">{new Date(cat.created_at).toLocaleDateString()}</td>
+                          <td className="py-3.5 text-right">
+                            <button
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete category "${cat.name}"?`)) {
+                                  apiDeleteCategory(cat.id, {
+                                    onError: (err: any) => {
+                                      alert(err.response?.data?.message || err.message || "Failed to delete category");
+                                    }
+                                  });
+                                }
+                              }}
+                              className="p-1.5 text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-6">
+              <GlassCard className="p-6 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#B47F35]">
+                  Add Category
+                </h4>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget;
+                    const data = new FormData(form);
+                    const name = data.get("categoryName") as string;
+                    if (!name?.trim()) return;
+
+                    apiAddCategory(
+                      { name: name.trim() },
+                      {
+                        onSuccess: () => {
+                          form.reset();
+                        },
+                        onError: (err: any) => {
+                          alert(err.response?.data?.message || err.message || "Failed to add category");
+                        }
+                      }
+                    );
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block">
+                      Category Name
+                    </label>
+                    <input
+                      name="categoryName"
+                      type="text"
+                      required
+                      placeholder="e.g. Cold Drinks, Platters..."
+                      className="w-full p-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs outline-none focus:border-[#B47F35] focus:bg-white transition-all"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white text-xs font-semibold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Category</span>
+                  </button>
+                </form>
+              </GlassCard>
+            </div>
           </motion.div>
         )}
 
@@ -1482,7 +1606,7 @@ export default function CanteenCRMPage() {
                       <div className="text-right">
                         <span className="text-[9px] uppercase tracking-wider block">Total paid</span>
                         <span className="text-base font-heading font-bold text-[#B47F35]">
-                          ₹{o.total.toLocaleString("en-IN")}
+                          UGX {o.total.toLocaleString("en-IN")}
                         </span>
                       </div>
 

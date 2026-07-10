@@ -25,7 +25,7 @@ export default function UserDonationsPage() {
 
   // Download Receipt simulation
   const handlePrintReceipt = (donation: any) => {
-    alert(`Generating print receipt for Donation ${donation.id}...\nDonor: ${donation.donorName}\nAmount: ₹${donation.amount}\nCampaign: ${donation.campaignTitle}\nStatus: ${donation.status}`);
+    alert(`Generating print receipt for Donation ${donation.id}...\nDonor: ${donation.donorName}\nAmount: UGX ${donation.amount}\nCampaign: ${donation.campaignTitle}\nStatus: ${donation.status}`);
   };
 
   return (

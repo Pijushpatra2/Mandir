@@ -617,7 +617,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     const newNotif = {
       id: Date.now(),
       title: "New Order Placed",
-      message: `Token ${tokenNum} generated for ${allocatedTableName}. Total: ₹${total}`,
+      message: `Token ${tokenNum} generated for ${allocatedTableName}. Total: UGX ${total}`,
       type: "success",
       read: false,
     };
@@ -733,7 +733,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const getTodaySales = () => {
     return orders
       .filter((o) => o.status === "COMPLETED" || (o.paymentStatus === "PAID" && o.status !== "CANCELLED"))
-      .reduce((sum, o) => sum + o.total, 0);
+      .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
   };
 
   const getTodayOrdersCount = () => {

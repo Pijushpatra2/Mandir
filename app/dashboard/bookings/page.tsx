@@ -427,7 +427,7 @@ export default function BookingsDashboardPage() {
                     <div className="flex justify-between">
                       <span className="text-secondary-bronze/65">Puja Ingredients:</span>
                       <span className="font-bold text-primary-gold">
-                        {selectedBooking.slot.includes("With Puja Contents") ? "Samagri Box Provided (+₹500)" : "No Contents (Devotee Brings)"}
+                        {selectedBooking.slot.includes("With Puja Contents") ? "Samagri Box Provided (+UGX 500)" : "No Contents (Devotee Brings)"}
                       </span>
                     </div>
                     <div className="flex justify-between">

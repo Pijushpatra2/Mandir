@@ -93,7 +93,7 @@ export default function DashboardCouponsPage() {
                 <div>
                   <span className="font-bold text-dark-surface tracking-wider text-base">{coupon.code}</span>
                   <span className="text-[10px] text-secondary-bronze/50 block mt-0.5">
-                    Min Spend: ₹{coupon.minSpend}
+                    Min Spend: UGX {coupon.minSpend}
                   </span>
                 </div>
               </div>
@@ -116,7 +116,7 @@ export default function DashboardCouponsPage() {
               </p>
               <div className="text-xs font-bold text-primary-gold pt-2 border-t border-primary-gold/5 flex justify-between">
                 <span>Value:</span>
-                <span>{coupon.discountType === "PERCENT" ? `${coupon.value}% OFF` : `Flat ₹${coupon.value} OFF`}</span>
+                <span>{coupon.discountType === "PERCENT" ? `${coupon.value}% OFF` : `Flat UGX ${coupon.value} OFF`}</span>
               </div>
             </div>
           </div>
@@ -156,7 +156,7 @@ export default function DashboardCouponsPage() {
                     className={inputs.select}
                   >
                     <option value="PERCENT">PERCENT (%)</option>
-                    <option value="FIXED">FIXED (₹)</option>
+                    <option value="FIXED">FIXED (UGX )</option>
                   </select>
                 </div>
 
@@ -187,7 +187,7 @@ export default function DashboardCouponsPage() {
                 <label className={inputs.label}>Description</label>
                 <input
                   type="text"
-                  placeholder="e.g. 15% discount on checkout orders above ₹1000"
+                  placeholder="e.g. 15% discount on checkout orders above UGX 1000"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className={inputs.text}
