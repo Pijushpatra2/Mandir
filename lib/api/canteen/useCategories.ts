@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { staffApiClient } from '@/lib/apiClient';
+import { getStaffAccessToken } from '@/lib/authStorage';
 import type { ApiResponse } from '@/lib/api/canteen.types';
 
 export interface CanteenCategory {
@@ -15,6 +16,10 @@ export interface CanteenCategory {
  * Retrieves dynamic list of canteen categories.
  */
 export function useCategories(options?: { enabled?: boolean }) {
+  const hasStaffToken = typeof window !== 'undefined' && !!getStaffAccessToken();
+  const { enabled, ...queryOptions } = options ?? {};
+  const shouldEnable = enabled === false ? false : hasStaffToken;
+
   return useQuery({
     queryKey: ['canteen_categories'],
     queryFn: async (): Promise<CanteenCategory[]> => {
@@ -23,11 +28,12 @@ export function useCategories(options?: { enabled?: boolean }) {
       );
       return data.data;
     },
+    enabled: shouldEnable,
     staleTime: 30 * 60 * 1000, // 30 minutes cache
     gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
-    ...options,
+    ...queryOptions,
   });
 }
 
