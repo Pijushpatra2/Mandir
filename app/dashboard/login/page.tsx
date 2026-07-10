@@ -9,7 +9,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { Lock, Mail, AlertTriangle, CheckCircle, Loader2, ArrowRight } from "lucide-react";
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function AdminLoginPage() {
   const router = useRouter();
