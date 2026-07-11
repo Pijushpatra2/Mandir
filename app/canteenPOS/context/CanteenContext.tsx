@@ -46,6 +46,13 @@ export type POSTab =
   | "reports"
   | "settings";
 
+export interface PosSession {
+  isOpen: boolean;
+  openingCash: number;
+  startTime: string;
+  cashierName: string;
+}
+
 interface CanteenContextType {
   currentRole: POSRole | null;
   isLoggedIn: boolean;
@@ -134,6 +141,9 @@ interface CanteenContextType {
   getUpcomingBookingsCount: () => number;
   getAverageOrderValue: () => number;
   getInventoryAlertsCount: () => number;
+  posSession: PosSession | null;
+  openPosSession: (openingCash: number) => void;
+  closePosSession: () => void;
   saveState: (key: string, data: any) => void;
 }
 
@@ -303,6 +313,8 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showWasteModal, setShowWasteModal] = useState(false);
 
+  const [posSession, setPosSession] = useState<PosSession | null>(null);
+
   // POS State
   const [posCategory, setPosCategory] = useState<string>("All");
   const [posSearch, setPosSearch] = useState("");
@@ -344,6 +356,16 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         { id: 2, title: "Upcoming Reservation", message: "Pankaj Shah (6 guests) arriving at 02:30 PM", type: "info", read: false },
         { id: 3, title: "New KDS Order", message: "Token TK-2042 sent to kitchen queue", type: "success", read: true }
       ]);
+
+      // POS session recovery
+      const storedSession = localStorage.getItem("canteen_pos_session");
+      if (storedSession) {
+        try {
+          setPosSession(JSON.parse(storedSession));
+        } catch (e) {
+          localStorage.removeItem("canteen_pos_session");
+        }
+      }
 
       // Authentication session recovery
       const logged = localStorage.getItem("canteen_is_logged_in") === "true";
@@ -654,6 +676,36 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const openPosSession = (openingCash: number) => {
+    let cashierName = "Canteen Cashier";
+    if (typeof window !== "undefined") {
+      const activeSession = localStorage.getItem("canteen_active_staff");
+      if (activeSession) {
+        try {
+          cashierName = JSON.parse(activeSession).name || "Canteen Cashier";
+        } catch (e) {}
+      }
+    }
+
+    const session: PosSession = {
+      isOpen: true,
+      openingCash,
+      startTime: new Date().toISOString(),
+      cashierName,
+    };
+    setPosSession(session);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("canteen_pos_session", JSON.stringify(session));
+    }
+  };
+
+  const closePosSession = () => {
+    setPosSession(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("canteen_pos_session");
+    }
+  };
+
   const handleCreateBooking = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -851,6 +903,9 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         getUpcomingBookingsCount,
         getAverageOrderValue,
         getInventoryAlertsCount,
+        posSession,
+        openPosSession,
+        closePosSession,
         saveState
       }}
     >

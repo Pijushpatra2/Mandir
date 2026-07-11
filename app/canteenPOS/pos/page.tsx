@@ -20,6 +20,8 @@ export default function POSPage() {
   const { data: apiCategories = [] } = useCategories();
   
   const {
+    posSession,
+    openPosSession,
     posSearch,
     setPosSearch,
     posCategory,
@@ -67,6 +69,60 @@ export default function POSPage() {
     const matchesCategory = posCategory === "All" || item.category === posCategory;
     return matchesSearch && matchesCategory;
   });
+
+  if (!posSession || !posSession.isOpen) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-170px)] bg-gray-50/50">
+        <div className="bg-white p-8 rounded-3xl border border-gray-150 shadow-xl max-w-md w-full text-center space-y-6">
+          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto">
+            <ShoppingCart className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-gray-800">POS Session Closed</h2>
+            <p className="text-xs text-gray-400">
+              Open a new sales session and record the opening cash drawer balance to start billing.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const val = new FormData(e.currentTarget).get("openingCash");
+              const cash = Number(val);
+              if (isNaN(cash) || cash < 0) {
+                alert("Please enter a valid amount");
+                return;
+              }
+              openPosSession(cash);
+            }}
+            className="space-y-4 text-left"
+          >
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase text-gray-400 block">
+                Opening Cash Drawer Balance (UGX)
+              </label>
+              <input
+                name="openingCash"
+                type="number"
+                required
+                defaultValue="0"
+                min="0"
+                placeholder="Enter opening cash drawer balance..."
+                className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:bg-white focus:border-blue-500 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer border-none"
+            >
+              Open POS Session
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch min-h-[calc(100vh-170px)]">

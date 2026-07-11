@@ -6,7 +6,7 @@ import {
   Coffee, Users, Plus, Trash2, Check, ClipboardList, 
   Utensils, DollarSign, Clock, CheckCircle2, Ticket, ShoppingCart, 
   Printer, CheckCircle, X, Sparkles, ArrowRight, Lock, Mail, 
-  UserCheck, TrendingUp, BarChart3, Settings, AlertTriangle
+  UserCheck, TrendingUp, BarChart3, Settings, AlertTriangle, Pencil
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { 
@@ -42,6 +42,7 @@ import {
   useCategories,
   useAddCategory,
   useDeleteCategory,
+  useUpdateCategory,
 } from "@/lib/api/canteen";
 
 export default function CanteenCRMPage() {
@@ -110,7 +111,10 @@ export default function CanteenCRMPage() {
   const { mutate: apiDeleteMenuItem } = useDeleteMenuItem();
   const { mutate: apiAddCategory } = useAddCategory();
   const { mutate: apiDeleteCategory } = useDeleteCategory();
+  const { mutate: apiUpdateCategory } = useUpdateCategory();
   const { mutate: apiAddTable } = useAddTable();
+
+  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string } | null>(null);
 
   // Map API Menu Catalog to FoodItem[]
   useEffect(() => {
@@ -1468,6 +1472,12 @@ export default function CanteenCRMPage() {
                           <td className="py-3.5 text-secondary-bronze">{new Date(cat.created_at).toLocaleDateString()}</td>
                           <td className="py-3.5 text-right">
                             <button
+                              onClick={() => setEditingCategory({ id: cat.id, name: cat.name })}
+                              className="p-1.5 text-blue-500 hover:text-blue-700 bg-transparent border-none cursor-pointer hover:bg-blue-50 rounded-lg transition-colors mr-1"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => {
                                 if (confirm(`Are you sure you want to delete category "${cat.name}"?`)) {
                                   apiDeleteCategory(cat.id, {
@@ -1541,6 +1551,81 @@ export default function CanteenCRMPage() {
                 </form>
               </GlassCard>
             </div>
+
+            {/* Edit Category Modal Overlay */}
+            {editingCategory && (
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <GlassCard className="p-6 max-w-sm w-full space-y-4 shadow-2xl border border-primary-gold/20 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex justify-between items-start border-b border-[#B47F35]/15 pb-2">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#B47F35]">
+                        Rename Category
+                      </h4>
+                      <p className="text-[10px] text-secondary-bronze/70 mt-0.5">
+                        Products under this category will update automatically.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setEditingCategory(null)}
+                      className="text-secondary-bronze hover:text-black border-none bg-transparent cursor-pointer font-bold text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const val = new FormData(e.currentTarget).get("newName") as string;
+                      if (!val?.trim()) return;
+                      
+                      apiUpdateCategory(
+                        { id: editingCategory.id, name: val.trim() },
+                        {
+                          onSuccess: () => {
+                            setEditingCategory(null);
+                          },
+                          onError: (err: any) => {
+                            alert(err.response?.data?.message || err.message || "Failed to update category");
+                          }
+                        }
+                      );
+                    }}
+                    className="space-y-4 text-left"
+                  >
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block">
+                        Category Name
+                      </label>
+                      <input
+                        name="newName"
+                        type="text"
+                        required
+                        defaultValue={editingCategory.name}
+                        placeholder="Enter new category name..."
+                        className="w-full p-2.5 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs outline-none focus:border-[#B47F35] focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setEditingCategory(null)}
+                        className="px-3 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-gray-500 bg-white"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-[#B47F35] hover:bg-[#8B5E34] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border-none"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                </GlassCard>
+              </div>
+            )}
           </motion.div>
         )}
 

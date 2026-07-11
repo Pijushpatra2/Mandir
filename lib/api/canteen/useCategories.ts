@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
-import { getStaffAccessToken } from '@/lib/authStorage';
+import { staffApiClient, adminApiClient } from '@/lib/apiClient';
+import { getStaffAccessToken, getAdminAccessToken } from '@/lib/authStorage';
 import type { ApiResponse } from '@/lib/api/canteen.types';
 
 export interface CanteenCategory {
@@ -11,24 +11,28 @@ export interface CanteenCategory {
   created_at: string;
 }
 
+function getActiveClient() {
+  const hasAdminToken = typeof window !== 'undefined' && !!getAdminAccessToken();
+  return hasAdminToken ? adminApiClient : staffApiClient;
+}
+
 /**
  * useCategories
  * Retrieves dynamic list of canteen categories.
  */
 export function useCategories(options?: { enabled?: boolean }) {
-  const hasStaffToken = typeof window !== 'undefined' && !!getStaffAccessToken();
   const { enabled, ...queryOptions } = options ?? {};
-  const shouldEnable = enabled === false ? false : hasStaffToken;
-
+  
   return useQuery({
     queryKey: ['canteen_categories'],
     queryFn: async (): Promise<CanteenCategory[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<CanteenCategory[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<CanteenCategory[]>>(
         '/canteen/categories'
       );
       return data.data;
     },
-    enabled: shouldEnable,
+    enabled: enabled !== false,
     staleTime: 30 * 60 * 1000, // 30 minutes cache
     gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -45,7 +49,8 @@ export function useAddCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: { name: string }) => {
-      const { data } = await staffApiClient.post<ApiResponse<CanteenCategory>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<CanteenCategory>>(
         '/canteen/categories',
         payload
       );
@@ -65,13 +70,36 @@ export function useDeleteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const { data } = await staffApiClient.delete<ApiResponse<null>>(
+      const client = getActiveClient();
+      const { data } = await client.delete<ApiResponse<null>>(
         `/canteen/categories/${id}`
       );
       return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['canteen_categories'] });
+    },
+  });
+}
+
+/**
+ * useUpdateCategory
+ * Modifies an existing category.
+ */
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { id: number; name: string }) => {
+      const client = getActiveClient();
+      const { data } = await client.put<ApiResponse<CanteenCategory>>(
+        `/canteen/categories/${payload.id}`,
+        { name: payload.name }
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['canteen_categories'] });
+      queryClient.invalidateQueries({ queryKey: ['canteen_menu'] });
     },
   });
 }
