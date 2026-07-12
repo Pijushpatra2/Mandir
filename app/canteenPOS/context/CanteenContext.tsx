@@ -513,8 +513,8 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     }
 
     const subtotal = cart.reduce((sum, c) => sum + c.item.price * c.qty, 0);
-    const tax = Math.round(subtotal * 0.05); // 5% GST
-    const serviceCharge = Math.round(subtotal * 0.025); // 2.5% Service Charge
+    const tax = 0; // 0% GST (Removed automatic addition)
+    const serviceCharge = 0; // 0% Service Charge (Removed automatic addition)
     const discount = Number(posDiscount) || 0;
     const total = Math.max(0, subtotal + tax + serviceCharge - discount);
 

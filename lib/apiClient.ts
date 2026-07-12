@@ -110,8 +110,8 @@ staffApiClient.interceptors.response.use(
     } catch (refreshError) {
       clearStaffTokens();
       staffQueue = [];
-      // Redirect to canteen login if refresh fails
-      if (typeof window !== 'undefined') {
+      // Redirect to canteen login if refresh fails and we are not already on the login page
+      if (typeof window !== 'undefined' && window.location.pathname !== '/canteenPOS') {
         window.location.href = '/canteenPOS';
       }
       return Promise.reject(refreshError);

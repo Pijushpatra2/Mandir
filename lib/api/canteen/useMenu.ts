@@ -17,9 +17,15 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { staffApiClient, adminApiClient } from '@/lib/apiClient';
+import { getAdminAccessToken } from '@/lib/authStorage';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type { ApiResponse, CanteenMenuItem, MenuCategory, MenuVariety } from '@/lib/api/canteen.types';
+
+function getActiveClient() {
+  const hasAdminToken = typeof window !== 'undefined' && !!getAdminAccessToken();
+  return hasAdminToken ? adminApiClient : staffApiClient;
+}
 
 // ─── Fetch All Menu Items ─────────────────────────────────────────────────────
 
@@ -36,7 +42,8 @@ export function useMenu(
   return useQuery({
     queryKey: QUERY_KEYS.menu(filters),
     queryFn: async (): Promise<CanteenMenuItem[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<CanteenMenuItem[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<CanteenMenuItem[]>>(
         '/canteen/menu',
         { params: filters },
       );
@@ -83,7 +90,8 @@ export function useAddMenuItem() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: AddMenuItemPayload) => {
-      const { data } = await staffApiClient.post<ApiResponse<CanteenMenuItem>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<CanteenMenuItem>>(
         '/canteen/menu',
         payload,
       );
@@ -111,7 +119,8 @@ export function useEditMenuItem() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, updates }: EditMenuItemPayload) => {
-      const { data } = await staffApiClient.patch<ApiResponse<CanteenMenuItem>>(
+      const client = getActiveClient();
+      const { data } = await client.patch<ApiResponse<CanteenMenuItem>>(
         `/canteen/menu/${id}`,
         updates,
       );
@@ -134,7 +143,8 @@ export function useDeleteMenuItem() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      await staffApiClient.delete(`/canteen/menu/${id}`);
+      const client = getActiveClient();
+      await client.delete(`/canteen/menu/${id}`);
       return id;
     },
     onSuccess: () => {

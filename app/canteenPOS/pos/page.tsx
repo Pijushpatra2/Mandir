@@ -347,8 +347,8 @@ export default function POSPage() {
 
           {(() => {
             const subtotal = cart.reduce((sum, c) => sum + c.item.price * c.qty, 0);
-            const tax = Math.round(subtotal * 0.05);
-            const serviceCharge = Math.round(subtotal * 0.025);
+            const tax = 0;
+            const serviceCharge = 0;
             const discount = Number(posDiscount) || 0;
             const total = Math.max(0, subtotal + tax + serviceCharge - discount);
 

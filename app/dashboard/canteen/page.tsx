@@ -356,8 +356,8 @@ export default function CanteenCRMPage() {
     }
 
     const subtotal = cart.reduce((acc, c) => acc + c.item.price * c.qty, 0);
-    const tax = Math.round(subtotal * 0.05); // 5% VAT
-    const serviceCharge = Math.round(subtotal * 0.025); // 2.5% Service Charge
+    const tax = 0; // 0% VAT (Removed automatic addition)
+    const serviceCharge = 0; // 0% Service Charge (Removed automatic addition)
     const total = subtotal + tax + serviceCharge;
 
     const matchedTable = tables.find((t) => t.id === selectedTable);

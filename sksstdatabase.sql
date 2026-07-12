@@ -1,10 +1,10 @@
-﻿-- phpMyAdmin SQL Dump
+-- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Jul 12, 2026 at 08:49 AM
--- Server version: 10.4.32-MariaDB
+-- Host: sksstdatabase.c9c4wq4gcxjc.eu-north-1.rds.amazonaws.com:3306
+-- Generation Time: Jul 12, 2026 at 09:53 AM
+-- Server version: 8.4.9
 -- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `sksst_kampala`
+-- Database: `sksstdatabase`
 --
 
 -- --------------------------------------------------------
@@ -28,16 +28,16 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `admin_users` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `name` varchar(120) NOT NULL,
-  `email` varchar(180) NOT NULL,
-  `password_hash` varchar(255) NOT NULL COMMENT 'bcrypt hashed — never store plain text',
-  `role` enum('super_admin','module_admin','viewer') NOT NULL DEFAULT 'module_admin',
-  `module_scope` varchar(60) DEFAULT NULL COMMENT 'e.g. canteen | temple | events | NULL=all',
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(180) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'bcrypt hashed — never store plain text',
+  `role` enum('super_admin','module_admin','viewer') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'module_admin',
+  `module_scope` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'e.g. canteen | temple | events | NULL=all',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `last_login_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GLOBAL — Single platform admin table shared by all modules';
 
 --
@@ -55,19 +55,19 @@ INSERT INTO `admin_users` (`id`, `name`, `email`, `password_hash`, `role`, `modu
 --
 
 CREATE TABLE `canteen_bookings` (
-  `id` char(36) NOT NULL DEFAULT (uuid()),
-  `customer_id` char(36) DEFAULT NULL COMMENT 'canteen_customers.id — NULL if walk-in phone booking',
-  `customer_name` varchar(120) NOT NULL,
-  `customer_phone` varchar(25) NOT NULL,
-  `table_id` char(36) NOT NULL,
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `customer_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'canteen_customers.id — NULL if walk-in phone booking',
+  `customer_name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `customer_phone` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `table_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `booking_date` date NOT NULL,
-  `booking_time` varchar(20) NOT NULL COMMENT 'e.g. 02:30 PM',
-  `party_size` tinyint(3) UNSIGNED NOT NULL DEFAULT 2,
-  `status` enum('CONFIRMED','SEATED','CANCELLED','NO_SHOW') NOT NULL DEFAULT 'CONFIRMED',
-  `special_notes` text DEFAULT NULL,
-  `booked_by` int(10) UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id who registered this booking',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `booking_time` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'e.g. 02:30 PM',
+  `party_size` tinyint UNSIGNED NOT NULL DEFAULT '2',
+  `status` enum('CONFIRMED','SEATED','CANCELLED','NO_SHOW') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'CONFIRMED',
+  `special_notes` text COLLATE utf8mb4_unicode_ci,
+  `booked_by` int UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id who registered this booking',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Table reservation calendar for devotees';
 
 --
@@ -86,9 +86,9 @@ INSERT INTO `canteen_bookings` (`id`, `customer_id`, `customer_name`, `customer_
 --
 
 CREATE TABLE `canteen_categories` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `name` varchar(120) NOT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(120) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -111,19 +111,19 @@ INSERT INTO `canteen_categories` (`id`, `name`, `created_at`) VALUES
 --
 
 CREATE TABLE `canteen_customers` (
-  `id` char(36) NOT NULL DEFAULT (uuid()),
-  `name` varchar(120) NOT NULL,
-  `phone` varchar(25) NOT NULL,
-  `email` varchar(180) DEFAULT NULL,
-  `customer_type` enum('VIP','Regular','Guest') NOT NULL DEFAULT 'Guest',
-  `total_orders` int(10) UNSIGNED NOT NULL DEFAULT 0,
-  `total_visits` int(10) UNSIGNED NOT NULL DEFAULT 0,
-  `total_spent` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(180) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `customer_type` enum('VIP','Regular','Guest') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Guest',
+  `total_orders` int UNSIGNED NOT NULL DEFAULT '0',
+  `total_visits` int UNSIGNED NOT NULL DEFAULT '0',
+  `total_spent` decimal(12,2) NOT NULL DEFAULT '0.00',
   `last_visit` date DEFAULT NULL,
-  `notes` text DEFAULT NULL COMMENT 'Internal staff notes about this devotee',
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Internal staff notes about this devotee',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Devotee and walk-in customer profiles (NOT staff, NOT admins)';
 
 --
@@ -144,17 +144,17 @@ INSERT INTO `canteen_customers` (`id`, `name`, `phone`, `email`, `customer_type`
 --
 
 CREATE TABLE `canteen_inventory` (
-  `id` char(36) NOT NULL DEFAULT (uuid()),
-  `name` varchar(150) NOT NULL,
-  `category` enum('Grains','Dairy','Spices','Beverages','Vegetables','Other') NOT NULL DEFAULT 'Other',
-  `stock` decimal(10,3) NOT NULL DEFAULT 0.000 COMMENT 'Current stock quantity',
-  `unit` varchar(20) NOT NULL COMMENT 'kg, Litre, Packet, Bag etc.',
-  `min_stock` decimal(10,3) NOT NULL DEFAULT 0.000 COMMENT 'Reorder alert threshold',
-  `supplier_id` char(36) DEFAULT NULL,
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` enum('Grains','Dairy','Spices','Beverages','Vegetables','Other') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Other',
+  `stock` decimal(10,3) NOT NULL DEFAULT '0.000' COMMENT 'Current stock quantity',
+  `unit` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'kg, Litre, Packet, Bag etc.',
+  `min_stock` decimal(10,3) NOT NULL DEFAULT '0.000' COMMENT 'Reorder alert threshold',
+  `supplier_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `unit_cost` decimal(8,2) DEFAULT NULL COMMENT 'Cost per unit from supplier',
   `last_restocked` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Raw ingredient stock levels with low-stock thresholds';
 
 --
@@ -177,13 +177,13 @@ INSERT INTO `canteen_inventory` (`id`, `name`, `category`, `stock`, `unit`, `min
 --
 
 CREATE TABLE `canteen_inventory_log` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `inventory_id` char(36) NOT NULL,
-  `type` enum('RESTOCK','USAGE','WASTE','ADJUSTMENT') NOT NULL,
+  `id` int UNSIGNED NOT NULL,
+  `inventory_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('RESTOCK','USAGE','WASTE','ADJUSTMENT') COLLATE utf8mb4_unicode_ci NOT NULL,
   `quantity` decimal(10,3) NOT NULL COMMENT 'Positive=addition, Negative=deduction',
-  `note` text DEFAULT NULL,
-  `performed_by` int(10) UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `note` text COLLATE utf8mb4_unicode_ci,
+  `performed_by` int UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Audit log for every inventory stock movement';
 
 -- --------------------------------------------------------
@@ -193,10 +193,10 @@ CREATE TABLE `canteen_inventory_log` (
 --
 
 CREATE TABLE `canteen_menu_combo_items` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `combo_id` char(36) NOT NULL COMMENT 'canteen_menu_items.id of the parent combo',
-  `component_id` char(36) NOT NULL COMMENT 'canteen_menu_items.id of bundled item',
-  `quantity` tinyint(3) UNSIGNED NOT NULL DEFAULT 1
+  `id` int UNSIGNED NOT NULL,
+  `combo_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'canteen_menu_items.id of the parent combo',
+  `component_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'canteen_menu_items.id of bundled item',
+  `quantity` tinyint UNSIGNED NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Bundle contents for combo menu items';
 
 --
@@ -215,17 +215,17 @@ INSERT INTO `canteen_menu_combo_items` (`id`, `combo_id`, `component_id`, `quant
 --
 
 CREATE TABLE `canteen_menu_items` (
-  `id` char(36) NOT NULL DEFAULT (uuid()),
-  `name` varchar(200) NOT NULL,
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `price` decimal(8,2) NOT NULL,
-  `category` varchar(100) NOT NULL DEFAULT 'Mains',
-  `variety` enum('Regular','Jain','Spicy','Sweet') NOT NULL DEFAULT 'Regular',
-  `description` text DEFAULT NULL,
-  `image_url` varchar(500) DEFAULT NULL,
-  `available` tinyint(1) NOT NULL DEFAULT 1,
-  `sort_order` smallint(6) NOT NULL DEFAULT 0 COMMENT 'Display order in POS menu panel',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Mains',
+  `variety` enum('Regular','Jain','Spicy','Sweet') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Regular',
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `available` tinyint(1) NOT NULL DEFAULT '1',
+  `sort_order` smallint NOT NULL DEFAULT '0' COMMENT 'Display order in POS menu panel',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Food menu catalog (mains, snacks, beverages, desserts, combos, add-ons)';
 
 --
@@ -253,27 +253,27 @@ INSERT INTO `canteen_menu_items` (`id`, `name`, `price`, `category`, `variety`, 
 --
 
 CREATE TABLE `canteen_orders` (
-  `id` char(36) NOT NULL DEFAULT (uuid()),
-  `token_number` varchar(20) NOT NULL COMMENT 'e.g. TK-2041 — printed on receipt',
-  `customer_id` char(36) DEFAULT NULL COMMENT 'canteen_customers.id — NULL if unregistered',
-  `customer_name` varchar(120) NOT NULL DEFAULT 'Guest Devotee',
-  `customer_phone` varchar(25) DEFAULT NULL,
-  `table_id` char(36) DEFAULT NULL COMMENT 'canteen_tables.id — NULL for walk-in counter',
-  `table_name` varchar(100) NOT NULL DEFAULT 'Counter Walk-in',
-  `served_by` int(10) UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id who processed the order',
-  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `tax_amount` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'e.g. 5% GST',
-  `service_charge` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'e.g. 2.5% Service Charge',
-  `discount_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `payment_method` enum('CASH','UPI','CARD','PENDING') NOT NULL DEFAULT 'PENDING',
-  `payment_status` enum('PAID','PENDING','REFUNDED') NOT NULL DEFAULT 'PENDING',
-  `order_status` enum('NEW','PREPARING','READY_TO_SERVE','COMPLETED','CANCELLED') NOT NULL DEFAULT 'NEW',
-  `notes` text DEFAULT NULL,
-  `ordered_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `token_number` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'e.g. TK-2041 — printed on receipt',
+  `customer_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'canteen_customers.id — NULL if unregistered',
+  `customer_name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Guest Devotee',
+  `customer_phone` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `table_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'canteen_tables.id — NULL for walk-in counter',
+  `table_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Counter Walk-in',
+  `served_by` int UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id who processed the order',
+  `subtotal` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `tax_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'e.g. 5% GST',
+  `service_charge` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'e.g. 2.5% Service Charge',
+  `discount_amount` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `total_amount` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `payment_method` enum('CASH','UPI','CARD','PENDING') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `payment_status` enum('PAID','PENDING','REFUNDED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `order_status` enum('NEW','PREPARING','READY_TO_SERVE','COMPLETED','CANCELLED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'NEW',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `ordered_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Order tokens with full billing breakdown and KDS status';
 
 --
@@ -295,14 +295,14 @@ INSERT INTO `canteen_orders` (`id`, `token_number`, `customer_id`, `customer_nam
 --
 
 CREATE TABLE `canteen_order_items` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `order_id` char(36) NOT NULL,
-  `menu_item_id` char(36) NOT NULL,
-  `item_name` varchar(200) NOT NULL COMMENT 'Snapshot of item name at order time',
+  `id` int UNSIGNED NOT NULL,
+  `order_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `menu_item_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Snapshot of item name at order time',
   `item_price` decimal(8,2) NOT NULL COMMENT 'Snapshot of price at order time',
-  `quantity` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
-  `line_total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `cooking_notes` varchar(500) DEFAULT NULL COMMENT 'Per-item kitchen instructions — low spice, no onion, etc.'
+  `quantity` tinyint UNSIGNED NOT NULL DEFAULT '1',
+  `line_total` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cooking_notes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Per-item kitchen instructions — low spice, no onion, etc.'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Individual food line items per order token';
 
 --
@@ -331,11 +331,11 @@ INSERT INTO `canteen_order_items` (`id`, `order_id`, `menu_item_id`, `item_name`
 --
 
 CREATE TABLE `canteen_settings` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `setting_key` varchar(80) NOT NULL,
-  `setting_value` varchar(500) NOT NULL,
-  `description` varchar(300) DEFAULT NULL,
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int UNSIGNED NOT NULL,
+  `setting_key` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Key-value business configuration (tax rates, receipt text, etc.)';
 
 --
@@ -359,16 +359,16 @@ INSERT INTO `canteen_settings` (`id`, `setting_key`, `setting_value`, `descripti
 --
 
 CREATE TABLE `canteen_staff` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `name` varchar(120) NOT NULL,
-  `email` varchar(180) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `assigned_role` enum('manager','receptionist','cashier','kitchen') NOT NULL DEFAULT 'receptionist',
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_by` int(10) UNSIGNED DEFAULT NULL COMMENT 'admin_users.id who created this staff account',
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(180) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `assigned_role` enum('manager','receptionist','cashier','kitchen') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'receptionist',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_by` int UNSIGNED DEFAULT NULL COMMENT 'admin_users.id who created this staff account',
   `last_login_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — POS terminal staff with assigned floor roles';
 
 --
@@ -388,12 +388,12 @@ INSERT INTO `canteen_staff` (`id`, `name`, `email`, `password_hash`, `assigned_r
 --
 
 CREATE TABLE `canteen_staff_sessions` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `staff_id` int(10) UNSIGNED NOT NULL,
-  `login_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `id` int UNSIGNED NOT NULL,
+  `staff_id` int UNSIGNED NOT NULL,
+  `login_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `logout_at` datetime DEFAULT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `device_info` varchar(255) DEFAULT NULL
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device_info` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Terminal login/logout session audit trail';
 
 -- --------------------------------------------------------
@@ -403,14 +403,14 @@ CREATE TABLE `canteen_staff_sessions` (
 --
 
 CREATE TABLE `canteen_suppliers` (
-  `id` char(36) NOT NULL DEFAULT (uuid()),
-  `name` varchar(150) NOT NULL,
-  `phone` varchar(25) NOT NULL,
-  `email` varchar(180) DEFAULT NULL,
-  `address` text DEFAULT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(180) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Raw material vendor and distributor profiles';
 
 --
@@ -429,9 +429,9 @@ INSERT INTO `canteen_suppliers` (`id`, `name`, `phone`, `email`, `address`, `is_
 --
 
 CREATE TABLE `canteen_supplier_items` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `supplier_id` char(36) NOT NULL,
-  `item_name` varchar(150) NOT NULL
+  `id` int UNSIGNED NOT NULL,
+  `supplier_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Items each supplier is known to deliver';
 
 --
@@ -459,16 +459,16 @@ INSERT INTO `canteen_supplier_items` (`id`, `supplier_id`, `item_name`) VALUES
 --
 
 CREATE TABLE `canteen_tables` (
-  `id` char(36) NOT NULL DEFAULT (uuid()),
-  `name` varchar(100) NOT NULL COMMENT 'e.g. Table 3 (Center)',
-  `capacity` tinyint(3) UNSIGNED NOT NULL DEFAULT 4,
-  `status` enum('AVAILABLE','OCCUPIED','RESERVED','CLEANING') NOT NULL DEFAULT 'AVAILABLE',
-  `current_bill` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'e.g. Table 3 (Center)',
+  `capacity` tinyint UNSIGNED NOT NULL DEFAULT '4',
+  `status` enum('AVAILABLE','OCCUPIED','RESERVED','CLEANING') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'AVAILABLE',
+  `current_bill` decimal(10,2) NOT NULL DEFAULT '0.00',
   `occupied_since` datetime DEFAULT NULL,
-  `location_zone` varchar(60) DEFAULT NULL COMMENT 'e.g. Window, Veranda, Center, Entrance',
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `location_zone` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'e.g. Window, Veranda, Center, Entrance',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Physical dining tables with live status tracking';
 
 --
@@ -492,12 +492,12 @@ INSERT INTO `canteen_tables` (`id`, `name`, `capacity`, `status`, `current_bill`
 --
 
 CREATE TABLE `canteen_table_merges` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `primary_id` char(36) NOT NULL COMMENT 'Base table (canteen_tables.id)',
-  `merged_id` char(36) NOT NULL COMMENT 'Table merged into primary',
-  `merged_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `id` int UNSIGNED NOT NULL,
+  `primary_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Base table (canteen_tables.id)',
+  `merged_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Table merged into primary',
+  `merged_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `split_at` datetime DEFAULT NULL,
-  `merged_by` int(10) UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id'
+  `merged_by` int UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Tracks combined/merged table pairs';
 
 -- --------------------------------------------------------
@@ -507,16 +507,16 @@ CREATE TABLE `canteen_table_merges` (
 -- (See below for the actual view)
 --
 CREATE TABLE `canteen_vw_active_tables` (
-`id` char(36)
-,`name` varchar(100)
-,`capacity` tinyint(3) unsigned
-,`status` enum('AVAILABLE','OCCUPIED','RESERVED','CLEANING')
+`active_order_token` varchar(20)
+,`capacity` tinyint unsigned
 ,`current_bill` decimal(10,2)
-,`location_zone` varchar(60)
-,`occupied_since` datetime
-,`occupied_minutes` bigint(21)
-,`active_order_token` varchar(20)
 ,`current_customer` varchar(120)
+,`id` char(36)
+,`location_zone` varchar(60)
+,`name` varchar(100)
+,`occupied_minutes` bigint
+,`occupied_since` datetime
+,`status` enum('AVAILABLE','OCCUPIED','RESERVED','CLEANING')
 );
 
 -- --------------------------------------------------------
@@ -526,14 +526,14 @@ CREATE TABLE `canteen_vw_active_tables` (
 -- (See below for the actual view)
 --
 CREATE TABLE `canteen_vw_kitchen_queue` (
-`id` char(36)
-,`token_number` varchar(20)
-,`customer_name` varchar(120)
-,`table_name` varchar(100)
-,`order_status` enum('NEW','PREPARING','READY_TO_SERVE','COMPLETED','CANCELLED')
+`customer_name` varchar(120)
+,`id` char(36)
+,`minutes_elapsed` bigint
 ,`notes` text
+,`order_status` enum('NEW','PREPARING','READY_TO_SERVE','COMPLETED','CANCELLED')
 ,`ordered_at` datetime
-,`minutes_elapsed` bigint(21)
+,`table_name` varchar(100)
+,`token_number` varchar(20)
 );
 
 -- --------------------------------------------------------
@@ -543,15 +543,15 @@ CREATE TABLE `canteen_vw_kitchen_queue` (
 -- (See below for the actual view)
 --
 CREATE TABLE `canteen_vw_low_stock` (
-`id` char(36)
-,`name` varchar(150)
-,`category` enum('Grains','Dairy','Spices','Beverages','Vegetables','Other')
-,`stock` decimal(10,3)
+`category` enum('Grains','Dairy','Spices','Beverages','Vegetables','Other')
+,`id` char(36)
 ,`min_stock` decimal(10,3)
-,`unit` varchar(20)
+,`name` varchar(150)
+,`stock` decimal(10,3)
 ,`stock_pct` decimal(15,1)
 ,`supplier_name` varchar(150)
 ,`supplier_phone` varchar(25)
+,`unit` varchar(20)
 );
 
 -- --------------------------------------------------------
@@ -561,15 +561,15 @@ CREATE TABLE `canteen_vw_low_stock` (
 -- (See below for the actual view)
 --
 CREATE TABLE `canteen_vw_today_revenue` (
-`total_orders` bigint(21)
+`avg_order_value` decimal(14,6)
+,`card_total` decimal(32,2)
+,`cash_total` decimal(32,2)
 ,`gross_revenue` decimal(32,2)
 ,`total_discounts` decimal(32,2)
-,`total_tax` decimal(32,2)
+,`total_orders` bigint
 ,`total_service_charge` decimal(32,2)
-,`avg_order_value` decimal(14,6)
-,`cash_total` decimal(32,2)
+,`total_tax` decimal(32,2)
 ,`upi_total` decimal(32,2)
-,`card_total` decimal(32,2)
 );
 
 -- --------------------------------------------------------
@@ -579,15 +579,15 @@ CREATE TABLE `canteen_vw_today_revenue` (
 -- (See below for the actual view)
 --
 CREATE TABLE `canteen_vw_top_customers` (
-`id` char(36)
+`customer_type` enum('VIP','Regular','Guest')
+,`id` char(36)
+,`last_visit` date
 ,`name` varchar(120)
 ,`phone` varchar(25)
-,`customer_type` enum('VIP','Regular','Guest')
-,`total_orders` int(10) unsigned
-,`total_visits` int(10) unsigned
+,`spend_rank` bigint unsigned
+,`total_orders` int unsigned
 ,`total_spent` decimal(12,2)
-,`last_visit` date
-,`spend_rank` bigint(21)
+,`total_visits` int unsigned
 );
 
 -- --------------------------------------------------------
@@ -597,16 +597,16 @@ CREATE TABLE `canteen_vw_top_customers` (
 --
 
 CREATE TABLE `canteen_waste_log` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `inventory_id` char(36) DEFAULT NULL COMMENT 'canteen_inventory.id — NULL if item no longer exists',
-  `item_name` varchar(150) NOT NULL COMMENT 'Snapshot of item name at time of logging',
+  `id` int UNSIGNED NOT NULL,
+  `inventory_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'canteen_inventory.id — NULL if item no longer exists',
+  `item_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Snapshot of item name at time of logging',
   `quantity` decimal(10,3) NOT NULL,
-  `unit` varchar(20) NOT NULL,
-  `estimated_cost` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `reason` varchar(500) NOT NULL,
-  `logged_by` int(10) UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id',
+  `unit` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estimated_cost` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `reason` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `logged_by` int UNSIGNED DEFAULT NULL COMMENT 'canteen_staff.id',
   `logged_at` date NOT NULL DEFAULT (curdate()),
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CANTEEN — Ingredient and food wastage records with cost impact';
 
 --
@@ -624,14 +624,14 @@ INSERT INTO `canteen_waste_log` (`id`, `inventory_id`, `item_name`, `quantity`, 
 --
 
 CREATE TABLE `website_staff` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `name` varchar(120) NOT NULL,
-  `email` varchar(180) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `role` varchar(60) NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(120) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(180) COLLATE utf8mb4_general_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `role` varchar(60) COLLATE utf8mb4_general_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -649,7 +649,7 @@ INSERT INTO `website_staff` (`id`, `name`, `email`, `password_hash`, `role`, `is
 --
 DROP TABLE IF EXISTS `canteen_vw_active_tables`;
 
-CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_active_tables`  AS SELECT `t`.`id` AS `id`, `t`.`name` AS `name`, `t`.`capacity` AS `capacity`, `t`.`status` AS `status`, `t`.`current_bill` AS `current_bill`, `t`.`location_zone` AS `location_zone`, `t`.`occupied_since` AS `occupied_since`, timestampdiff(MINUTE,`t`.`occupied_since`,current_timestamp()) AS `occupied_minutes`, `o`.`token_number` AS `active_order_token`, `o`.`customer_name` AS `current_customer` FROM (`canteen_tables` `t` left join `canteen_orders` `o` on(`o`.`table_id` = `t`.`id` and `o`.`order_status` not in ('COMPLETED','CANCELLED'))) WHERE `t`.`is_active` = 1 ORDER BY `t`.`status` ASC, `t`.`name` ASC ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`sksst`@`%` SQL SECURITY DEFINER VIEW `canteen_vw_active_tables`  AS SELECT `t`.`id` AS `id`, `t`.`name` AS `name`, `t`.`capacity` AS `capacity`, `t`.`status` AS `status`, `t`.`current_bill` AS `current_bill`, `t`.`location_zone` AS `location_zone`, `t`.`occupied_since` AS `occupied_since`, timestampdiff(MINUTE,`t`.`occupied_since`,now()) AS `occupied_minutes`, `o`.`token_number` AS `active_order_token`, `o`.`customer_name` AS `current_customer` FROM (`canteen_tables` `t` left join `canteen_orders` `o` on(((`o`.`table_id` = `t`.`id`) and (`o`.`order_status` not in ('COMPLETED','CANCELLED'))))) WHERE (`t`.`is_active` = 1) ORDER BY `t`.`status` ASC, `t`.`name` ASC ;
 
 -- --------------------------------------------------------
 
@@ -658,7 +658,7 @@ CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_active_tables`
 --
 DROP TABLE IF EXISTS `canteen_vw_kitchen_queue`;
 
-CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_kitchen_queue`  AS SELECT `o`.`id` AS `id`, `o`.`token_number` AS `token_number`, `o`.`customer_name` AS `customer_name`, `o`.`table_name` AS `table_name`, `o`.`order_status` AS `order_status`, `o`.`notes` AS `notes`, `o`.`ordered_at` AS `ordered_at`, timestampdiff(MINUTE,`o`.`ordered_at`,current_timestamp()) AS `minutes_elapsed` FROM `canteen_orders` AS `o` WHERE `o`.`order_status` in ('NEW','PREPARING') ORDER BY `o`.`ordered_at` ASC ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`sksst`@`%` SQL SECURITY DEFINER VIEW `canteen_vw_kitchen_queue`  AS SELECT `o`.`id` AS `id`, `o`.`token_number` AS `token_number`, `o`.`customer_name` AS `customer_name`, `o`.`table_name` AS `table_name`, `o`.`order_status` AS `order_status`, `o`.`notes` AS `notes`, `o`.`ordered_at` AS `ordered_at`, timestampdiff(MINUTE,`o`.`ordered_at`,now()) AS `minutes_elapsed` FROM `canteen_orders` AS `o` WHERE (`o`.`order_status` in ('NEW','PREPARING')) ORDER BY `o`.`ordered_at` ASC ;
 
 -- --------------------------------------------------------
 
@@ -667,7 +667,7 @@ CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_kitchen_queue`
 --
 DROP TABLE IF EXISTS `canteen_vw_low_stock`;
 
-CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_low_stock`  AS SELECT `i`.`id` AS `id`, `i`.`name` AS `name`, `i`.`category` AS `category`, `i`.`stock` AS `stock`, `i`.`min_stock` AS `min_stock`, `i`.`unit` AS `unit`, round(`i`.`stock` / `i`.`min_stock` * 100,1) AS `stock_pct`, `s`.`name` AS `supplier_name`, `s`.`phone` AS `supplier_phone` FROM (`canteen_inventory` `i` left join `canteen_suppliers` `s` on(`s`.`id` = `i`.`supplier_id`)) WHERE `i`.`stock` <= `i`.`min_stock` ORDER BY round(`i`.`stock` / `i`.`min_stock` * 100,1) ASC ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`sksst`@`%` SQL SECURITY DEFINER VIEW `canteen_vw_low_stock`  AS SELECT `i`.`id` AS `id`, `i`.`name` AS `name`, `i`.`category` AS `category`, `i`.`stock` AS `stock`, `i`.`min_stock` AS `min_stock`, `i`.`unit` AS `unit`, round(((`i`.`stock` / `i`.`min_stock`) * 100),1) AS `stock_pct`, `s`.`name` AS `supplier_name`, `s`.`phone` AS `supplier_phone` FROM (`canteen_inventory` `i` left join `canteen_suppliers` `s` on((`s`.`id` = `i`.`supplier_id`))) WHERE (`i`.`stock` <= `i`.`min_stock`) ORDER BY round(((`i`.`stock` / `i`.`min_stock`) * 100),1) ASC ;
 
 -- --------------------------------------------------------
 
@@ -676,7 +676,7 @@ CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_low_stock`  AS
 --
 DROP TABLE IF EXISTS `canteen_vw_today_revenue`;
 
-CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_today_revenue`  AS SELECT count(0) AS `total_orders`, coalesce(sum(`canteen_orders`.`total_amount`),0) AS `gross_revenue`, coalesce(sum(`canteen_orders`.`discount_amount`),0) AS `total_discounts`, coalesce(sum(`canteen_orders`.`tax_amount`),0) AS `total_tax`, coalesce(sum(`canteen_orders`.`service_charge`),0) AS `total_service_charge`, coalesce(avg(`canteen_orders`.`total_amount`),0) AS `avg_order_value`, coalesce(sum(case when `canteen_orders`.`payment_method` = 'CASH' then `canteen_orders`.`total_amount` end),0) AS `cash_total`, coalesce(sum(case when `canteen_orders`.`payment_method` = 'UPI' then `canteen_orders`.`total_amount` end),0) AS `upi_total`, coalesce(sum(case when `canteen_orders`.`payment_method` = 'CARD' then `canteen_orders`.`total_amount` end),0) AS `card_total` FROM `canteen_orders` WHERE cast(`canteen_orders`.`ordered_at` as date) = curdate() AND `canteen_orders`.`payment_status` = 'PAID' AND `canteen_orders`.`order_status` <> 'CANCELLED' ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`sksst`@`%` SQL SECURITY DEFINER VIEW `canteen_vw_today_revenue`  AS SELECT count(0) AS `total_orders`, coalesce(sum(`canteen_orders`.`total_amount`),0) AS `gross_revenue`, coalesce(sum(`canteen_orders`.`discount_amount`),0) AS `total_discounts`, coalesce(sum(`canteen_orders`.`tax_amount`),0) AS `total_tax`, coalesce(sum(`canteen_orders`.`service_charge`),0) AS `total_service_charge`, coalesce(avg(`canteen_orders`.`total_amount`),0) AS `avg_order_value`, coalesce(sum((case when (`canteen_orders`.`payment_method` = 'CASH') then `canteen_orders`.`total_amount` end)),0) AS `cash_total`, coalesce(sum((case when (`canteen_orders`.`payment_method` = 'UPI') then `canteen_orders`.`total_amount` end)),0) AS `upi_total`, coalesce(sum((case when (`canteen_orders`.`payment_method` = 'CARD') then `canteen_orders`.`total_amount` end)),0) AS `card_total` FROM `canteen_orders` WHERE ((cast(`canteen_orders`.`ordered_at` as date) = curdate()) AND (`canteen_orders`.`payment_status` = 'PAID') AND (`canteen_orders`.`order_status` <> 'CANCELLED')) ;
 
 -- --------------------------------------------------------
 
@@ -685,335 +685,7 @@ CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_today_revenue`
 --
 DROP TABLE IF EXISTS `canteen_vw_top_customers`;
 
-CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `canteen_vw_top_customers`  AS SELECT `canteen_customers`.`id` AS `id`, `canteen_customers`.`name` AS `name`, `canteen_customers`.`phone` AS `phone`, `canteen_customers`.`customer_type` AS `customer_type`, `canteen_customers`.`total_orders` AS `total_orders`, `canteen_customers`.`total_visits` AS `total_visits`, `canteen_customers`.`total_spent` AS `total_spent`, `canteen_customers`.`last_visit` AS `last_visit`, rank() over ( order by `canteen_customers`.`total_spent` desc) AS `spend_rank` FROM `canteen_customers` WHERE `canteen_customers`.`is_active` = 1 ORDER BY `canteen_customers`.`total_spent` DESC ;
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `admin_users`
---
-ALTER TABLE `admin_users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_email` (`email`),
-  ADD KEY `idx_role` (`role`),
-  ADD KEY `idx_module_scope` (`module_scope`);
-
---
--- Indexes for table `canteen_bookings`
---
-ALTER TABLE `canteen_bookings`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_cb_date` (`booking_date`),
-  ADD KEY `idx_cb_table_id` (`table_id`),
-  ADD KEY `idx_cb_status` (`status`),
-  ADD KEY `idx_cb_cust_id` (`customer_id`),
-  ADD KEY `fk_cb_staff` (`booked_by`);
-
---
--- Indexes for table `canteen_categories`
---
-ALTER TABLE `canteen_categories`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
-
---
--- Indexes for table `canteen_customers`
---
-ALTER TABLE `canteen_customers`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `phone` (`phone`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_cc_phone` (`phone`),
-  ADD KEY `idx_cc_customer_type` (`customer_type`),
-  ADD KEY `idx_cc_total_spent` (`total_spent`),
-  ADD KEY `idx_cc_last_visit` (`last_visit`);
-
---
--- Indexes for table `canteen_inventory`
---
-ALTER TABLE `canteen_inventory`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_cinv_category` (`category`),
-  ADD KEY `idx_cinv_supplier` (`supplier_id`),
-  ADD KEY `idx_cinv_stock` (`stock`);
-
---
--- Indexes for table `canteen_inventory_log`
---
-ALTER TABLE `canteen_inventory_log`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_cil_inv_id` (`inventory_id`),
-  ADD KEY `idx_cil_type` (`type`),
-  ADD KEY `idx_cil_created_at` (`created_at`),
-  ADD KEY `fk_cil_staff` (`performed_by`);
-
---
--- Indexes for table `canteen_menu_combo_items`
---
-ALTER TABLE `canteen_menu_combo_items`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_cmci_pair` (`combo_id`,`component_id`),
-  ADD KEY `fk_cmci_component` (`component_id`);
-
---
--- Indexes for table `canteen_menu_items`
---
-ALTER TABLE `canteen_menu_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_cmi_category` (`category`),
-  ADD KEY `idx_cmi_variety` (`variety`),
-  ADD KEY `idx_cmi_available` (`available`);
-
---
--- Indexes for table `canteen_orders`
---
-ALTER TABLE `canteen_orders`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `token_number` (`token_number`),
-  ADD KEY `idx_co_token` (`token_number`),
-  ADD KEY `idx_co_customer_id` (`customer_id`),
-  ADD KEY `idx_co_table_id` (`table_id`),
-  ADD KEY `idx_co_order_status` (`order_status`),
-  ADD KEY `idx_co_payment_status` (`payment_status`),
-  ADD KEY `idx_co_ordered_at` (`ordered_at`),
-  ADD KEY `idx_co_served_by` (`served_by`);
-
---
--- Indexes for table `canteen_order_items`
---
-ALTER TABLE `canteen_order_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_coi_order_id` (`order_id`),
-  ADD KEY `idx_coi_menu_item_id` (`menu_item_id`);
-
---
--- Indexes for table `canteen_settings`
---
-ALTER TABLE `canteen_settings`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `setting_key` (`setting_key`),
-  ADD KEY `idx_cset_key` (`setting_key`);
-
---
--- Indexes for table `canteen_staff`
---
-ALTER TABLE `canteen_staff`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_cs_email` (`email`),
-  ADD KEY `idx_cs_role` (`assigned_role`),
-  ADD KEY `fk_cs_created_by` (`created_by`);
-
---
--- Indexes for table `canteen_staff_sessions`
---
-ALTER TABLE `canteen_staff_sessions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_css_staff` (`staff_id`);
-
---
--- Indexes for table `canteen_suppliers`
---
-ALTER TABLE `canteen_suppliers`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_csup_name` (`name`);
-
---
--- Indexes for table `canteen_supplier_items`
---
-ALTER TABLE `canteen_supplier_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_csi_supplier` (`supplier_id`);
-
---
--- Indexes for table `canteen_tables`
---
-ALTER TABLE `canteen_tables`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`),
-  ADD KEY `idx_ct_status` (`status`);
-
---
--- Indexes for table `canteen_table_merges`
---
-ALTER TABLE `canteen_table_merges`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_ctm_primary` (`primary_id`),
-  ADD KEY `fk_ctm_merged` (`merged_id`);
-
---
--- Indexes for table `canteen_waste_log`
---
-ALTER TABLE `canteen_waste_log`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_cwl_inv_id` (`inventory_id`),
-  ADD KEY `idx_cwl_logged_at` (`logged_at`),
-  ADD KEY `fk_cwl_staff` (`logged_by`);
-
---
--- Indexes for table `website_staff`
---
-ALTER TABLE `website_staff`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `admin_users`
---
-ALTER TABLE `admin_users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `canteen_categories`
---
-ALTER TABLE `canteen_categories`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT for table `canteen_inventory_log`
---
-ALTER TABLE `canteen_inventory_log`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `canteen_menu_combo_items`
---
-ALTER TABLE `canteen_menu_combo_items`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `canteen_order_items`
---
-ALTER TABLE `canteen_order_items`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
--- AUTO_INCREMENT for table `canteen_settings`
---
-ALTER TABLE `canteen_settings`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `canteen_staff`
---
-ALTER TABLE `canteen_staff`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `canteen_staff_sessions`
---
-ALTER TABLE `canteen_staff_sessions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `canteen_supplier_items`
---
-ALTER TABLE `canteen_supplier_items`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
-
---
--- AUTO_INCREMENT for table `canteen_table_merges`
---
-ALTER TABLE `canteen_table_merges`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `canteen_waste_log`
---
-ALTER TABLE `canteen_waste_log`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `website_staff`
---
-ALTER TABLE `website_staff`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `canteen_bookings`
---
-ALTER TABLE `canteen_bookings`
-  ADD CONSTRAINT `fk_cb_customer` FOREIGN KEY (`customer_id`) REFERENCES `canteen_customers` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_cb_staff` FOREIGN KEY (`booked_by`) REFERENCES `canteen_staff` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_cb_table` FOREIGN KEY (`table_id`) REFERENCES `canteen_tables` (`id`);
-
---
--- Constraints for table `canteen_inventory`
---
-ALTER TABLE `canteen_inventory`
-  ADD CONSTRAINT `fk_cinv_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `canteen_suppliers` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `canteen_inventory_log`
---
-ALTER TABLE `canteen_inventory_log`
-  ADD CONSTRAINT `fk_cil_inv` FOREIGN KEY (`inventory_id`) REFERENCES `canteen_inventory` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_cil_staff` FOREIGN KEY (`performed_by`) REFERENCES `canteen_staff` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `canteen_menu_combo_items`
---
-ALTER TABLE `canteen_menu_combo_items`
-  ADD CONSTRAINT `fk_cmci_combo` FOREIGN KEY (`combo_id`) REFERENCES `canteen_menu_items` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_cmci_component` FOREIGN KEY (`component_id`) REFERENCES `canteen_menu_items` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `canteen_orders`
---
-ALTER TABLE `canteen_orders`
-  ADD CONSTRAINT `fk_co_customer` FOREIGN KEY (`customer_id`) REFERENCES `canteen_customers` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_co_staff` FOREIGN KEY (`served_by`) REFERENCES `canteen_staff` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_co_table` FOREIGN KEY (`table_id`) REFERENCES `canteen_tables` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `canteen_order_items`
---
-ALTER TABLE `canteen_order_items`
-  ADD CONSTRAINT `fk_coi_item` FOREIGN KEY (`menu_item_id`) REFERENCES `canteen_menu_items` (`id`),
-  ADD CONSTRAINT `fk_coi_order` FOREIGN KEY (`order_id`) REFERENCES `canteen_orders` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `canteen_staff`
---
-ALTER TABLE `canteen_staff`
-  ADD CONSTRAINT `fk_cs_created_by` FOREIGN KEY (`created_by`) REFERENCES `admin_users` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `canteen_staff_sessions`
---
-ALTER TABLE `canteen_staff_sessions`
-  ADD CONSTRAINT `fk_css_staff` FOREIGN KEY (`staff_id`) REFERENCES `canteen_staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `canteen_supplier_items`
---
-ALTER TABLE `canteen_supplier_items`
-  ADD CONSTRAINT `fk_csi_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `canteen_suppliers` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `canteen_table_merges`
---
-ALTER TABLE `canteen_table_merges`
-  ADD CONSTRAINT `fk_ctm_merged` FOREIGN KEY (`merged_id`) REFERENCES `canteen_tables` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_ctm_primary` FOREIGN KEY (`primary_id`) REFERENCES `canteen_tables` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `canteen_waste_log`
---
-ALTER TABLE `canteen_waste_log`
-  ADD CONSTRAINT `fk_cwl_inv` FOREIGN KEY (`inventory_id`) REFERENCES `canteen_inventory` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_cwl_staff` FOREIGN KEY (`logged_by`) REFERENCES `canteen_staff` (`id`) ON DELETE SET NULL;
+CREATE ALGORITHM=UNDEFINED DEFINER=`sksst`@`%` SQL SECURITY DEFINER VIEW `canteen_vw_top_customers`  AS SELECT `canteen_customers`.`id` AS `id`, `canteen_customers`.`name` AS `name`, `canteen_customers`.`phone` AS `phone`, `canteen_customers`.`customer_type` AS `customer_type`, `canteen_customers`.`total_orders` AS `total_orders`, `canteen_customers`.`total_visits` AS `total_visits`, `canteen_customers`.`total_spent` AS `total_spent`, `canteen_customers`.`last_visit` AS `last_visit`, rank() OVER (ORDER BY `canteen_customers`.`total_spent` desc ) AS `spend_rank` FROM `canteen_customers` WHERE (`canteen_customers`.`is_active` = 1) ORDER BY `canteen_customers`.`total_spent` DESC ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
