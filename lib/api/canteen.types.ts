@@ -52,6 +52,7 @@ export interface CanteenMenuItem {
   image_url: string | null;
   available: boolean;
   sort_order: number;
+  channel?: 'canteen' | 'e-com' | 'both';
   created_at: string;
   updated_at: string;
 }

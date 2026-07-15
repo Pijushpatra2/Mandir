@@ -14,7 +14,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type {
   ApiResponse,
@@ -41,7 +41,8 @@ export function useTodayReport() {
   return useQuery({
     queryKey: QUERY_KEYS.reportsToday(),
     queryFn: async (): Promise<TodayReportSummary> => {
-      const { data } = await staffApiClient.get<ApiResponse<TodayReportSummary>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<TodayReportSummary>>(
         '/canteen/reports/today',
       );
       return data.data;
@@ -68,7 +69,8 @@ export function useTopCustomers(options?: { limit?: number }) {
   return useQuery({
     queryKey: QUERY_KEYS.reportsTopCustomers(limit),
     queryFn: async (): Promise<TopCustomer[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<TopCustomer[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<TopCustomer[]>>(
         '/canteen/reports/top-customers',
         { params: { limit } },
       );
@@ -102,7 +104,8 @@ export function useReportsSummary(range?: { start?: string; end?: string }) {
   return useQuery({
     queryKey: QUERY_KEYS.reportsSummary(start, end),
     queryFn: async (): Promise<ReportSummary[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<ReportSummary[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<ReportSummary[]>>(
         '/canteen/reports/summary',
         { params: { start, end } },
       );

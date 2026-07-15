@@ -6,6 +6,7 @@ import Image from "next/image";
 import { mockCategories } from "@/data/categories";
 import { mockProducts } from "@/data/products";
 import { useApp } from "@/lib/context";
+import { useMenu } from "@/lib/api/canteen/useMenu";
 import { layout, cards, typography, buttons, inputs, badges } from "@/lib/design-system";
 import { Search, SlidersHorizontal, Star, ShoppingCart, Heart, RefreshCw, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -21,6 +22,56 @@ export default function ShopPage() {
   const [sortBy, setSortBy] = useState("featured");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // Fetch e-commerce visible products from database
+  const { data: dbItems = [] } = useMenu({ channel: "e-com" });
+
+  // Map database food/e-com items into e-com product catalog structures
+  const products = useMemo(() => {
+    const dbProducts = dbItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      slug: item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      description: item.description || "Fresh, delicious temple prasadam and sweets made with pure love and devotion.",
+      categoryId: item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      price: item.price,
+      stock: 50,
+      images: [
+        item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600"
+      ],
+      rating: 4.8,
+      reviewsCount: 15,
+      specs: { "Origin": "Temple Kitchen", "Serving": "Fresh" },
+      isFeatured: true,
+      isNew: false
+    }));
+    return [...dbProducts, ...mockProducts];
+  }, [dbItems]);
+
+  // Dynamically construct combined categories list with correct product counts
+  const categoriesList = useMemo(() => {
+    const list = [...mockCategories];
+
+    dbItems.forEach((item) => {
+      const slug = item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const exists = list.find((c) => c.slug === slug || c.id === slug);
+      if (!exists) {
+        list.push({
+          id: slug,
+          name: item.category,
+          slug: slug,
+          description: `Fresh, sacred ${item.category} offerings from the temple kitchen.`,
+          image: item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600",
+          count: 0,
+        });
+      }
+    });
+
+    return list.map((cat) => {
+      const count = products.filter((p) => p.categoryId === cat.id || p.categoryId === cat.slug).length;
+      return { ...cat, count };
+    });
+  }, [dbItems, products]);
+
   // Reset all filters
   const resetFilters = () => {
     setSearchQuery("");
@@ -32,7 +83,7 @@ export default function ShopPage() {
 
   // Filtered and Sorted Products
   const filteredProducts = useMemo(() => {
-    return mockProducts
+    return products
       .filter((product) => {
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -47,10 +98,10 @@ export default function ShopPage() {
         if (sortBy === "price-low") return a.price - b.price;
         if (sortBy === "price-high") return b.price - a.price;
         if (sortBy === "rating") return b.rating - a.rating;
-        if (sortBy === "newest") return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
-        return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0); // Featured default
+        if (sortBy === "newest") return (("isNew" in b && b.isNew ? 1 : 0) - ("isNew" in a && a.isNew ? 1 : 0));
+        return (("isFeatured" in b && b.isFeatured ? 1 : 0) - ("isFeatured" in a && a.isFeatured ? 1 : 0)); // Featured default
       });
-  }, [searchQuery, selectedCategory, priceRange, minRating, sortBy]);
+  }, [products, searchQuery, selectedCategory, priceRange, minRating, sortBy]);
 
   return (
     <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding}`}>
@@ -131,7 +182,7 @@ export default function ShopPage() {
                 >
                   All Categories
                 </button>
-                {mockCategories.map((cat) => (
+                {categoriesList.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}

@@ -15,7 +15,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type {
   ApiResponse,
@@ -49,7 +49,8 @@ export function useOrders(filters?: OrderFilters, options?: { enabled?: boolean 
   return useQuery({
     queryKey: QUERY_KEYS.orders(filters),
     queryFn: async (): Promise<CanteenOrder[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<CanteenOrder[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<CanteenOrder[]>>(
         '/canteen/orders',
         { params: filters },
       );
@@ -92,7 +93,8 @@ export function usePlaceOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: PlaceOrderPayload) => {
-      const { data } = await staffApiClient.post<ApiResponse<CanteenOrder>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<CanteenOrder>>(
         '/canteen/orders',
         payload,
       );
@@ -130,7 +132,8 @@ export function useRecordPayment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...payment }: RecordPaymentPayload) => {
-      const { data } = await staffApiClient.patch<ApiResponse<{ updated: boolean }>>(
+      const client = getActiveClient();
+      const { data } = await client.patch<ApiResponse<{ updated: boolean }>>(
         `/canteen/orders/${id}/payment`,
         payment,
       );
@@ -161,7 +164,8 @@ export function useCancelOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      await staffApiClient.delete(`/canteen/orders/${id}`);
+      const client = getActiveClient();
+      await client.delete(`/canteen/orders/${id}`);
       return id;
     },
     onSuccess: () => {

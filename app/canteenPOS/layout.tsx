@@ -270,20 +270,16 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
           {/* Right quick role switcher & notifications */}
           <div className="flex items-center gap-4 relative">
-            {/* Quick role switcher */}
+            {/* Static role display of logged in member */}
             {currentRole && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-xl">
                 <span className="text-[9px] font-bold uppercase text-gray-400">Terminal Role:</span>
-                <select
-                  value={currentRole}
-                  onChange={(e) => handleRoleChange(e.target.value as POSRole)}
-                  className="p-1 px-2 border border-gray-100 bg-gray-50 hover:bg-white rounded-xl text-[10px] font-bold uppercase outline-none text-gray-700 cursor-pointer"
-                >
-                  <option value="manager">Canteen Manager</option>
-                  <option value="receptionist">Receptionist</option>
-                  <option value="cashier">Cashier Desk</option>
-                  <option value="kitchen">Kitchen Staff</option>
-                </select>
+                <span className="text-[10px] font-bold uppercase text-gray-700">
+                  {currentRole === "manager" && "Canteen Manager"}
+                  {currentRole === "receptionist" && "Receptionist"}
+                  {currentRole === "cashier" && "Cashier Desk"}
+                  {currentRole === "kitchen" && "Kitchen Staff"}
+                </span>
               </div>
             )}
 
@@ -484,7 +480,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Thermal Print Receipt Simulation layout */}
-            <div className="border border-gray-150 p-4 rounded-xl bg-gray-50 text-xs font-mono text-gray-800 space-y-3.5 leading-normal shadow-inner max-h-[480px] overflow-y-auto">
+            <div id="thermal-receipt-content" className="border border-gray-150 p-4 rounded-xl bg-gray-50 text-xs font-mono text-gray-800 space-y-3.5 leading-normal shadow-inner max-h-[480px] overflow-y-auto">
               <div className="text-center border-b border-gray-200 pb-3">
                 <h4 className="font-bold text-sm tracking-wider uppercase">SKSS Kampala Canteen</h4>
                 <p className="text-[10px] text-gray-400 font-sans mt-0.5">Bukoto Complex, Kampala</p>
@@ -594,7 +590,61 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
             <div className="mt-4 flex gap-2 justify-end">
               <button
                 onClick={() => {
-                  alert("Bill reprint sent to terminal printer queue!");
+                  const printContent = document.getElementById("thermal-receipt-content");
+                  if (printContent) {
+                    const iframe = document.createElement("iframe");
+                    iframe.style.position = "absolute";
+                    iframe.style.width = "0px";
+                    iframe.style.height = "0px";
+                    iframe.style.border = "none";
+                    document.body.appendChild(iframe);
+                    const doc = iframe.contentWindow?.document;
+                    if (doc) {
+                      doc.write(`
+                        <html>
+                          <head>
+                            <title>Receipt ${receiptOrder.tokenNumber}</title>
+                            <style>
+                              @page { size: auto; margin: 0mm; }
+                              body { font-family: monospace; font-size: 11px; color: #000; margin: 8px; padding: 0; width: 72mm; }
+                              .text-center { text-align: center; }
+                              .font-bold { font-weight: bold; }
+                              .text-sm { font-size: 12px; }
+                              .text-blue-600 { color: #000 !important; }
+                              .bg-blue-50 { background: none !important; border: 1px solid #000; padding: 1px 3px; }
+                              .flex { display: flex; }
+                              .justify-between { justify-content: space-between; }
+                              .justify-end { display: flex; justify-content: flex-end; }
+                              .space-y-1 > * + * { margin-top: 2px; }
+                              .space-y-3.5 > * + * { margin-top: 10px; }
+                              .my-2 { border-top: 1px solid #000; margin: 6px 0; }
+                              .border-t { border-top: 1px solid #000; }
+                              .border-b { border-bottom: 1px solid #000; }
+                              .border-dashed { border-top: 1px dashed #000; margin: 10px 0; }
+                              .border { border: 1px solid #000; padding: 6px; border-radius: 4px; }
+                              .rounded-xl { border-radius: 4px; }
+                              .uppercase { text-transform: uppercase; }
+                              .text-gray-400 { color: #555; }
+                              .text-red-500 { color: #000; }
+                            </style>
+                          </head>
+                          <body>
+                            <div>${printContent.innerHTML}</div>
+                            <script>
+                              window.onload = function() {
+                                window.focus();
+                                window.print();
+                                setTimeout(function() {
+                                  window.parent.document.body.removeChild(window.frameElement);
+                                }, 1000);
+                              };
+                            </script>
+                          </body>
+                        </html>
+                      `);
+                      doc.close();
+                    }
+                  }
                   setReceiptOrder(null);
                 }}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-100 flex items-center gap-1.5 border-none cursor-pointer"

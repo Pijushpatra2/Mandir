@@ -37,6 +37,7 @@ import {
   useAddStaff,
   useDeleteStaff,
   useAddMenuItem,
+  useEditMenuItem,
   useDeleteMenuItem,
   useAddTable,
   useCategories,
@@ -73,6 +74,60 @@ export default function CanteenCRMPage() {
   const [newFoodPrice, setNewFoodPrice] = useState<number>(100);
   const [newFoodCategory, setNewFoodCategory] = useState<string>("Mains");
   const [newFoodVariety, setNewFoodVariety] = useState<"Regular" | "Jain" | "Spicy" | "Sweet">("Regular");
+  const [newFoodChannel, setNewFoodChannel] = useState<"canteen" | "e-com" | "both">("canteen");
+  const [newFoodImage, setNewFoodImage] = useState<string>("");
+
+  // Configure Edit Food Form State
+  const [editingFood, setEditingFood] = useState<FoodItem | null>(null);
+  const [editFoodName, setEditFoodName] = useState("");
+  const [editFoodPrice, setEditFoodPrice] = useState<number>(100);
+  const [editFoodCategory, setEditFoodCategory] = useState("");
+  const [editFoodVariety, setEditFoodVariety] = useState<"Regular" | "Jain" | "Spicy" | "Sweet">("Regular");
+  const [editFoodChannel, setEditFoodChannel] = useState<"canteen" | "e-com" | "both">("canteen");
+  const [editFoodImage, setEditFoodImage] = useState<string>("");
+
+  // Helper for image upload scaling
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        if (isEdit) {
+          setEditFoodImage(dataUrl);
+        } else {
+          setNewFoodImage(dataUrl);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Configure Add Staff Form State
   const [newStaffName, setNewStaffName] = useState("");
@@ -90,7 +145,7 @@ export default function CanteenCRMPage() {
   }, []);
 
   // ─── API Query & Offline Hooks ──────────────────────────────────────────────
-  const { data: apiMenu } = useOfflineMenu({ enabled: isAdminLoggedIn });
+  const { data: apiMenu } = useOfflineMenu(undefined, { enabled: isAdminLoggedIn });
   const { data: apiTables } = useOfflineTables(undefined, { enabled: isAdminLoggedIn });
   const { data: apiCategories = [] } = useCategories({ enabled: isAdminLoggedIn });
   const { data: apiOrders } = useOrders(undefined, { enabled: isAdminLoggedIn });
@@ -108,6 +163,7 @@ export default function CanteenCRMPage() {
   const { mutate: apiAddStaff } = useAddStaff();
   const { mutate: apiDeleteStaff } = useDeleteStaff();
   const { mutate: apiAddMenuItem } = useAddMenuItem();
+  const { mutate: apiEditMenuItem } = useEditMenuItem();
   const { mutate: apiDeleteMenuItem } = useDeleteMenuItem();
   const { mutate: apiAddCategory } = useAddCategory();
   const { mutate: apiDeleteCategory } = useDeleteCategory();
@@ -126,6 +182,8 @@ export default function CanteenCRMPage() {
         category: m.category,
         variety: m.variety,
         available: !!m.available,
+        image: m.image_url || undefined,
+        channel: m.channel,
       }));
       setFoodMenu(mappedMenu);
     }
@@ -310,17 +368,40 @@ export default function CanteenCRMPage() {
 
     apiAddMenuItem({
       name: newFoodName,
-      price: newFoodPrice,
+      price: Number(newFoodPrice),
       category: newFoodCategory,
       variety: newFoodVariety,
       available: true,
+      image_url: newFoodImage || undefined,
+      channel: newFoodChannel,
     });
 
     setNewFoodName("");
+    setNewFoodImage("");
+    setNewFoodChannel("canteen");
   };
 
   const handleDeleteFood = (id: string) => {
     apiDeleteMenuItem(id);
+  };
+
+  const handleEditFoodSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFood) return;
+
+    apiEditMenuItem({
+      id: editingFood.id,
+      updates: {
+        name: editFoodName,
+        price: Number(editFoodPrice),
+        category: editFoodCategory,
+        variety: editFoodVariety,
+        channel: editFoodChannel,
+        image_url: editFoodImage || undefined,
+      },
+    });
+
+    setEditingFood(null);
   };
 
   // Cart operations
@@ -1316,6 +1397,7 @@ export default function CanteenCRMPage() {
                       <th className="pb-3">Item Details</th>
                       <th className="pb-3">Category</th>
                       <th className="pb-3">Variety</th>
+                      <th className="pb-3">Channel</th>
                       <th className="pb-3">Price</th>
                       <th className="pb-3 text-right">Actions</th>
                     </tr>
@@ -1323,7 +1405,16 @@ export default function CanteenCRMPage() {
                   <tbody className="divide-y divide-[#B47F35]/10">
                     {foodMenu.map((item) => (
                       <tr key={item.id} className="text-left text-[#2B132C]">
-                        <td className="py-3.5 font-semibold">{item.name}</td>
+                        <td className="py-3.5 font-semibold flex items-center gap-3">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-8 h-8 rounded-lg object-cover border border-primary-gold/10" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-[#B47F35]/10 flex items-center justify-center text-[9px] font-bold text-[#B47F35] uppercase">
+                              {item.name.substring(0, 2)}
+                            </div>
+                          )}
+                          <span>{item.name}</span>
+                        </td>
                         <td className="py-3.5">{item.category}</td>
                         <td className="py-3.5">
                           <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
@@ -1334,8 +1425,31 @@ export default function CanteenCRMPage() {
                             {item.variety}
                           </span>
                         </td>
+                        <td className="py-3.5">
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                            item.channel === "both" ? "bg-purple-500/10 text-purple-700" :
+                            item.channel === "e-com" ? "bg-blue-500/10 text-blue-700" :
+                            "bg-amber-500/10 text-amber-700"
+                          }`}>
+                            {item.channel || "canteen"}
+                          </span>
+                        </td>
                         <td className="py-3.5 font-bold text-[#B47F35]">UGX {item.price}</td>
-                        <td className="py-3.5 text-right">
+                        <td className="py-3.5 text-right flex items-center justify-end gap-3.5">
+                          <button
+                            onClick={() => {
+                              setEditingFood(item);
+                              setEditFoodName(item.name);
+                              setEditFoodPrice(item.price);
+                              setEditFoodCategory(item.category);
+                              setEditFoodVariety(item.variety);
+                              setEditFoodChannel(item.channel || "canteen");
+                              setEditFoodImage(item.image || "");
+                            }}
+                            className="text-secondary-bronze/50 hover:text-[#B47F35] transition-colors cursor-pointer"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
                           <button
                             onClick={() => handleDeleteFood(item.id)}
                             className="text-secondary-bronze/50 hover:text-red-500 transition-colors cursor-pointer"
@@ -1419,6 +1533,38 @@ export default function CanteenCRMPage() {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                      Sales Channel
+                    </label>
+                    <select
+                      value={newFoodChannel}
+                      onChange={(e: any) => setNewFoodChannel(e.target.value)}
+                      className="w-full p-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs"
+                    >
+                      <option value="canteen">Canteen Only</option>
+                      <option value="e-com">E-Commerce Only</option>
+                      <option value="both">Both (Canteen & E-Com)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                      Food Item Image
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageFileChange(e, false)}
+                        className="text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
+                      />
+                      {newFoodImage && (
+                        <img src={newFoodImage} alt="Preview" className="w-8 h-8 rounded-lg object-cover border" />
+                      )}
+                    </div>
+                  </div>
+
                   <button
                     type="submit"
                     className="w-full py-2.5 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white text-xs font-semibold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
@@ -1431,6 +1577,138 @@ export default function CanteenCRMPage() {
               </GlassCard>
             </div>
 
+            {/* Edit Food Item Modal Overlay */}
+            {editingFood && (
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <GlassCard className="p-6 max-w-sm w-full space-y-4 shadow-2xl border border-primary-gold/20 animate-in fade-in zoom-in-95 duration-150 text-left">
+                  <div className="flex justify-between items-start border-b border-[#B47F35]/15 pb-2">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#B47F35]">
+                        Edit Food Item
+                      </h4>
+                      <p className="text-[10px] text-secondary-bronze/70 mt-0.5">
+                        Modify menu item properties and sales channels.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setEditingFood(null)}
+                      className="text-secondary-bronze hover:text-black border-none bg-transparent cursor-pointer font-bold text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleEditFoodSubmit} className="space-y-4 font-sans text-xs">
+                    <div>
+                      <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                        Food Item Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editFoodName}
+                        onChange={(e) => setEditFoodName(e.target.value)}
+                        className="w-full px-3 py-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs font-sans text-[#2B132C] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                        Price (INR) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={10}
+                        value={editFoodPrice}
+                        onChange={(e) => setEditFoodPrice(parseInt(e.target.value) || 100)}
+                        className="w-full px-3 py-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs font-sans text-[#2B132C] outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                          Category
+                        </label>
+                        <select
+                          value={editFoodCategory}
+                          onChange={(e: any) => setEditFoodCategory(e.target.value)}
+                          className="w-full p-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs font-sans text-[#2B132C] outline-none"
+                        >
+                          {adminCategories.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                          Variety
+                        </label>
+                        <select
+                          value={editFoodVariety}
+                          onChange={(e: any) => setEditFoodVariety(e.target.value)}
+                          className="w-full p-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs font-sans text-[#2B132C] outline-none"
+                        >
+                          <option value="Regular">Regular</option>
+                          <option value="Jain">Jain</option>
+                          <option value="Spicy">Spicy</option>
+                          <option value="Sweet">Sweet</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                        Sales Channel
+                      </label>
+                      <select
+                        value={editFoodChannel}
+                        onChange={(e: any) => setEditFoodChannel(e.target.value as any)}
+                        className="w-full p-2 bg-[#FAF7F2]/50 border border-primary-gold/15 rounded-lg text-xs font-sans text-[#2B132C] outline-none"
+                      >
+                        <option value="canteen">Canteen Only</option>
+                        <option value="e-com">E-Commerce Only</option>
+                        <option value="both">Both (Canteen & E-Com)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[8px] font-bold uppercase text-[#2B132C]/65 block mb-1">
+                        Food Item Image
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageFileChange(e, true)}
+                          className="text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
+                        />
+                        {editFoodImage && (
+                          <img src={editFoodImage} alt="Preview" className="w-8 h-8 rounded-lg object-cover border" />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingFood(null)}
+                        className="px-3 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-gray-500 bg-white"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-[#B47F35] hover:bg-[#8B5E34] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border-none"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                </GlassCard>
+              </div>
+            )}
           </motion.div>
         )}
 

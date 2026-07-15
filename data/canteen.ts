@@ -27,6 +27,7 @@ export interface FoodItem {
   variety: "Regular" | "Jain" | "Spicy" | "Sweet";
   available: boolean;
   image?: string;
+  channel?: "canteen" | "e-com" | "both";
 }
 
 export interface CanteenOrder {

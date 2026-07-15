@@ -168,7 +168,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const [wasteLogs, setWasteLogs] = useState<any[]>([]);
 
   // ─── API Query & Offline Hooks ──────────────────────────────────────────────
-  const { data: apiMenu } = useOfflineMenu({ enabled: isLoggedIn });
+  const { data: apiMenu } = useOfflineMenu({ channel: 'canteen' }, { enabled: isLoggedIn });
   const { data: apiTables } = useOfflineTables(undefined, { enabled: isLoggedIn });
   const { data: apiOrders } = useOrders(undefined, { enabled: isLoggedIn });
   const { data: apiBookings } = useBookings(undefined, { enabled: isLoggedIn });

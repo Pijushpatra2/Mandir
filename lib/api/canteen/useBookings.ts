@@ -13,7 +13,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type { ApiResponse, CanteenBooking, BookingStatus } from '@/lib/api/canteen.types';
 
@@ -33,7 +33,8 @@ export function useBookings(filters?: { date?: string }, options?: { enabled?: b
   return useQuery({
     queryKey: QUERY_KEYS.bookings(filters?.date),
     queryFn: async (): Promise<CanteenBooking[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<CanteenBooking[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<CanteenBooking[]>>(
         '/canteen/bookings',
         { params: filters },
       );
@@ -70,7 +71,8 @@ export function useAddBooking() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: AddBookingPayload) => {
-      const { data } = await staffApiClient.post<ApiResponse<CanteenBooking>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<CanteenBooking>>(
         '/canteen/bookings',
         payload,
       );
@@ -108,7 +110,8 @@ export function useUpdateBooking() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, updates }: UpdateBookingPayload) => {
-      const { data } = await staffApiClient.patch<ApiResponse<CanteenBooking>>(
+      const client = getActiveClient();
+      const { data } = await client.patch<ApiResponse<CanteenBooking>>(
         `/canteen/bookings/${id}`,
         updates,
       );

@@ -17,15 +17,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient, adminApiClient } from '@/lib/apiClient';
-import { getAdminAccessToken } from '@/lib/authStorage';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type { ApiResponse, CanteenMenuItem, MenuCategory, MenuVariety } from '@/lib/api/canteen.types';
-
-function getActiveClient() {
-  const hasAdminToken = typeof window !== 'undefined' && !!getAdminAccessToken();
-  return hasAdminToken ? adminApiClient : staffApiClient;
-}
 
 // ─── Fetch All Menu Items ─────────────────────────────────────────────────────
 
@@ -36,7 +30,7 @@ function getActiveClient() {
  * const { data: menu = [], isLoading } = useMenu();
  */
 export function useMenu(
-  filters?: { category?: MenuCategory; variety?: MenuVariety; available?: 0 | 1 },
+  filters?: { category?: MenuCategory; variety?: MenuVariety; available?: 0 | 1; channel?: 'canteen' | 'e-com' | 'both' },
   options?: { enabled?: boolean }
 ) {
   return useQuery({
@@ -78,6 +72,7 @@ interface AddMenuItemPayload {
   image_url?: string;
   available?: boolean;
   sort_order?: number;
+  channel?: 'canteen' | 'e-com' | 'both';
 }
 
 /**

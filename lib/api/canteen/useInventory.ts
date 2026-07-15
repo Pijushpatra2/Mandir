@@ -14,7 +14,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type {
   ApiResponse,
@@ -37,7 +37,8 @@ export function useInventory() {
   return useQuery({
     queryKey: QUERY_KEYS.inventory(),
     queryFn: async (): Promise<CanteenInventoryItem[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<CanteenInventoryItem[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<CanteenInventoryItem[]>>(
         '/canteen/inventory',
       );
       return data.data;
@@ -64,7 +65,8 @@ export function useLowStock() {
   return useQuery({
     queryKey: QUERY_KEYS.lowStock(),
     queryFn: async (): Promise<LowStockItem[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<LowStockItem[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<LowStockItem[]>>(
         '/canteen/inventory/low-stock',
       );
       return data.data;
@@ -99,7 +101,8 @@ export function useAdjustInventory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...body }: AdjustInventoryPayload) => {
-      const { data } = await staffApiClient.post<ApiResponse<{ adjusted: boolean }>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<{ adjusted: boolean }>>(
         `/canteen/inventory/${id}/adjust`,
         body,
       );
@@ -132,7 +135,8 @@ export function useLogWaste() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: WasteLogPayload) => {
-      const { data } = await staffApiClient.post<ApiResponse<{ logged: boolean }>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<{ logged: boolean }>>(
         '/canteen/inventory/waste',
         payload,
       );

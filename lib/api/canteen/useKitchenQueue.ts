@@ -17,7 +17,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type { ApiResponse, KitchenQueueItem, OrderStatus } from '@/lib/api/canteen.types';
 
@@ -38,7 +38,8 @@ export function useKitchenQueue() {
   return useQuery({
     queryKey: QUERY_KEYS.kitchenQueue(),
     queryFn: async (): Promise<KitchenQueueItem[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<KitchenQueueItem[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<KitchenQueueItem[]>>(
         '/canteen/orders/kitchen/queue',
       );
       return data.data;
@@ -80,7 +81,8 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: UpdateStatusPayload) => {
-      const { data } = await staffApiClient.patch<ApiResponse<{ updated: boolean }>>(
+      const client = getActiveClient();
+      const { data } = await client.patch<ApiResponse<{ updated: boolean }>>(
         `/canteen/orders/${id}/status`,
         { status },
       );

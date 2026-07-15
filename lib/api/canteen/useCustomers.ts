@@ -13,7 +13,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type {
   ApiResponse,
@@ -52,7 +52,8 @@ export function useCustomers(filters?: CustomerFilters, options?: { enabled?: bo
   return useQuery({
     queryKey: QUERY_KEYS.customers(search, page),
     queryFn: async (): Promise<PaginatedResult<CanteenCustomer>> => {
-      const { data } = await staffApiClient.get<{
+      const client = getActiveClient();
+      const { data } = await client.get<{
         success: boolean;
         message: string;
         data: CanteenCustomer[];
@@ -90,7 +91,8 @@ export function useCustomerSearch(search: string) {
   return useQuery({
     queryKey: QUERY_KEYS.customers(search),
     queryFn: async (): Promise<PaginatedResult<CanteenCustomer>> => {
-      const { data } = await staffApiClient.get<{
+      const client = getActiveClient();
+      const { data } = await client.get<{
         success: boolean;
         message: string;
         data: CanteenCustomer[];
@@ -134,7 +136,8 @@ export function useAddCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: AddCustomerPayload) => {
-      const { data } = await staffApiClient.post<ApiResponse<CanteenCustomer>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<CanteenCustomer>>(
         '/canteen/customers',
         payload,
       );
@@ -164,7 +167,8 @@ export function useEditCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, updates }: EditCustomerPayload) => {
-      const { data } = await staffApiClient.patch<ApiResponse<CanteenCustomer>>(
+      const client = getActiveClient();
+      const { data } = await client.patch<ApiResponse<CanteenCustomer>>(
         `/canteen/customers/${id}`,
         updates,
       );

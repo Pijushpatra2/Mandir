@@ -33,6 +33,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5001/api';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+export function getActiveClient() {
+  const hasAdminToken = typeof window !== 'undefined' && !!getAdminAccessToken();
+  return hasAdminToken ? adminApiClient : staffApiClient;
+}
+
 /** Track in-flight refresh attempts to avoid refresh loops. */
 let staffRefreshing = false;
 let adminRefreshing = false;

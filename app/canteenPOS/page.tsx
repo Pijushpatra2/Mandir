@@ -2489,7 +2489,7 @@ export default function CanteenPOSPage() {
               <X className="w-4 h-4" />
             </button>
 
-            <div className="border border-gray-150 p-4 rounded-xl bg-gray-50 text-xs font-mono text-gray-800 space-y-3.5 leading-normal shadow-inner max-h-[480px] overflow-y-auto">
+            <div id="thermal-receipt-content-page" className="border border-gray-150 p-4 rounded-xl bg-gray-50 text-xs font-mono text-gray-800 space-y-3.5 leading-normal shadow-inner max-h-[480px] overflow-y-auto">
               <div className="text-center border-b border-gray-250 pb-3">
                 <h4 className="font-bold text-sm tracking-wider uppercase">SKSS Kampala Canteen</h4>
                 <p className="text-[10px] text-gray-400 font-sans mt-0.5">Bukoto Complex, Kampala</p>
@@ -2598,7 +2598,61 @@ export default function CanteenPOSPage() {
             <div className="mt-4 flex gap-2 justify-end">
               <button
                 onClick={() => {
-                  alert("Thermal print simulated!");
+                  const printContent = document.getElementById("thermal-receipt-content-page");
+                  if (printContent) {
+                    const iframe = document.createElement("iframe");
+                    iframe.style.position = "absolute";
+                    iframe.style.width = "0px";
+                    iframe.style.height = "0px";
+                    iframe.style.border = "none";
+                    document.body.appendChild(iframe);
+                    const doc = iframe.contentWindow?.document;
+                    if (doc) {
+                      doc.write(`
+                        <html>
+                          <head>
+                            <title>Receipt ${receiptOrder.tokenNumber}</title>
+                            <style>
+                              @page { size: auto; margin: 0mm; }
+                              body { font-family: monospace; font-size: 11px; color: #000; margin: 8px; padding: 0; width: 72mm; }
+                              .text-center { text-align: center; }
+                              .font-bold { font-weight: bold; }
+                              .text-sm { font-size: 12px; }
+                              .text-blue-600 { color: #000 !important; }
+                              .bg-blue-50 { background: none !important; border: 1px solid #000; padding: 1px 3px; }
+                              .flex { display: flex; }
+                              .justify-between { justify-content: space-between; }
+                              .justify-end { display: flex; justify-content: flex-end; }
+                              .space-y-1 > * + * { margin-top: 2px; }
+                              .space-y-3.5 > * + * { margin-top: 10px; }
+                              .my-2 { border-top: 1px solid #000; margin: 6px 0; }
+                              .border-t { border-top: 1px solid #000; }
+                              .border-b { border-bottom: 1px solid #000; }
+                              .border-dashed { border-top: 1px dashed #000; margin: 10px 0; }
+                              .border { border: 1px solid #000; padding: 6px; border-radius: 4px; }
+                              .rounded-xl { border-radius: 4px; }
+                              .uppercase { text-transform: uppercase; }
+                              .text-gray-400 { color: #555; }
+                              .text-red-500 { color: #000; }
+                            </style>
+                          </head>
+                          <body>
+                            <div>${printContent.innerHTML}</div>
+                            <script>
+                              window.onload = function() {
+                                window.focus();
+                                window.print();
+                                setTimeout(function() {
+                                  window.parent.document.body.removeChild(window.frameElement);
+                                }, 1000);
+                              };
+                            </script>
+                          </body>
+                        </html>
+                      `);
+                      doc.close();
+                    }
+                  }
                   setReceiptOrder(null);
                 }}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"

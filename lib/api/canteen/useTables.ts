@@ -19,7 +19,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient } from '@/lib/apiClient';
+import { getActiveClient } from '@/lib/apiClient';
 import { QUERY_KEYS } from '@/lib/api/queryKeys';
 import type { ApiResponse, CanteenTable, TableStatus } from '@/lib/api/canteen.types';
 
@@ -44,7 +44,8 @@ export function useTables(params?: { live?: boolean }, options?: { enabled?: boo
   return useQuery({
     queryKey: QUERY_KEYS.tables(),
     queryFn: async (): Promise<CanteenTable[]> => {
-      const { data } = await staffApiClient.get<ApiResponse<CanteenTable[]>>(
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<CanteenTable[]>>(
         '/canteen/tables',
       );
       return data.data;
@@ -89,7 +90,8 @@ export function useUpdateTable() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, updates }: UpdateTablePayload) => {
-      const { data } = await staffApiClient.patch<ApiResponse<CanteenTable>>(
+      const client = getActiveClient();
+      const { data } = await client.patch<ApiResponse<CanteenTable>>(
         `/canteen/tables/${id}`,
         updates,
       );
@@ -119,7 +121,8 @@ export function useAddTable() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: AddTablePayload) => {
-      const { data } = await staffApiClient.post<ApiResponse<CanteenTable>>(
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<CanteenTable>>(
         '/canteen/tables',
         payload,
       );

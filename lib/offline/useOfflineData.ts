@@ -31,7 +31,10 @@ interface OfflineMenuResult {
   source: 'api' | 'indexeddb' | 'empty';
 }
 
-export function useOfflineMenu(options?: { enabled?: boolean }): OfflineMenuResult {
+export function useOfflineMenu(
+  filters?: { channel?: 'canteen' | 'e-com' | 'both' },
+  options?: { enabled?: boolean }
+): OfflineMenuResult {
   const { isOffline } = useOfflineStatus();
   const [offlineData, setOfflineData] = useState<CanteenMenuItem[]>([]);
   const [offlineLoading, setOfflineLoading] = useState(false);
@@ -39,7 +42,7 @@ export function useOfflineMenu(options?: { enabled?: boolean }): OfflineMenuResu
   const enabled = options?.enabled ?? true;
 
   // Online path — TanStack Query handles caching
-  const { data: apiData = EMPTY_ARRAY, isLoading: apiLoading } = useMenu(undefined, options);
+  const { data: apiData = EMPTY_ARRAY, isLoading: apiLoading } = useMenu(filters, options);
 
   // Offline path — read from Dexie
   useEffect(() => {
@@ -50,7 +53,15 @@ export function useOfflineMenu(options?: { enabled?: boolean }): OfflineMenuResu
       .orderBy('sort_order')
       .toArray()
       .then((items) => {
-        setOfflineData(items);
+        let filtered = items;
+        if (filters?.channel) {
+          filtered = items.filter(i => 
+            filters.channel === 'canteen' ? (i.channel === 'canteen' || i.channel === 'both') :
+            filters.channel === 'e-com' ? (i.channel === 'e-com' || i.channel === 'both') :
+            i.channel === filters.channel
+          );
+        }
+        setOfflineData(filtered);
       })
       .catch((err) => {
         console.error('[useOfflineMenu] Failed to read from IndexedDB:', err);
@@ -58,7 +69,7 @@ export function useOfflineMenu(options?: { enabled?: boolean }): OfflineMenuResu
       .finally(() => {
         setOfflineLoading(false);
       });
-  }, [isOffline, enabled]);
+  }, [isOffline, enabled, JSON.stringify(filters)]);
 
   if (isOffline) {
     return {

@@ -1,19 +1,13 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { staffApiClient, adminApiClient } from '@/lib/apiClient';
-import { getStaffAccessToken, getAdminAccessToken } from '@/lib/authStorage';
+import { getActiveClient } from '@/lib/apiClient';
 import type { ApiResponse } from '@/lib/api/canteen.types';
 
 export interface CanteenCategory {
   id: number;
   name: string;
   created_at: string;
-}
-
-function getActiveClient() {
-  const hasAdminToken = typeof window !== 'undefined' && !!getAdminAccessToken();
-  return hasAdminToken ? adminApiClient : staffApiClient;
 }
 
 /**
