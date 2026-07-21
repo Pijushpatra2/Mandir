@@ -132,6 +132,10 @@ export function useEditMenuItem() {
 /**
  * useDeleteMenuItem
  *
+ * Smart-delete: the backend will hard-delete if the item has no order
+ * history, or soft-delete (hide from POS) if it does.
+ *
+ * Returns `{ id, mode }` where mode is 'hard' | 'soft'.
  * After success: invalidates ['menu'] cache.
  */
 export function useDeleteMenuItem() {
@@ -139,8 +143,10 @@ export function useDeleteMenuItem() {
   return useMutation({
     mutationFn: async (id: string) => {
       const client = getActiveClient();
-      await client.delete(`/canteen/menu/${id}`);
-      return id;
+      const { data } = await client.delete<ApiResponse<{ id: string; mode: 'hard' | 'soft' }>>(
+        `/canteen/menu/${id}`,
+      );
+      return data.data; // { id, mode }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.menu() });
