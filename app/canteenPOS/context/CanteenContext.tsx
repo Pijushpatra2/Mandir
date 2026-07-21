@@ -28,6 +28,9 @@ import {
   useCustomers,
   useAddCustomer,
   useUpdateTable,
+  useAddMenuItem,
+  useCategories,
+  useAddCategory,
 } from "@/lib/api/canteen";
 import { staffApiClient, resetStaffSession } from "@/lib/apiClient";
 import { setStaffTokens, clearStaffTokens, getAdminAccessToken } from "@/lib/authStorage";
@@ -145,6 +148,18 @@ interface CanteenContextType {
   openPosSession: (openingCash: number) => void;
   closePosSession: () => void;
   saveState: (key: string, data: any) => void;
+  handleCreateMenuItem: (newItem: {
+    name: string;
+    price: number;
+    category: FoodItem["category"];
+    variety: FoodItem["variety"];
+    image_url?: string;
+    channel?: 'canteen' | 'e-com' | 'both';
+  }) => void;
+  categories: any[];
+  showAddCategoryModal: boolean;
+  setShowAddCategoryModal: React.Dispatch<React.SetStateAction<boolean>>;
+  handleCreateCategory: (payload: { name: string }) => void;
 }
 
 const CanteenContext = createContext<CanteenContextType | undefined>(undefined);
@@ -188,6 +203,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const { data: apiOrders } = useOrders(undefined, { enabled: isLoggedIn });
   const { data: apiBookings } = useBookings(undefined, { enabled: isLoggedIn });
   const { data: apiCustomers } = useCustomers(undefined, { enabled: isLoggedIn });
+  const { data: apiCategories } = useCategories({ enabled: isLoggedIn });
 
   // Map API Menu Catalog to FoodItem[]
   useEffect(() => {
@@ -312,6 +328,8 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const { mutate: apiAddBooking } = useAddBooking();
   const { mutate: apiUpdateBooking } = useUpdateBooking();
   const { mutate: apiAddCustomer } = useAddCustomer();
+  const { mutate: apiAddMenuItem } = useAddMenuItem();
+  const { mutate: apiAddCategory } = useAddCategory();
 
   // UI / Global States
   const [refreshKey, setRefreshKey] = useState(0);
@@ -325,8 +343,16 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const [receiptOrder, setReceiptOrder] = useState<CanteenOrder | null>(null);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showWasteModal, setShowWasteModal] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (apiCategories) {
+      setCategories(apiCategories);
+    }
+  }, [apiCategories]);
 
   const [posSession, setPosSession] = useState<PosSession | null>(null);
 
@@ -800,6 +826,61 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const handleCreateMenuItem = (newItem: {
+    name: string;
+    price: number;
+    category: FoodItem["category"];
+    variety: FoodItem["variety"];
+    image_url?: string;
+    channel?: 'canteen' | 'e-com' | 'both';
+  }) => {
+    // Optimistic local state update
+    const newFood: FoodItem = {
+      id: "food-" + Date.now(),
+      name: newItem.name,
+      price: newItem.price,
+      category: newItem.category,
+      variety: newItem.variety,
+      available: true,
+      image: newItem.image_url,
+      channel: newItem.channel || "canteen"
+    };
+    const updated = [...menu, newFood];
+    setMenu(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("canteen_menu", JSON.stringify(updated));
+    }
+
+    // Trigger API mutation
+    apiAddMenuItem({
+      name: newItem.name,
+      price: newItem.price,
+      category: newItem.category as any,
+      variety: newItem.variety as any,
+      available: true,
+      image_url: newItem.image_url,
+      channel: newItem.channel || "canteen",
+    });
+  };
+
+  const handleCreateCategory = (payload: { name: string }) => {
+    // Optimistic local state update
+    const newCat = { id: Date.now(), name: payload.name };
+    setCategories((prev) => [...prev, newCat]);
+
+    // Trigger API mutation
+    apiAddCategory(
+      { name: payload.name },
+      {
+        onError: () => {
+          // Revert on error
+          setCategories((prev) => prev.filter((c) => c.name !== payload.name));
+          alert("Failed to add category. Please check if it already exists.");
+        },
+      }
+    );
+  };
+
   // --- STATS SELECTORS ---
   const getTodaySales = () => {
     return orders
@@ -925,7 +1006,12 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         posSession,
         openPosSession,
         closePosSession,
-        saveState
+        saveState,
+        handleCreateMenuItem,
+        categories,
+        showAddCategoryModal,
+        setShowAddCategoryModal,
+        handleCreateCategory
       }}
     >
       {children}

@@ -54,7 +54,7 @@ import {
   initialStaffAccounts
 } from "@/data/canteen";
 import { useCanteen } from "./context/CanteenContext";
-import { useCategories } from "@/lib/api/canteen";
+import { useCategories, useAddMenuItem } from "@/lib/api/canteen";
 
 type POSTab =
   | "dashboard"
@@ -71,6 +71,7 @@ type POSTab =
 
 export default function CanteenPOSPage() {
   const { login } = useCanteen();
+  const { mutate: apiAddMenuItem } = useAddMenuItem();
   // Session & Auth states
   const [activeStaff, setActiveStaff] = useState<CanteenStaffAccount | null>(null);
   const { data: apiCategories = [] } = useCategories({ enabled: !!activeStaff });
@@ -2874,6 +2875,16 @@ export default function CanteenPOSPage() {
                 const updated = [...menu, newFood];
                 setMenu(updated);
                 saveState("canteen_menu", updated);
+
+                apiAddMenuItem({
+                  name,
+                  price,
+                  category: category as any,
+                  variety: variety as any,
+                  available: true,
+                  channel: "canteen"
+                });
+
                 setShowAddMenuModal(false);
               }}
               className="space-y-4 font-sans text-xs text-gray-650"

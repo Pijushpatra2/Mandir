@@ -10,6 +10,7 @@ export default function MenuPage() {
     menu,
     setMenu,
     setShowAddMenuModal,
+    setShowAddCategoryModal,
     saveState
   } = useCanteen();
 
@@ -55,12 +56,20 @@ export default function MenuPage() {
             </h3>
             <p className="text-[11px] text-gray-400">Add, edit, or adjust pricing of canteen items</p>
           </div>
-          <button
-            onClick={() => setShowAddMenuModal(true)}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 border-none cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Add Food Item
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAddCategoryModal(true)}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 border-none cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add Category
+            </button>
+            <button
+              onClick={() => setShowAddMenuModal(true)}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 border-none cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add Food Item
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

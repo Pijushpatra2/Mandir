@@ -94,8 +94,54 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
     handleCancelBooking,
     getActiveTablesCount,
     getInventoryAlertsCount,
-    saveState
+    saveState,
+    handleCreateMenuItem,
+    categories,
+    showAddCategoryModal,
+    setShowAddCategoryModal,
+    handleCreateCategory
   } = useCanteen();
+
+  const [newFoodImage, setNewFoodImage] = useState("");
+  const [newFoodChannel, setNewFoodChannel] = useState<'canteen' | 'e-com' | 'both'>("canteen");
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        setNewFoodImage(dataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -863,18 +909,17 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
                 if (!name) return;
 
-                const newFood: FoodItem = {
-                  id: "food-" + Date.now(),
+                handleCreateMenuItem({
                   name,
                   price,
                   category,
                   variety,
-                  available: true
-                };
+                  image_url: newFoodImage || undefined,
+                  channel: newFoodChannel
+                });
 
-                const updated = [...menu, newFood];
-                setMenu(updated);
-                saveState("canteen_menu", updated);
+                setNewFoodImage("");
+                setNewFoodChannel("canteen");
                 setShowAddMenuModal(false);
               }}
               className="space-y-4 font-sans text-xs text-gray-600"
@@ -910,10 +955,11 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                     required
                     className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold cursor-pointer focus:border-blue-400 focus:bg-white"
                   >
-                    <option value="Mains">Mains</option>
-                    <option value="Snacks">Snacks</option>
-                    <option value="Beverages">Beverages</option>
-                    <option value="Desserts">Desserts</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id || cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -931,11 +977,88 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
 
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Sales Channel *</label>
+                <select
+                  value={newFoodChannel}
+                  onChange={(e: any) => setNewFoodChannel(e.target.value)}
+                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold cursor-pointer focus:border-blue-400 focus:bg-white"
+                >
+                  <option value="canteen">Canteen Only</option>
+                  <option value="e-com">E-Commerce Only</option>
+                  <option value="both">Both (Canteen & E-Com)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Food Item Image</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    className="text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
+                  />
+                  {newFoodImage && (
+                    <img src={newFoodImage} alt="Preview" className="w-8 h-8 rounded-lg object-cover border" />
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
                 className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors border-none cursor-pointer"
               >
                 Create Food Item
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5.5 ADD CATEGORY MODAL */}
+      {showAddCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 border border-gray-100 shadow-2xl relative text-left">
+            <button
+              onClick={() => setShowAddCategoryModal(false)}
+              className="absolute top-4 right-4 w-7 h-7 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center text-gray-500 cursor-pointer border-none"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-100 pb-2.5 mb-4">
+              Add Menu Category
+            </h4>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const data = new FormData(e.currentTarget);
+                const name = data.get("categoryName") as string;
+                if (!name?.trim()) return;
+
+                handleCreateCategory({ name: name.trim() });
+                setShowAddCategoryModal(false);
+              }}
+              className="space-y-4 font-sans text-xs text-gray-600"
+            >
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Category Name *</label>
+                <input
+                  type="text"
+                  required
+                  name="categoryName"
+                  placeholder="e.g. Desserts"
+                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 focus:border-blue-400 focus:bg-white"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md mt-2 transition-colors border-none cursor-pointer"
+              >
+                Create Category
               </button>
             </form>
           </div>
