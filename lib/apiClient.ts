@@ -41,6 +41,8 @@ export function getActiveClient() {
 /** Track in-flight refresh attempts to avoid refresh loops. */
 let staffRefreshing = false;
 let adminRefreshing = false;
+let staffSessionInvalid = false;
+let adminSessionInvalid = false;
 
 /** Queue of requests waiting for a token refresh to complete. */
 let staffQueue: Array<(token: string) => void> = [];
@@ -78,12 +80,23 @@ staffApiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status !== 401 || original._retry) {
+    if (error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    if (staffSessionInvalid || original._retry) {
+      staffSessionInvalid = true;
+      clearStaffTokens();
+      staffQueue = [];
+      if (typeof window !== 'undefined' && window.location.pathname !== '/canteenPOS') {
+        window.location.href = '/canteenPOS';
+      }
       return Promise.reject(error);
     }
 
     if (staffRefreshing) {
       // Queue request until the ongoing refresh completes
+      original._retry = true;
       return new Promise((resolve) => {
         staffQueue.push((token: string) => {
           original.headers.Authorization = `Bearer ${token}`;
@@ -107,6 +120,7 @@ staffApiClient.interceptors.response.use(
       const newRefreshToken: string = data.data.refreshToken ?? refreshToken;
 
       setStaffTokens(newAccessToken, newRefreshToken);
+      staffSessionInvalid = false;
       processQueue(staffQueue, newAccessToken);
       staffQueue = [];
 
@@ -114,6 +128,7 @@ staffApiClient.interceptors.response.use(
       return staffApiClient(original);
     } catch (refreshError) {
       clearStaffTokens();
+      staffSessionInvalid = true;
       staffQueue = [];
       // Redirect to canteen login if refresh fails and we are not already on the login page
       if (typeof window !== 'undefined' && window.location.pathname !== '/canteenPOS') {
@@ -154,11 +169,22 @@ adminApiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status !== 401 || original._retry) {
+    if (error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    if (adminSessionInvalid || original._retry) {
+      adminSessionInvalid = true;
+      clearAdminTokens();
+      adminQueue = [];
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard/login';
+      }
       return Promise.reject(error);
     }
 
     if (adminRefreshing) {
+      original._retry = true;
       return new Promise((resolve) => {
         adminQueue.push((token: string) => {
           original.headers.Authorization = `Bearer ${token}`;
@@ -182,6 +208,7 @@ adminApiClient.interceptors.response.use(
       const newRefreshToken: string = data.data.refreshToken ?? refreshToken;
 
       setAdminTokens(newAccessToken, newRefreshToken);
+      adminSessionInvalid = false;
       processQueue(adminQueue, newAccessToken);
       adminQueue = [];
 
@@ -189,6 +216,7 @@ adminApiClient.interceptors.response.use(
       return adminApiClient(original);
     } catch (refreshError) {
       clearAdminTokens();
+      adminSessionInvalid = true;
       adminQueue = [];
       // Redirect to admin login if refresh fails
       if (typeof window !== 'undefined') {
