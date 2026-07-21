@@ -104,7 +104,7 @@ staffApiClient.interceptors.response.use(
       });
 
       const newAccessToken: string = data.data.accessToken;
-      const newRefreshToken: string = data.data.refreshToken;
+      const newRefreshToken: string = data.data.refreshToken ?? refreshToken;
 
       setStaffTokens(newAccessToken, newRefreshToken);
       processQueue(staffQueue, newAccessToken);
@@ -179,7 +179,7 @@ adminApiClient.interceptors.response.use(
       });
 
       const newAccessToken: string = data.data.accessToken;
-      const newRefreshToken: string = data.data.refreshToken;
+      const newRefreshToken: string = data.data.refreshToken ?? refreshToken;
 
       setAdminTokens(newAccessToken, newRefreshToken);
       processQueue(adminQueue, newAccessToken);
