@@ -29,8 +29,8 @@ import {
   useAddCustomer,
   useUpdateTable,
 } from "@/lib/api/canteen";
-import { staffApiClient } from "@/lib/apiClient";
-import { setStaffTokens, clearStaffTokens } from "@/lib/authStorage";
+import { staffApiClient, resetStaffSession } from "@/lib/apiClient";
+import { setStaffTokens, clearStaffTokens, getAdminAccessToken } from "@/lib/authStorage";
 
 export type POSRole = "manager" | "receptionist" | "cashier" | "kitchen";
 export type POSTab =
@@ -153,8 +153,23 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // Authentication State
-  const [currentRole, setCurrentRole] = useState<POSRole | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  // ⚡ Lazy initialisers read localStorage SYNCHRONOUSLY on first render so
+  //    the auth guard in layout.tsx sees the correct state immediately —
+  //    preventing the flash-redirect to the login page on refresh.
+  const [currentRole, setCurrentRole] = useState<POSRole | null>(() => {
+    if (typeof window === "undefined") return null;
+    const role = localStorage.getItem("canteen_role") as POSRole | null;
+    // Super-admin gets manager access by default
+    if (!role && !!localStorage.getItem("admin_access_token")) return "manager";
+    return role;
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const staffLoggedIn = localStorage.getItem("canteen_is_logged_in") === "true";
+    // Super-admin / module-admin with admin_access_token can access POS
+    const adminLoggedIn = !!localStorage.getItem("admin_access_token");
+    return staffLoggedIn || adminLoggedIn;
+  });
   const [activeTab, setActiveTab] = useState<POSTab>("dashboard");
 
   // Core Data States
@@ -367,13 +382,9 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Authentication session recovery
-      const logged = localStorage.getItem("canteen_is_logged_in") === "true";
-      const role = localStorage.getItem("canteen_role") as POSRole | null;
-      if (logged && role) {
-        setIsLoggedIn(true);
-        setCurrentRole(role);
-      }
+      // ── Session recovery is now handled by lazy useState initialisers ──
+      // No async recovery needed here; isLoggedIn / currentRole are already
+      // hydrated synchronously before the first render completes.
     }
   }, [refreshKey]);
 
@@ -413,8 +424,10 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
       if (response.data && response.data.data) {
         const { accessToken, refreshToken, staff } = response.data.data;
 
-        // Save tokens
+        // Store tokens — then reset the session-invalid flag so the
+        // interceptor does not block future requests from this session.
         setStaffTokens(accessToken, refreshToken);
+        resetStaffSession();
 
         // Update context states
         setIsLoggedIn(true);
@@ -458,7 +471,13 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(false);
     setCurrentRole(null);
     clearStaffTokens();
-    router.push("/canteenPOS");
+    // If the user is a super-admin operating the POS, we do NOT clear their
+    // admin token — just redirect them back to the admin dashboard.
+    if (typeof window !== "undefined" && getAdminAccessToken()) {
+      router.push("/dashboard");
+    } else {
+      router.push("/canteenPOS");
+    }
   };
 
   // Switch tabs (routes) manually

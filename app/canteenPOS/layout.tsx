@@ -112,25 +112,31 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
   }, [pathname, mounted, setActiveTab]);
 
   // Auth Router Guard Redirects
+  // NOTE: isLoggedIn is now synchronously initialised from localStorage inside
+  // CanteenContext (lazy useState), so we can safely guard on first mount
+  // without waiting for an async useEffect to populate it.
   useEffect(() => {
-    if (mounted) {
-      if (!isLoggedIn && pathname !== "/canteenPOS") {
-        router.replace("/canteenPOS");
-      } else if (isLoggedIn) {
-        if (pathname === "/canteenPOS") {
+    if (!mounted) return;
+
+    if (!isLoggedIn && pathname !== "/canteenPOS") {
+      // Not authenticated — send to canteen login
+      router.replace("/canteenPOS");
+    } else if (isLoggedIn) {
+      if (pathname === "/canteenPOS") {
+        // Already logged in but on the login page — redirect to correct home
+        let target = "/canteenPOS/dashboard";
+        if (currentRole === "kitchen") target = "/canteenPOS/kitchen";
+        else if (currentRole === "receptionist" || currentRole === "cashier") target = "/canteenPOS/pos";
+        router.replace(target);
+      } else {
+        // Enforce per-tab role restrictions
+        const tabName = pathname.split("/").pop() || "dashboard";
+        const currentLink = sidebarLinks.find((l) => l.id === tabName);
+        if (currentLink && currentRole && !currentLink.roles.includes(currentRole)) {
           let target = "/canteenPOS/dashboard";
           if (currentRole === "kitchen") target = "/canteenPOS/kitchen";
           else if (currentRole === "receptionist" || currentRole === "cashier") target = "/canteenPOS/pos";
           router.replace(target);
-        } else {
-          const tabName = pathname.split("/").pop() || "dashboard";
-          const currentLink = sidebarLinks.find((l) => l.id === tabName);
-          if (currentLink && currentRole && !currentLink.roles.includes(currentRole)) {
-            let target = "/canteenPOS/dashboard";
-            if (currentRole === "kitchen") target = "/canteenPOS/kitchen";
-            else if (currentRole === "receptionist" || currentRole === "cashier") target = "/canteenPOS/pos";
-            router.replace(target);
-          }
         }
       }
     }
