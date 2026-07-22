@@ -29,6 +29,7 @@ import {
   useAddCustomer,
   useUpdateTable,
   useAddMenuItem,
+  useEditMenuItem,
   useCategories,
   useAddCategory,
   useCancelOrder,
@@ -156,6 +157,15 @@ interface CanteenContextType {
     variety: FoodItem["variety"];
     image_url?: string;
     channel?: 'canteen' | 'e-com' | 'both';
+  }) => void;
+  handleUpdateMenuItem: (id: string, updates: {
+    name?: string;
+    price?: number;
+    category?: FoodItem["category"];
+    variety?: FoodItem["variety"];
+    image_url?: string;
+    channel?: 'canteen' | 'e-com' | 'both';
+    available?: boolean;
   }) => void;
   categories: any[];
   showAddCategoryModal: boolean;
@@ -332,6 +342,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const { mutate: apiUpdateBooking } = useUpdateBooking();
   const { mutate: apiAddCustomer } = useAddCustomer();
   const { mutate: apiAddMenuItem } = useAddMenuItem();
+  const { mutate: apiEditMenuItem } = useEditMenuItem();
   const { mutate: apiAddCategory } = useAddCategory();
   const { mutateAsync: apiCancelOrder } = useCancelOrder();
 
@@ -867,6 +878,50 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const handleUpdateMenuItem = (id: string, updates: {
+    name?: string;
+    price?: number;
+    category?: FoodItem["category"];
+    variety?: FoodItem["variety"];
+    image_url?: string;
+    channel?: 'canteen' | 'e-com' | 'both';
+    available?: boolean;
+  }) => {
+    // Optimistic local state update
+    const updated = menu.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            ...(updates.name && { name: updates.name }),
+            ...(updates.price !== undefined && { price: updates.price }),
+            ...(updates.category && { category: updates.category }),
+            ...(updates.variety && { variety: updates.variety }),
+            ...(updates.image_url !== undefined && { image: updates.image_url }),
+            ...(updates.channel && { channel: updates.channel }),
+            ...(updates.available !== undefined && { available: updates.available }),
+          }
+        : item
+    );
+    setMenu(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("canteen_menu", JSON.stringify(updated));
+    }
+
+    // Trigger API mutation
+    apiEditMenuItem({
+      id,
+      updates: {
+        ...(updates.name && { name: updates.name }),
+        ...(updates.price !== undefined && { price: updates.price }),
+        ...(updates.category && { category: updates.category as any }),
+        ...(updates.variety && { variety: updates.variety as any }),
+        ...(updates.image_url !== undefined && { image_url: updates.image_url }),
+        ...(updates.channel && { channel: updates.channel }),
+        ...(updates.available !== undefined && { available: updates.available }),
+      },
+    });
+  };
+
   const handleCreateCategory = (payload: { name: string }) => {
     // Optimistic local state update
     const newCat = { id: Date.now(), name: payload.name };
@@ -1035,6 +1090,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         closePosSession,
         saveState,
         handleCreateMenuItem,
+        handleUpdateMenuItem,
         categories,
         showAddCategoryModal,
         setShowAddCategoryModal,

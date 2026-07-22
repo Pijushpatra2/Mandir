@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, Trash2, Pencil, X } from "lucide-react";
 import { useCanteen } from "../context/CanteenContext";
 import { useDeleteMenuItem, useBulkDeleteMenuItems } from "@/lib/api/canteen";
+import { FoodItem } from "@/data/canteen";
 
 export default function MenuPage() {
   const {
@@ -11,17 +12,19 @@ export default function MenuPage() {
     setMenu,
     setShowAddMenuModal,
     setShowAddCategoryModal,
+    categories,
+    handleUpdateMenuItem,
     saveState
   } = useCanteen();
 
-  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
+  const [editImage, setEditImage] = useState<string>("");
 
   const { mutate: deleteMenuItem, isPending: isDeleting } = useDeleteMenuItem();
   const { mutate: bulkDeleteMenuItems } = useBulkDeleteMenuItems();
 
   // Exclude any soft-deleted items (name starts with '[Deleted]') from display.
-  // These exist only to preserve order-history FK integrity and should never
-  // be visible in the management UI.
   const visibleMenu = menu.filter(
     (m) => !m.name.startsWith("[Deleted]")
   );
@@ -31,7 +34,6 @@ export default function MenuPage() {
 
     deleteMenuItem(id, {
       onSuccess: (result) => {
-        // Remove from local context state immediately for instant UI feedback
         const updated = menu.filter((item) => item.id !== id);
         setMenu(updated);
         saveState("canteen_menu", updated);
@@ -54,7 +56,6 @@ export default function MenuPage() {
 
     bulkDeleteMenuItems(selectedIds, {
       onSuccess: () => {
-        // Optimistically remove from local state immediately
         const updated = menu.filter((item) => !selectedIds.includes(item.id));
         setMenu(updated);
         saveState("canteen_menu", updated);
@@ -64,6 +65,75 @@ export default function MenuPage() {
         alert("Failed to delete selected menu items.");
       }
     });
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        setEditImage(dataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const openEditModal = (item: FoodItem) => {
+    setEditingItem(item);
+    setEditImage(item.image || "");
+  };
+
+  const handleEditSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingItem) return;
+
+    const data = new FormData(e.currentTarget);
+    const name = data.get("foodName") as string;
+    const price = Number(data.get("foodPrice"));
+    const category = data.get("foodCategory") as FoodItem["category"];
+    const variety = data.get("foodVariety") as FoodItem["variety"];
+    const channel = data.get("foodChannel") as 'canteen' | 'e-com' | 'both';
+
+    if (!name) return;
+
+    handleUpdateMenuItem(editingItem.id, {
+      name,
+      price,
+      category,
+      variety,
+      channel,
+      image_url: editImage || undefined,
+    });
+
+    setEditingItem(null);
+    setEditImage("");
   };
 
   return (
@@ -146,10 +216,21 @@ export default function MenuPage() {
                   </td>
                   {/* Item Name + Avatar */}
                   <td className="py-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-[9px] font-black text-orange-500 shrink-0">
-                        {m.name.slice(0, 2).toUpperCase()}
-                      </div>
+                    <div className="flex items-center gap-2.5">
+                      {m.image ? (
+                        <img
+                          src={m.image}
+                          alt={m.name}
+                          className="w-8 h-8 rounded-lg object-cover border border-gray-100 shadow-sm shrink-0"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-[9px] font-black text-orange-500 shrink-0">
+                          {m.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
                       <span className="font-bold text-gray-800">{m.name}</span>
                     </div>
                   </td>
@@ -188,19 +269,20 @@ export default function MenuPage() {
                   {/* Actions */}
                   <td className="py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      {/* Edit (placeholder — can wire to edit modal) */}
+                      {/* Edit Button */}
                       <button
-                        className="text-gray-300 hover:text-blue-500 transition-colors p-1 border-none bg-transparent cursor-pointer"
+                        onClick={() => openEditModal(m)}
+                        className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 rounded-lg hover:bg-blue-50 border-none bg-transparent cursor-pointer"
                         title="Edit item"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
 
-                      {/* Delete */}
+                      {/* Delete Button */}
                       <button
                         onClick={() => handleDelete(m.id, m.name)}
                         disabled={isDeleting}
-                        className="text-gray-300 hover:text-red-500 transition-colors p-1 border-none bg-transparent cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="text-gray-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50 border-none bg-transparent cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         title="Delete item"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -212,7 +294,7 @@ export default function MenuPage() {
 
               {visibleMenu.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-gray-300 text-xs font-semibold">
+                  <td colSpan={7} className="py-10 text-center text-gray-300 text-xs font-semibold">
                     No menu items found. Click &quot;Add Food Item&quot; to get started.
                   </td>
                 </tr>
@@ -266,6 +348,132 @@ export default function MenuPage() {
           </div>
         </div>
       </div>
+
+      {/* EDIT FOOD ITEM MODAL */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 border border-gray-100 shadow-2xl relative text-left">
+            <button
+              onClick={() => {
+                setEditingItem(null);
+                setEditImage("");
+              }}
+              className="absolute top-4 right-4 w-7 h-7 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center text-gray-500 cursor-pointer border-none"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-100 pb-2.5 mb-4">
+              Edit Food Item
+            </h4>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4 font-sans text-xs text-gray-600">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Food Item Name *</label>
+                <input
+                  type="text"
+                  required
+                  name="foodName"
+                  defaultValue={editingItem.name}
+                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 focus:border-blue-400 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Price (UGX) *</label>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  step="0.01"
+                  defaultValue={editingItem.price}
+                  name="foodPrice"
+                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 focus:border-blue-400 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3.5">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Category *</label>
+                  <select
+                    name="foodCategory"
+                    required
+                    defaultValue={editingItem.category}
+                    className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold cursor-pointer focus:border-blue-400 focus:bg-white"
+                  >
+                    {categories.map((cat: any) => (
+                      <option key={cat.id || cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Variety *</label>
+                  <select
+                    name="foodVariety"
+                    required
+                    defaultValue={editingItem.variety}
+                    className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold cursor-pointer focus:border-blue-400 focus:bg-white"
+                  >
+                    <option value="Regular">Regular</option>
+                    <option value="Jain">Jain</option>
+                    <option value="Spicy">Spicy</option>
+                    <option value="Sweet">Sweet</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Sales Channel *</label>
+                <select
+                  name="foodChannel"
+                  defaultValue={editingItem.channel || "canteen"}
+                  className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700 font-semibold cursor-pointer focus:border-blue-400 focus:bg-white"
+                >
+                  <option value="canteen">Canteen Only</option>
+                  <option value="e-com">E-Commerce Only</option>
+                  <option value="both">Both (Canteen & E-Com)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Food Item Photo (S3 Upload)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    className="text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
+                  />
+                  {editImage && (
+                    <img src={editImage} alt="Preview" className="w-9 h-9 rounded-lg object-cover border shadow-sm" />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setEditImage("");
+                  }}
+                  className="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-colors border-none cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition-colors border-none cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
