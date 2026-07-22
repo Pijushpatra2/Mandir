@@ -44,6 +44,8 @@ import {
   useAddCategory,
   useDeleteCategory,
   useUpdateCategory,
+  useBulkDeleteMenuItems,
+  useBulkDeleteTables,
 } from "@/lib/api/canteen";
 
 export default function CanteenCRMPage() {
@@ -64,6 +66,10 @@ export default function CanteenCRMPage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD">("UPI");
   const [activeTicket, setActiveTicket] = useState<CanteenOrder | null>(null);
+
+  // Bulk Delete selection states
+  const [selectedMenuIds, setSelectedMenuIds] = useState<string[]>([]);
+  const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
 
   // Configure Add Table Form State
   const [newTableName, setNewTableName] = useState("");
@@ -165,6 +171,8 @@ export default function CanteenCRMPage() {
   const { mutate: apiAddMenuItem } = useAddMenuItem();
   const { mutate: apiEditMenuItem } = useEditMenuItem();
   const { mutate: apiDeleteMenuItem } = useDeleteMenuItem();
+  const { mutate: apiBulkDeleteMenuItems } = useBulkDeleteMenuItems();
+  const { mutate: apiBulkDeleteTables } = useBulkDeleteTables();
   const { mutate: apiAddCategory } = useAddCategory();
   const { mutate: apiDeleteCategory } = useDeleteCategory();
   const { mutate: apiUpdateCategory } = useUpdateCategory();
@@ -383,6 +391,34 @@ export default function CanteenCRMPage() {
 
   const handleDeleteFood = (id: string) => {
     apiDeleteMenuItem(id);
+  };
+
+  const handleBulkDeleteMenu = () => {
+    if (selectedMenuIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete the ${selectedMenuIds.length} selected menu items?`)) return;
+
+    apiBulkDeleteMenuItems(selectedMenuIds, {
+      onSuccess: () => {
+        setSelectedMenuIds([]);
+      },
+      onError: () => {
+        alert("Failed to delete selected menu items.");
+      }
+    });
+  };
+
+  const handleBulkDeleteTables = () => {
+    if (selectedTableIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete/deactivate the ${selectedTableIds.length} selected seating tables?`)) return;
+
+    apiBulkDeleteTables(selectedTableIds, {
+      onSuccess: () => {
+        setSelectedTableIds([]);
+      },
+      onError: () => {
+        alert("Failed to delete selected tables.");
+      }
+    });
   };
 
   const handleEditFoodSubmit = (e: React.FormEvent) => {
@@ -1263,22 +1299,56 @@ export default function CanteenCRMPage() {
                   <Utensils className="w-4 h-4" />
                   <span>Canteen Table Layout Configuration</span>
                 </h3>
-                <span className="text-[10px] text-secondary-bronze/70 font-sans">
-                  Total Capacity: {tables.reduce((acc, t) => acc + t.capacity, 0)} Seats
-                </span>
+                <div className="flex items-center gap-3">
+                  {selectedTableIds.length > 0 && (
+                    <button
+                      onClick={handleBulkDeleteTables}
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold transition-colors cursor-pointer border-none flex items-center gap-1 shadow-sm"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Delete Selected ({selectedTableIds.length})</span>
+                    </button>
+                  )}
+                  <span className="text-[10px] text-secondary-bronze/70 font-sans">
+                    Total Capacity: {tables.reduce((acc, t) => acc + t.capacity, 0)} Seats
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 {tables.map((table) => (
                   <div 
                     key={table.id}
-                    className={`border rounded-2xl p-5 text-left flex flex-col justify-between space-y-4 shadow-sm transition-colors ${
+                    onClick={() => {
+                      if (selectedTableIds.includes(table.id)) {
+                        setSelectedTableIds((prev) => prev.filter((id) => id !== table.id));
+                      } else {
+                        setSelectedTableIds((prev) => [...prev, table.id]);
+                      }
+                    }}
+                    className={`border rounded-2xl p-5 text-left flex flex-col justify-between space-y-4 shadow-sm transition-colors cursor-pointer relative ${
+                      selectedTableIds.includes(table.id) ? "border-[#B47F35] ring-2 ring-[#B47F35]/30 bg-[#B47F35]/5 text-[#2B132C]" :
                       table.status === "AVAILABLE" ? "border-green-500/25 bg-green-500/5 text-green-700" :
                       table.status === "OCCUPIED" ? "border-red-500/25 bg-red-500/5 text-[#2B132C]" :
                       "border-[#B47F35]/30 bg-[#B47F35]/5 text-[#B47F35]"
                     }`}
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="absolute top-3 right-3" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedTableIds.includes(table.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTableIds((prev) => [...prev, table.id]);
+                          } else {
+                            setSelectedTableIds((prev) => prev.filter((id) => id !== table.id));
+                          }
+                        }}
+                        className="cursor-pointer rounded border-[#B47F35]/35 text-[#B47F35] focus:ring-[#B47F35]"
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-start pr-6">
                       <div>
                         <h4 className="text-xs font-bold text-[#2B132C]">{table.name}</h4>
                         <span className="text-[9px] text-secondary-bronze/80 font-sans mt-0.5 block">
@@ -1287,8 +1357,11 @@ export default function CanteenCRMPage() {
                       </div>
                       
                       <button
-                        onClick={() => handleDeleteTable(table.id)}
-                        className="text-secondary-bronze/50 hover:text-red-500 transition-colors cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTable(table.id);
+                        }}
+                        className="text-secondary-bronze/50 hover:text-red-500 transition-colors cursor-pointer border-none bg-transparent"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -1304,7 +1377,10 @@ export default function CanteenCRMPage() {
                           <button
                             key={status}
                             type="button"
-                            onClick={() => toggleTableStatus(table.id, status as any)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTableStatus(table.id, status as any);
+                            }}
                             className={`py-1 rounded text-[7px] font-bold text-center cursor-pointer uppercase ${
                               table.status === status 
                                 ? "bg-white shadow-sm border border-primary-gold/30 font-bold" 
@@ -1385,15 +1461,40 @@ export default function CanteenCRMPage() {
           >
             
             <div className="lg:col-span-8 bg-white border border-[#B47F35]/15 rounded-3xl p-6 shadow-sm space-y-6">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
-                <Coffee className="w-4 h-4" />
-                <span>Canteen Food Menu Customization</span>
-              </h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#B47F35] flex items-center gap-1.5">
+                  <Coffee className="w-4 h-4" />
+                  <span>Canteen Food Menu Customization</span>
+                </h3>
+                {selectedMenuIds.length > 0 && (
+                  <button
+                    onClick={handleBulkDeleteMenu}
+                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold transition-colors cursor-pointer border-none flex items-center gap-1 shadow-sm"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Delete Selected ({selectedMenuIds.length})</span>
+                  </button>
+                )}
+              </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full font-sans text-xs">
                   <thead>
                     <tr className="border-b border-[#B47F35]/15 text-left text-secondary-bronze uppercase tracking-wider text-[10px] font-bold">
+                      <th className="pb-3 w-8">
+                        <input
+                          type="checkbox"
+                          checked={foodMenu.length > 0 && selectedMenuIds.length === foodMenu.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedMenuIds(foodMenu.map((f) => f.id));
+                            } else {
+                              setSelectedMenuIds([]);
+                            }
+                          }}
+                          className="cursor-pointer rounded border-[#B47F35]/35 text-[#B47F35] focus:ring-[#B47F35]"
+                        />
+                      </th>
                       <th className="pb-3">Item Details</th>
                       <th className="pb-3">Category</th>
                       <th className="pb-3">Variety</th>
@@ -1405,6 +1506,20 @@ export default function CanteenCRMPage() {
                   <tbody className="divide-y divide-[#B47F35]/10">
                     {foodMenu.map((item) => (
                       <tr key={item.id} className="text-left text-[#2B132C]">
+                        <td className="py-3.5 w-8">
+                          <input
+                            type="checkbox"
+                            checked={selectedMenuIds.includes(item.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedMenuIds((prev) => [...prev, item.id]);
+                              } else {
+                                setSelectedMenuIds((prev) => prev.filter((id) => id !== item.id));
+                              }
+                            }}
+                            className="cursor-pointer rounded border-[#B47F35]/35 text-[#B47F35] focus:ring-[#B47F35]"
+                          />
+                        </td>
                         <td className="py-3.5 font-semibold flex items-center gap-3">
                           {item.image ? (
                             <img src={item.image} alt={item.name} className="w-8 h-8 rounded-lg object-cover border border-primary-gold/10" />

@@ -153,3 +153,20 @@ export function useDeleteMenuItem() {
     },
   });
 }
+
+export function useBulkDeleteMenuItems() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<null>>(
+        '/canteen/menu/bulk-delete',
+        { ids },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.menu() });
+    },
+  });
+}

@@ -3,7 +3,7 @@
 import React from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { useCanteen } from "../context/CanteenContext";
-import { useDeleteMenuItem } from "@/lib/api/canteen";
+import { useDeleteMenuItem, useBulkDeleteMenuItems } from "@/lib/api/canteen";
 
 export default function MenuPage() {
   const {
@@ -14,7 +14,10 @@ export default function MenuPage() {
     saveState
   } = useCanteen();
 
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+
   const { mutate: deleteMenuItem, isPending: isDeleting } = useDeleteMenuItem();
+  const { mutate: bulkDeleteMenuItems } = useBulkDeleteMenuItems();
 
   // Exclude any soft-deleted items (name starts with '[Deleted]') from display.
   // These exist only to preserve order-history FK integrity and should never
@@ -45,6 +48,24 @@ export default function MenuPage() {
     });
   };
 
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete the ${selectedIds.length} selected menu items?`)) return;
+
+    bulkDeleteMenuItems(selectedIds, {
+      onSuccess: () => {
+        // Optimistically remove from local state immediately
+        const updated = menu.filter((item) => !selectedIds.includes(item.id));
+        setMenu(updated);
+        saveState("canteen_menu", updated);
+        setSelectedIds([]);
+      },
+      onError: () => {
+        alert("Failed to delete selected menu items.");
+      }
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Menu Items lists table (8 cols) */}
@@ -57,6 +78,14 @@ export default function MenuPage() {
             <p className="text-[11px] text-gray-400">Add, edit, or adjust pricing of canteen items</p>
           </div>
           <div className="flex gap-2">
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 border-none cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" /> Delete Selected ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={() => setShowAddCategoryModal(true)}
               className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1 border-none cursor-pointer"
@@ -76,6 +105,20 @@ export default function MenuPage() {
           <table className="w-full text-xs font-sans text-left">
             <thead>
               <tr className="border-b border-gray-50 text-gray-400 uppercase font-bold text-[9px]">
+                <th className="pb-2.5 w-8">
+                  <input
+                    type="checkbox"
+                    checked={visibleMenu.length > 0 && selectedIds.length === visibleMenu.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds(visibleMenu.map((f) => f.id));
+                      } else {
+                        setSelectedIds([]);
+                      }
+                    }}
+                    className="cursor-pointer rounded border-gray-250 text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
                 <th className="pb-2.5">Item Details</th>
                 <th className="pb-2.5">Category</th>
                 <th className="pb-2.5">Variety</th>
@@ -87,6 +130,20 @@ export default function MenuPage() {
             <tbody className="divide-y divide-gray-50">
               {visibleMenu.map((m) => (
                 <tr key={m.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-2.5 w-8">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(m.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds((prev) => [...prev, m.id]);
+                        } else {
+                          setSelectedIds((prev) => prev.filter((id) => id !== m.id));
+                        }
+                      }}
+                      className="cursor-pointer rounded border-gray-250 text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
                   {/* Item Name + Avatar */}
                   <td className="py-2.5">
                     <div className="flex items-center gap-2">

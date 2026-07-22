@@ -133,3 +133,36 @@ export function useAddTable() {
     },
   });
 }
+
+export function useDeleteTable() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const client = getActiveClient();
+      const { data } = await client.delete<ApiResponse<null>>(
+        `/canteen/tables/${id}`,
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tables() });
+    },
+  });
+}
+
+export function useBulkDeleteTables() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<null>>(
+        '/canteen/tables/bulk-delete',
+        { ids },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tables() });
+    },
+  });
+}

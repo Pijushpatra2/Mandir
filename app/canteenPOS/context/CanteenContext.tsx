@@ -31,6 +31,7 @@ import {
   useAddMenuItem,
   useCategories,
   useAddCategory,
+  useCancelOrder,
 } from "@/lib/api/canteen";
 import { staffApiClient, resetStaffSession } from "@/lib/apiClient";
 import { setStaffTokens, clearStaffTokens, getAdminAccessToken } from "@/lib/authStorage";
@@ -160,6 +161,8 @@ interface CanteenContextType {
   showAddCategoryModal: boolean;
   setShowAddCategoryModal: React.Dispatch<React.SetStateAction<boolean>>;
   handleCreateCategory: (payload: { name: string }) => void;
+  handleDeleteOrder: (orderId: string) => Promise<boolean>;
+  handleBulkDeleteOrders: (orderIds: string[]) => Promise<boolean>;
 }
 
 const CanteenContext = createContext<CanteenContextType | undefined>(undefined);
@@ -330,6 +333,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const { mutate: apiAddCustomer } = useAddCustomer();
   const { mutate: apiAddMenuItem } = useAddMenuItem();
   const { mutate: apiAddCategory } = useAddCategory();
+  const { mutateAsync: apiCancelOrder } = useCancelOrder();
 
   // UI / Global States
   const [refreshKey, setRefreshKey] = useState(0);
@@ -912,6 +916,29 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const getInventoryAlertsCount = () => {
     return inventory.filter((i) => i.stock <= i.minStock).length;
   };
+  const handleDeleteOrder = async (orderId: string): Promise<boolean> => {
+    try {
+      await apiCancelOrder(orderId);
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      return true;
+    } catch (err) {
+      console.error("[handleDeleteOrder] Failed to delete order:", err);
+      alert("Failed to delete order from database.");
+      return false;
+    }
+  };
+
+  const handleBulkDeleteOrders = async (orderIds: string[]): Promise<boolean> => {
+    try {
+      await Promise.all(orderIds.map((id) => apiCancelOrder(id)));
+      setOrders((prev) => prev.filter((o) => !orderIds.includes(o.id)));
+      return true;
+    } catch (err) {
+      console.error("[handleBulkDeleteOrders] Failed to bulk delete orders:", err);
+      alert("Failed to bulk delete orders from database.");
+      return false;
+    }
+  };
 
   return (
     <CanteenContext.Provider
@@ -1011,7 +1038,9 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         categories,
         showAddCategoryModal,
         setShowAddCategoryModal,
-        handleCreateCategory
+        handleCreateCategory,
+        handleDeleteOrder,
+        handleBulkDeleteOrders
       }}
     >
       {children}

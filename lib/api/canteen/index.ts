@@ -19,10 +19,10 @@ export {
 } from './useAuth';
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
-export { useMenu, useAddMenuItem, useEditMenuItem, useDeleteMenuItem } from './useMenu';
+export { useMenu, useAddMenuItem, useEditMenuItem, useDeleteMenuItem, useBulkDeleteMenuItems } from './useMenu';
 
 // ─── Tables ───────────────────────────────────────────────────────────────────
-export { useTables, useUpdateTable, useAddTable } from './useTables';
+export { useTables, useUpdateTable, useAddTable, useDeleteTable, useBulkDeleteTables } from './useTables';
 
 // ─── Kitchen Queue ────────────────────────────────────────────────────────────
 export { useKitchenQueue, useUpdateOrderStatus } from './useKitchenQueue';
