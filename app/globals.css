@@ -222,3 +222,21 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #8B5E34;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * PRINT MEDIA ISOLATION RULES
+ * Hides all web page sidebars, headers, search bars, buttons, and
+ * checkboxes during direct browser Ctrl+P printing.
+ * ───────────────────────────────────────────────────────────── */
+@media print {
+  aside,
+  header,
+  nav,
+  button,
+  input,
+  select,
+  .no-print {
+    display: none !important;
+  }
+}
+

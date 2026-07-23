@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Printer, Trash2 } from "lucide-react";
+import { Search, Printer, Trash2, FileText } from "lucide-react";
 import { useCanteen } from "../context/CanteenContext";
+import { printThermalReceipt, printA4Invoice } from "@/lib/printReceipt";
 
 export default function OrdersPage() {
   const {
@@ -226,19 +227,20 @@ export default function OrdersPage() {
                         {o.status.replace(/_/g, " ")}
                       </span>
                     </td>
-                    <td className="py-3 text-right pr-3 space-x-2">
+                    <td className="py-3 text-right pr-3 space-x-1.5">
                       <button
-                        onClick={() => setSelectedOrder(o)}
-                        className="px-2.5 py-1 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border-none cursor-pointer"
+                        onClick={() => printA4Invoice(o)}
+                        className="px-2.5 py-1 text-[10px] font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border-none cursor-pointer"
+                        title="Print A4 Invoice"
                       >
-                        Invoice
+                        📄 A4 Invoice
                       </button>
                       <button
-                        onClick={() => setReceiptOrder(o)}
-                        className="px-2 py-1 text-[10px] text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg border-none cursor-pointer"
-                        title="Print Receipt"
+                        onClick={() => printThermalReceipt(o, { rollWidth: "80mm" })}
+                        className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors border-none cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                        title="Print 80mm Thermal Receipt"
                       >
-                        <Printer className="w-3.5 h-3.5" />
+                        <Printer className="w-3 h-3" /> Slip
                       </button>
                     </td>
                   </tr>
