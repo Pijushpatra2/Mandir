@@ -1,5 +1,43 @@
 import { CanteenOrder } from "@/data/canteen";
 
+export type ThermalRollWidth = "80mm" | "58mm";
+
+/**
+ * Get saved thermal printer roll width preference ("80mm" | "58mm").
+ * Defaults to "80mm".
+ */
+export function getPreferredPrinterSize(): ThermalRollWidth {
+  if (typeof window === "undefined") return "80mm";
+  const saved = localStorage.getItem("canteen_printer_size");
+  return saved === "58mm" ? "58mm" : "80mm";
+}
+
+/**
+ * Save thermal printer roll width preference ("80mm" | "58mm").
+ */
+export function setPreferredPrinterSize(size: ThermalRollWidth) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("canteen_printer_size", size);
+}
+
+/**
+ * Check if Auto-Print on POS Checkout is enabled.
+ * Defaults to true.
+ */
+export function isAutoPrintEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  const saved = localStorage.getItem("canteen_auto_print");
+  return saved !== "false";
+}
+
+/**
+ * Toggle Auto-Print on POS Checkout setting.
+ */
+export function setAutoPrintEnabled(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("canteen_auto_print", String(enabled));
+}
+
 /**
  * Helper to trigger isolated printing via a temporary invisible iframe.
  */
@@ -36,14 +74,14 @@ function executeIframePrint(htmlContent: string) {
 
 /**
  * 1. THERMAL RECEIPT PRINTER HANDLER (58mm / 80mm Roll Paper)
- * Formats pure monospace, high-contrast, compact HTML for thermal POS roll printers.
- * Hides all background website UI and avoids scaling artifacts.
+ * Formats ultra-clear, high-contrast, large bold HTML specifically for POS thermal printers.
+ * Hides all background website UI and ensures crisp, large text readability.
  */
 export function printThermalReceipt(
   order: CanteenOrder,
-  options?: { rollWidth?: "80mm" | "58mm" }
+  options?: { rollWidth?: ThermalRollWidth }
 ) {
-  const width = options?.rollWidth ?? "80mm";
+  const width = options?.rollWidth ?? getPreferredPrinterSize();
   const is58 = width === "58mm";
 
   // Group items by category for kitchen/stall tear slips
@@ -71,72 +109,93 @@ export function printThermalReceipt(
       padding: 0;
     }
     body {
-      width: ${is58 ? "54mm" : "74mm"};
+      width: ${is58 ? "50mm" : "76mm"};
       margin: 0 auto;
-      padding: 4px 2px;
+      padding: ${is58 ? "3px 1px" : "6px 3px"};
       font-family: 'Courier New', Courier, monospace;
-      font-size: ${is58 ? "10px" : "11px"};
-      line-height: 1.2;
+      font-size: ${is58 ? "11px" : "14px"};
+      line-height: 1.25;
       color: #000000;
       background: #ffffff;
-      font-weight: bold;
+      font-weight: 800;
     }
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .text-left { text-align: left; }
     .bold { font-weight: 900; }
-    .title { font-size: ${is58 ? "12px" : "14px"}; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
-    .subtitle { font-size: 9px; font-weight: normal; margin-bottom: 4px; }
+    .title {
+      font-size: ${is58 ? "14px" : "18px"};
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+    .subtitle {
+      font-size: ${is58 ? "9px" : "11px"};
+      font-weight: normal;
+      margin-bottom: 2px;
+    }
     .token-box {
-      border: 2px solid #000;
-      padding: 4px;
-      margin: 6px 0;
+      border: ${is58 ? "2px" : "3px"} solid #000;
+      padding: ${is58 ? "4px 2px" : "8px 4px"};
+      margin: 8px 0;
       text-align: center;
       background: #fff;
     }
-    .token-no {
-      font-size: ${is58 ? "16px" : "20px"};
+    .token-title {
+      font-size: ${is58 ? "10px" : "12px"};
       font-weight: 900;
       letter-spacing: 1px;
     }
+    .token-no {
+      font-size: ${is58 ? "22px" : "30px"};
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      margin-top: 2px;
+    }
     .divider {
-      border-top: 1px dashed #000;
-      margin: 6px 0;
+      border-top: ${is58 ? "1px" : "1.5px"} dashed #000;
+      margin: 8px 0;
     }
     .double-divider {
-      border-top: 2px solid #000;
-      margin: 6px 0;
+      border-top: ${is58 ? "2px" : "3px"} solid #000;
+      margin: 8px 0;
     }
     .row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin: 2px 0;
+      margin: 3px 0;
+      font-size: ${is58 ? "11px" : "13px"};
     }
     .item-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 4px 0;
+      margin: 6px 0;
     }
     .item-table th {
-      border-bottom: 1px solid #000;
-      padding-bottom: 2px;
+      border-bottom: ${is58 ? "1.5px" : "2px"} solid #000;
+      padding-bottom: 4px;
       text-align: left;
-      font-size: 9px;
+      font-size: ${is58 ? "10px" : "12px"};
+      font-weight: 900;
     }
     .item-table td {
-      padding: 3px 0;
+      padding: 4px 0;
       vertical-align: top;
+      font-size: ${is58 ? "11px" : "13px"};
+      font-weight: 800;
     }
     .tear-slip {
-      margin-top: 10px;
-      padding-top: 6px;
-      border-top: 1px dashed #000;
+      margin-top: 14px;
+      padding-top: 8px;
+      border-top: 2px dashed #000;
     }
     .stall-badge {
-      border: 1px solid #000;
-      padding: 1px 4px;
-      font-size: 9px;
+      border: 1.5px solid #000;
+      padding: 1px 5px;
+      font-size: ${is58 ? "9px" : "11px"};
+      font-weight: 900;
       display: inline-block;
     }
   </style>
@@ -151,13 +210,13 @@ export function printThermalReceipt(
 
   <!-- TOKEN NUMBER DISPLAY -->
   <div class="token-box">
-    <div>TOKEN NUMBER</div>
+    <div class="token-title">TOKEN NUMBER</div>
     <div class="token-no">${order.tokenNumber}</div>
   </div>
 
   <!-- ORDER META DETAILS -->
   <div class="row">
-    <span>Table / Allocation:</span>
+    <span>Table / Alloc:</span>
     <span class="bold">${order.tableName}</span>
   </div>
   <div class="row">
@@ -191,9 +250,9 @@ export function printThermalReceipt(
         <tr>
           <td class="text-left">
             <div>${i.item.name}</div>
-            ${i.notes ? `<div style="font-size: 8px; font-style: italic;">* ${i.notes}</div>` : ""}
+            ${i.notes ? `<div style="font-size: ${is58 ? "9px" : "11px"}; font-style: italic;">* ${i.notes}</div>` : ""}
           </td>
-          <td class="text-center bold">${i.qty}</td>
+          <td class="text-center bold" style="font-size: ${is58 ? "12px" : "14px"};">${i.qty}</td>
           <td class="text-right">UGX ${i.item.price * i.qty}</td>
         </tr>
       `
@@ -227,16 +286,16 @@ export function printThermalReceipt(
 
   <div class="double-divider"></div>
 
-  <div class="row" style="font-size: ${is58 ? "12px" : "14px"}; margin: 4px 0;">
+  <div class="row" style="font-size: ${is58 ? "13px" : "17px"}; margin: 6px 0;">
     <span class="bold">TOTAL PAID:</span>
     <span class="bold">UGX ${order.total}</span>
   </div>
 
   <div class="divider"></div>
 
-  <div class="text-center" style="margin: 4px 0;">
+  <div class="text-center" style="margin: 6px 0; font-size: ${is58 ? "10px" : "12px"};">
     <div>PAYMENT METHOD: ${order.paymentMethod === "UPI" ? "MOBILE MONEY / UPI" : order.paymentMethod}</div>
-    <div class="bold" style="margin-top: 2px;">STATUS: ${order.paymentStatus}</div>
+    <div class="bold" style="margin-top: 3px; font-size: ${is58 ? "11px" : "13px"};">STATUS: ${order.paymentStatus}</div>
   </div>
 
   <!-- STALL TEAR SLIPS FOR KITCHEN COUNTERS -->
@@ -244,25 +303,25 @@ export function printThermalReceipt(
     .map(
       ([category, items]) => `
     <div class="tear-slip">
-      <div class="text-center subtitle" style="font-size: 8px;">- - - - TEAR SLIP FOR STALL: ${category.toUpperCase()} - - - -</div>
-      <div style="border: 1px solid #000; padding: 4px; margin-top: 4px;">
+      <div class="text-center subtitle" style="font-size: ${is58 ? "8px" : "10px"}; font-weight: bold;">- - - TEAR SLIP: ${category.toUpperCase()} - - -</div>
+      <div style="border: ${is58 ? "1.5px" : "2px"} solid #000; padding: 5px; margin-top: 4px;">
         <div class="row">
-          <span class="bold">TOKEN: ${order.tokenNumber}</span>
+          <span class="bold" style="font-size: ${is58 ? "12px" : "15px"};">TOKEN: ${order.tokenNumber}</span>
           <span class="stall-badge">${category}</span>
         </div>
-        <div class="row" style="font-size: 9px; font-weight: normal; margin-bottom: 4px;">
+        <div class="row" style="font-size: ${is58 ? "9px" : "11px"}; font-weight: normal; margin-bottom: 4px;">
           <span>Table: ${order.tableName}</span>
           <span>${order.timestamp}</span>
         </div>
-        <div class="divider" style="margin: 3px 0;"></div>
+        <div class="divider" style="margin: 4px 0;"></div>
         ${items
           .map(
             (i) => `
-          <div class="row">
+          <div class="row" style="font-size: ${is58 ? "11px" : "13px"};">
             <span>${i.item.name}</span>
-            <span class="bold">x ${i.qty}</span>
+            <span class="bold" style="font-size: ${is58 ? "12px" : "14px"};">x ${i.qty}</span>
           </div>
-          ${i.notes ? `<div style="font-size: 8px; font-style: italic; color: #333;">Note: ${i.notes}</div>` : ""}
+          ${i.notes ? `<div style="font-size: ${is58 ? "8px" : "10px"}; font-style: italic;">Note: ${i.notes}</div>` : ""}
         `
           )
           .join("")}
@@ -273,7 +332,7 @@ export function printThermalReceipt(
     .join("")}
 
   <div class="divider"></div>
-  <div class="text-center subtitle" style="margin-top: 6px;">
+  <div class="text-center subtitle" style="margin-top: 8px; font-size: ${is58 ? "9px" : "11px"};">
     Thank you! Present slip at pick-up counter.
   </div>
 </body>
@@ -281,6 +340,15 @@ export function printThermalReceipt(
   `;
 
   executeIframePrint(html);
+}
+
+/**
+ * Auto-print receipt based on saved user preferences (size & auto-print enabled flag).
+ */
+export function autoPrintReceipt(order: CanteenOrder) {
+  if (!isAutoPrintEnabled()) return;
+  const preferredSize = getPreferredPrinterSize();
+  printThermalReceipt(order, { rollWidth: preferredSize });
 }
 
 /**

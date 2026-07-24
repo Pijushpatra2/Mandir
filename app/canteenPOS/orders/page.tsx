@@ -236,9 +236,9 @@ export default function OrdersPage() {
                         📄 A4 Invoice
                       </button>
                       <button
-                        onClick={() => printThermalReceipt(o, { rollWidth: "80mm" })}
+                        onClick={() => printThermalReceipt(o)}
                         className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors border-none cursor-pointer inline-flex items-center gap-1 shadow-sm"
-                        title="Print 80mm Thermal Receipt"
+                        title="Print Thermal Receipt Slip"
                       >
                         <Printer className="w-3 h-3" /> Slip
                       </button>
