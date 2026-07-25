@@ -842,8 +842,8 @@ export default function POSPage() {
       {/* Three Column Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-3.5 md:gap-5 items-stretch xl:h-[calc(100vh-210px)] xl:min-h-[560px]">
 
-        {/* Column 1: Canteen Menu - Takes 5 columns */}
-        <div className="xl:col-span-5 glass-card overflow-hidden flex flex-col min-h-0">
+        {/* Column 1: Canteen Menu - Takes 6 columns */}
+        <div className="xl:col-span-6 glass-card overflow-hidden flex flex-col min-h-0">
           {/* Header */}
           <div className="p-3.5 sm:p-4 md:p-6 border-b border-neutral-gray bg-surface-white/50 flex-shrink-0">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3.5">
@@ -905,7 +905,7 @@ export default function POSPage() {
                 <p className="text-xs sm:text-body-sm md:text-body">No items found</p>
               </div>
             ) : (
-              <div className="grid gap-2.5 md:gap-3.5 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                 {filteredMenu.map((item) => {
                   const cartItem = cart.find(c => c.item.id === item.id);
                   const qty = cartItem ? cartItem.qty : 0;
@@ -931,7 +931,7 @@ export default function POSPage() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-0.5">
-                            <h4 className="font-semibold text-xs sm:text-body-sm md:text-body text-dark-surface truncate">
+                            <h4 className="font-semibold text-sm sm:text-base md:text-[17px] text-dark-surface break-words pr-1.5 leading-snug">
                               {item.name}
                             </h4>
                             {item.variety === "Spicy" ? (
@@ -987,8 +987,8 @@ export default function POSPage() {
           </div>
         </div>
 
-        {/* Column 2: Running Order Allocations - Takes 4 columns */}
-        <div className="xl:col-span-4 glass-card overflow-hidden flex flex-col min-h-0">
+        {/* Column 2: Running Order Allocations - Takes 3 columns */}
+        <div className="xl:col-span-3 glass-card overflow-hidden flex flex-col min-h-0">
           <div className="p-3.5 sm:p-4 md:p-6 border-b border-neutral-gray bg-surface-white/50 flex-shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 md:p-2 bg-primary-gold text-surface-white rounded-xl">
