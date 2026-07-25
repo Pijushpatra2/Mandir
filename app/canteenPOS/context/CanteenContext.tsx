@@ -14,6 +14,7 @@ import {
   initialInventory,
   initialCustomers
 } from "@/data/canteen";
+import { autoPrintReceipt } from "@/lib/printReceipt";
 import {
   useOfflineMenu,
   useOfflineTables,
@@ -639,6 +640,9 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
 
         // Set invoice receipt popup
         setReceiptOrder(newOrder);
+
+        // Auto-print receipt to default thermal printer
+        autoPrintReceipt(newOrder);
 
         // Update local orders state for instant UI update
         setOrders((prev) => [newOrder, ...prev]);

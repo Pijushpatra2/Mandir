@@ -918,10 +918,19 @@ export default function POSPage() {
                       <div className="flex gap-2.5 md:gap-3.5">
                         <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-bg-warm overflow-hidden flex-shrink-0 flex items-center justify-center text-lg sm:text-xl md:text-2xl border border-neutral-gray rounded-lg sm:rounded-[10px] md:rounded-xl">
                           {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span>🍽️</span>
-                          )}
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                const parent = (e.currentTarget as HTMLElement).parentElement;
+                                const fallback = parent?.querySelector('.fallback-emoji');
+                                if (fallback) fallback.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <span className={`fallback-emoji ${item.image ? 'hidden' : ''}`}>🍽️</span>
                           {!item.available && (
                             <div className="absolute inset-0 bg-dark-surface/60 flex items-center justify-center text-surface-white text-[7px] sm:text-[9px] md:text-[10px] font-bold uppercase rounded-lg sm:rounded-[10px] md:rounded-xl">
                               Unavailable

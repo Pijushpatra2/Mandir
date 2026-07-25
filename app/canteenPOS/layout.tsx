@@ -7,7 +7,15 @@ import { useDbSeed } from "@/lib/offline/useDbSeed";
 import { useSyncQueue } from "@/lib/offline/useSyncQueue";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { printThermalReceipt, printA4Invoice } from "@/lib/printReceipt";
+import {
+  printThermalReceipt,
+  printA4Invoice,
+  getPreferredPrinterSize,
+  setPreferredPrinterSize,
+  isAutoPrintEnabled,
+  setAutoPrintEnabled,
+  ThermalRollWidth
+} from "@/lib/printReceipt";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -640,24 +648,75 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2 justify-end">
+            {/* Quick Printer Size & Auto-Print Settings Bar */}
+            <div className="mt-3.5 p-2 bg-gray-50 rounded-xl border border-gray-150 flex items-center justify-between text-[10px] font-sans">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-gray-500 uppercase text-[9px]">Default Size:</span>
+                <button
+                  type="button"
+                  onClick={() => setPreferredPrinterSize("80mm")}
+                  className={`px-2 py-0.5 rounded-lg font-bold cursor-pointer border-none transition-colors ${
+                    getPreferredPrinterSize() === "80mm"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  80mm (3")
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreferredPrinterSize("58mm")}
+                  className={`px-2 py-0.5 rounded-lg font-bold cursor-pointer border-none transition-colors ${
+                    getPreferredPrinterSize() === "58mm"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  58mm (2")
+                </button>
+              </div>
+
+              <label className="flex items-center gap-1 cursor-pointer font-bold text-gray-600 select-none">
+                <input
+                  type="checkbox"
+                  defaultChecked={isAutoPrintEnabled()}
+                  onChange={(e) => setAutoPrintEnabled(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                Auto-Print
+              </label>
+            </div>
+
+            {/* Print Action Buttons */}
+            <div className="mt-3 flex flex-wrap gap-2 justify-end">
               <button
                 onClick={() => {
                   printA4Invoice(receiptOrder);
                   setReceiptOrder(null);
                 }}
-                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border-none cursor-pointer"
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border-none cursor-pointer"
               >
-                📄 Print A4 Invoice
+                📄 A4 Invoice
               </button>
               <button
                 onClick={() => {
+                  setPreferredPrinterSize("58mm");
+                  printThermalReceipt(receiptOrder, { rollWidth: "58mm" });
+                  setReceiptOrder(null);
+                }}
+                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1 border-none cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" /> 58mm Thermal
+              </button>
+              <button
+                onClick={() => {
+                  setPreferredPrinterSize("80mm");
                   printThermalReceipt(receiptOrder, { rollWidth: "80mm" });
                   setReceiptOrder(null);
                 }}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-100 flex items-center gap-1.5 border-none cursor-pointer"
               >
-                <Printer className="w-4 h-4" /> 🧾 Print Thermal Slip (80mm)
+                <Printer className="w-4 h-4" /> 80mm Thermal (Large)
               </button>
             </div>
           </div>
