@@ -21,7 +21,7 @@
 
 // export default function POSPage() {
 //   const { data: apiCategories = [] } = useCategories();
-  
+
 //   const {
 //     posSession,
 //     openPosSession,
@@ -235,7 +235,7 @@
 //                             )}
 //                           </span>
 //                         </div>
-                        
+
 //                         <p className="text-[13px] text-gray-400 mt-2 font-sans">
 //                           07:00 am - 09:00 pm
 //                         </p>
@@ -831,10 +831,10 @@ export default function POSPage() {
   };
 
   const subtotal = cart.reduce((sum, c) => sum + c.item.price * c.qty, 0);
-  const tax = Math.round(subtotal * 0.05);
-  const serviceCharge = Math.round(subtotal * 0.025);
+  const tax = 0;
+  const serviceCharge = 0;
   const discount = Number(posDiscount) || 0;
-  const total = Math.max(0, subtotal + tax + serviceCharge - discount);
+  const total = Math.max(0, subtotal - discount);
 
   return (
     <div className="w-full min-h-[calc(100vh-170px)] bg-bg-warm p-2.5 sm:p-3.5 md:p-5">
@@ -884,11 +884,10 @@ export default function POSPage() {
                 <button
                   key={cat}
                   onClick={() => setPosCategory(cat)}
-                  className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2.5 text-[10px] sm:text-xs md:text-body-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1 sm:gap-1.5 md:gap-2.5 border-2 rounded-[10px] sm:rounded-xl md:rounded-2xl flex-shrink-0 ${
-                    posCategory === cat
+                  className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2.5 text-[10px] sm:text-xs md:text-body-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1 sm:gap-1.5 md:gap-2.5 border-2 rounded-[10px] sm:rounded-xl md:rounded-2xl flex-shrink-0 ${posCategory === cat
                       ? "bg-primary-gold text-surface-white border-primary-gold"
                       : "bg-surface-white text-dark-surface/70 border-neutral-gray hover:border-primary-gold hover:text-primary-gold"
-                  }`}
+                    }`}
                 >
                   {getCategoryIcon(cat)}
                   <span className="text-[10px] sm:text-xs md:text-sm">{cat}</span>
@@ -905,7 +904,7 @@ export default function POSPage() {
                 <p className="text-xs sm:text-body-sm md:text-body">No items found</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-5">
                 {filteredMenu.map((item) => {
                   const cartItem = cart.find(c => c.item.id === item.id);
                   const qty = cartItem ? cartItem.qty : 0;
@@ -913,79 +912,102 @@ export default function POSPage() {
                   return (
                     <div
                       key={item.id}
-                      className="border-2 border-neutral-gray p-3 sm:p-3.5 md:p-4 hover:border-primary-gold transition-colors bg-surface-white rounded-[10px] sm:rounded-xl md:rounded-2xl"
+                      className="border border-neutral-gray bg-surface-white rounded-2xl overflow-hidden hover:border-primary-gold/60 hover:shadow-md transition-all flex flex-col justify-between group w-full max-w-full"
                     >
-                      <div className="flex gap-2.5 md:gap-3.5">
-                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-bg-warm overflow-hidden flex-shrink-0 flex items-center justify-center text-lg sm:text-xl md:text-2xl border border-neutral-gray rounded-lg sm:rounded-[10px] md:rounded-xl">
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display = 'none';
-                                const parent = (e.currentTarget as HTMLElement).parentElement;
-                                const fallback = parent?.querySelector('.fallback-emoji');
-                                if (fallback) fallback.classList.remove('hidden');
-                              }}
-                            />
-                          ) : null}
-                          <span className={`fallback-emoji ${item.image ? 'hidden' : ''}`}>🍽️</span>
-                          {!item.available && (
-                            <div className="absolute inset-0 bg-dark-surface/60 flex items-center justify-center text-surface-white text-[7px] sm:text-[9px] md:text-[10px] font-bold uppercase rounded-lg sm:rounded-[10px] md:rounded-xl">
-                              Unavailable
-                            </div>
-                          )}
-                        </div>
+                      {/* Top Banner Image Container */}
+                      <div className="relative w-full aspect-[4/3] bg-bg-warm overflow-hidden flex items-center justify-center text-3xl sm:text-4xl border-b border-neutral-gray/40">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLElement).style.display = 'none';
+                              const parent = (e.currentTarget as HTMLElement).parentElement;
+                              const fallback = parent?.querySelector('.fallback-emoji');
+                              if (fallback) fallback.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <span className={`fallback-emoji ${item.image ? 'hidden' : ''}`}>🍽️</span>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-0.5">
-                            <h4 className="font-semibold text-sm sm:text-base md:text-[17px] text-dark-surface break-words pr-1.5 leading-snug">
+                        {/* Category Badge Tag on Top-Right */}
+                        <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-surface-white/90 backdrop-blur-md text-[8px] xs:text-[10px] sm:text-xs text-dark-surface/80 border border-neutral-gray/40 font-normal shadow-2xs max-w-[60%] truncate">
+                          {item.category || "Canteen"} ›
+                        </span>
+
+                        {!item.available && (
+                          <div className="absolute inset-0 bg-dark-surface/65 backdrop-blur-xs flex items-center justify-center text-surface-white text-[10px] xs:text-xs sm:text-sm font-normal uppercase tracking-wider">
+                            Out of stock
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Content Details */}
+                      <div className="p-3 xs:p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2 xs:space-y-2.5 sm:space-y-3">
+                        <div>
+                          <div className="flex items-start justify-between gap-1.5">
+                            <h4 className="font-normal text-xs xs:text-sm sm:text-base text-dark-surface leading-snug break-words flex-1 min-w-0">
                               {item.name}
                             </h4>
                             {item.variety === "Spicy" ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-warning-amber flex-shrink-0" />
+                              <span className="px-1.5 xs:px-2 py-0.5 rounded-full bg-amber-50 text-warning-amber text-[8px] xs:text-[10px] sm:text-xs font-normal border border-amber-200/60 shrink-0 whitespace-nowrap">
+                                Spicy
+                              </span>
                             ) : (
-                              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-success-green flex-shrink-0" />
+                              <span className="px-1.5 xs:px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[8px] xs:text-[10px] sm:text-xs font-normal border border-emerald-200/60 shrink-0 whitespace-nowrap">
+                                {item.variety || "Regular"}
+                              </span>
                             )}
                           </div>
-                          <p className="text-[10px] sm:text-xs md:text-body-sm font-bold text-primary-gold mt-0.5 md:mt-1">
-                            UGX {item.price.toLocaleString()}
-                          </p>
 
-                          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 mt-2 md:mt-3 flex-wrap 2xl:flex-col">
-                            <div className="flex items-center gap-px sm:gap-0.5 md:gap-1 bg-bg-warm px-1 sm:px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full flex-shrink-0">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (qty > 0) handleUpdateCartQty(item.id, -1);
-                                }}
-                                className="text-dark-surface/50 hover:text-primary-gold font-bold cursor-pointer border-none bg-transparent p-0 text-xs sm:text-body-sm md:text-body w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 flex items-center justify-center"
-                              >
-                                -
-                              </button>
-                              <span className="w-4 sm:w-5 md:w-7 text-center text-[10px] sm:text-xs md:text-body-sm font-bold text-dark-surface">{qty}</span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUpdateCartQty(item.id, 1);
-                                }}
-                                className="text-dark-surface/50 hover:text-primary-gold font-bold cursor-pointer border-none bg-transparent p-0 text-xs sm:text-body-sm md:text-body w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 flex items-center justify-center"
-                              >
-                                +
-                              </button>
-                            </div>
+                          {/* Price Tag */}
+                          <div className="flex items-center justify-between mt-2 xs:mt-2.5">
+                            <span className="text-[10px] xs:text-xs sm:text-sm text-dark-surface/60 font-normal">
+                              Price
+                            </span>
+                            <span className="text-xs xs:text-sm sm:text-base font-medium text-emerald-600 whitespace-nowrap">
+                              UGX {item.price.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Quantity & Add Action Footer */}
+                        <div className="pt-2 xs:pt-2.5 border-t border-neutral-gray/50 flex items-center justify-between gap-1.5 xs:gap-2">
+                          <div className="flex items-center gap-0.5 xs:gap-1 bg-bg-warm px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full border border-neutral-gray/40 shrink-0">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleAddToCart(item);
+                                if (qty > 0) handleUpdateCartQty(item.id, -1);
                               }}
-                              className="flex-1 min-w-[44px] bg-success-green hover:bg-success-green/85 text-surface-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1.5 sm:px-2.5 md:px-3.5 py-1 sm:py-1 md:py-1.5 transition-colors border-none cursor-pointer flex items-center justify-center gap-0.5 md:gap-1.5 rounded-full"
+                              className="text-dark-surface/60 hover:text-primary-gold cursor-pointer border-none bg-transparent p-0 text-xs xs:text-sm w-4 xs:w-5 h-4 xs:h-5 flex items-center justify-center font-normal"
                             >
-                              <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 flex-shrink-0" />
-                              <span className="hidden sm:inline">Add</span>
+                              -
+                            </button>
+                            <span className="w-4 xs:w-5 text-center text-[10px] xs:text-xs sm:text-sm font-normal text-dark-surface">
+                              {qty}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateCartQty(item.id, 1);
+                              }}
+                              className="text-dark-surface/60 hover:text-primary-gold cursor-pointer border-none bg-transparent p-0 text-xs xs:text-sm w-4 xs:w-5 h-4 xs:h-5 flex items-center justify-center font-normal"
+                            >
+                              +
                             </button>
                           </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(item);
+                            }}
+                            className="flex-1 min-w-[60px] bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-surface-white text-[10px] xs:text-xs sm:text-sm font-normal py-1 xs:py-1.5 px-2 xs:px-3 rounded-full transition-all border-none cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 shadow-xs"
+                          >
+                            <Plus className="w-3 xs:w-3.5 h-3 xs:h-3.5" />
+                            <span className="hidden xs:inline">Add</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1192,18 +1214,22 @@ export default function POSPage() {
                       UGX {subtotal.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between text-[10px] sm:text-xs md:text-body-sm">
-                    <span className="text-dark-surface/60">GST (5%)</span>
-                    <span className="font-semibold text-dark-surface text-[10px] sm:text-xs md:text-body-sm">
-                      UGX {tax.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[10px] sm:text-xs md:text-body-sm">
-                    <span className="text-dark-surface/60">Service (2.5%)</span>
-                    <span className="font-semibold text-dark-surface text-[10px] sm:text-xs md:text-body-sm">
-                      UGX {serviceCharge.toLocaleString()}
-                    </span>
-                  </div>
+                  {tax > 0 && (
+                    <div className="flex justify-between text-[10px] sm:text-xs md:text-body-sm">
+                      <span className="text-dark-surface/60">GST (5%)</span>
+                      <span className="font-semibold text-dark-surface text-[10px] sm:text-xs md:text-body-sm">
+                        UGX {tax.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {serviceCharge > 0 && (
+                    <div className="flex justify-between text-[10px] sm:text-xs md:text-body-sm">
+                      <span className="text-dark-surface/60">Service (2.5%)</span>
+                      <span className="font-semibold text-dark-surface text-[10px] sm:text-xs md:text-body-sm">
+                        UGX {serviceCharge.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
                   {discount > 0 && (
                     <div className="flex justify-between text-[10px] sm:text-xs md:text-body-sm text-error-red">
                       <span>Discount</span>
@@ -1236,11 +1262,10 @@ export default function POSPage() {
                     <button
                       key={id}
                       onClick={() => setPosPaymentMethod(id as any)}
-                      className={`flex-1 min-w-[84px] basis-[84px] py-2 sm:py-2.5 md:py-3.5 border-2 text-center transition-colors flex flex-col items-center gap-0.5 md:gap-1.5 rounded-lg sm:rounded-[10px] md:rounded-xl ${
-                        posPaymentMethod === id
+                      className={`flex-1 min-w-[84px] basis-[84px] py-2 sm:py-2.5 md:py-3.5 border-2 text-center transition-colors flex flex-col items-center gap-0.5 md:gap-1.5 rounded-lg sm:rounded-[10px] md:rounded-xl ${posPaymentMethod === id
                           ? "border-primary-gold bg-primary-gold/10 text-primary-gold"
                           : "border-neutral-gray hover:border-primary-gold text-dark-surface/60 bg-surface-white hover:text-primary-gold"
-                      }`}
+                        }`}
                     >
                       {icon}
                       <span className="text-[9px] sm:text-[10px] md:text-body-sm font-semibold">{label}</span>
