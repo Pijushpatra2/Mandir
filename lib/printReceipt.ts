@@ -7,9 +7,10 @@ export type ThermalRollWidth = "80mm" | "58mm";
  * Defaults to "80mm".
  */
 export function getPreferredPrinterSize(): ThermalRollWidth {
-  if (typeof window === "undefined") return "80mm";
+  if (typeof window === "undefined") return "58mm";
   const saved = localStorage.getItem("canteen_printer_size");
-  return saved === "58mm" ? "58mm" : "80mm";
+  if (saved === "80mm") return "80mm";
+  return "58mm";
 }
 
 /**
@@ -98,6 +99,9 @@ export function printThermalReceipt(
 <head>
   <meta charset="utf-8">
   <title>Token_${order.tokenNumber}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     @page {
       size: ${width} auto;
@@ -112,27 +116,27 @@ export function printThermalReceipt(
       width: ${is58 ? "50mm" : "76mm"};
       margin: 0 auto;
       padding: ${is58 ? "3px 1px" : "6px 3px"};
-      font-family: 'Courier New', Courier, monospace;
-      font-size: ${is58 ? "11px" : "14px"};
-      line-height: 1.25;
+      font-family: 'Poppins', sans-serif;
+      font-size: ${is58 ? "13px" : "16px"};
+      line-height: 1.35;
       color: #000000;
       background: #ffffff;
-      font-weight: 800;
+      font-weight: 500;
     }
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .text-left { text-align: left; }
-    .bold { font-weight: 900; }
+    .bold { font-weight: 700; }
     .title {
-      font-size: ${is58 ? "14px" : "18px"};
-      font-weight: 900;
+      font-size: ${is58 ? "16px" : "20px"};
+      font-weight: 700;
       text-transform: uppercase;
       margin-bottom: 2px;
       letter-spacing: 0.5px;
     }
     .subtitle {
-      font-size: ${is58 ? "9px" : "11px"};
-      font-weight: normal;
+      font-size: ${is58 ? "11px" : "13px"};
+      font-weight: 400;
       margin-bottom: 2px;
     }
     .token-box {
@@ -143,13 +147,13 @@ export function printThermalReceipt(
       background: #fff;
     }
     .token-title {
-      font-size: ${is58 ? "10px" : "12px"};
-      font-weight: 900;
+      font-size: ${is58 ? "12px" : "14px"};
+      font-weight: 600;
       letter-spacing: 1px;
     }
     .token-no {
-      font-size: ${is58 ? "22px" : "30px"};
-      font-weight: 900;
+      font-size: ${is58 ? "26px" : "36px"};
+      font-weight: 700;
       letter-spacing: 1.5px;
       margin-top: 2px;
     }
@@ -166,7 +170,7 @@ export function printThermalReceipt(
       justify-content: space-between;
       align-items: flex-start;
       margin: 3px 0;
-      font-size: ${is58 ? "11px" : "13px"};
+      font-size: ${is58 ? "13px" : "15px"};
     }
     .item-table {
       width: 100%;
@@ -177,14 +181,14 @@ export function printThermalReceipt(
       border-bottom: ${is58 ? "1.5px" : "2px"} solid #000;
       padding-bottom: 4px;
       text-align: left;
-      font-size: ${is58 ? "10px" : "12px"};
-      font-weight: 900;
+      font-size: ${is58 ? "12px" : "14px"};
+      font-weight: 600;
     }
     .item-table td {
       padding: 4px 0;
       vertical-align: top;
-      font-size: ${is58 ? "11px" : "13px"};
-      font-weight: 800;
+      font-size: ${is58 ? "13px" : "15px"};
+      font-weight: 500;
     }
     .tear-slip {
       margin-top: 14px;
@@ -194,8 +198,8 @@ export function printThermalReceipt(
     .stall-badge {
       border: 1.5px solid #000;
       padding: 1px 5px;
-      font-size: ${is58 ? "9px" : "11px"};
-      font-weight: 900;
+      font-size: ${is58 ? "11px" : "13px"};
+      font-weight: 600;
       display: inline-block;
     }
   </style>
@@ -250,9 +254,9 @@ export function printThermalReceipt(
         <tr>
           <td class="text-left">
             <div>${i.item.name}</div>
-            ${i.notes ? `<div style="font-size: ${is58 ? "9px" : "11px"}; font-style: italic;">* ${i.notes}</div>` : ""}
+            ${i.notes ? `<div style="font-size: ${is58 ? "11px" : "13px"}; font-style: italic;">* ${i.notes}</div>` : ""}
           </td>
-          <td class="text-center bold" style="font-size: ${is58 ? "12px" : "14px"};">${i.qty}</td>
+          <td class="text-center bold" style="font-size: ${is58 ? "14px" : "16px"};">${i.qty}</td>
           <td class="text-right">UGX ${i.item.price * i.qty}</td>
         </tr>
       `
@@ -286,16 +290,16 @@ export function printThermalReceipt(
 
   <div class="double-divider"></div>
 
-  <div class="row" style="font-size: ${is58 ? "13px" : "17px"}; margin: 6px 0;">
+  <div class="row" style="font-size: ${is58 ? "15px" : "20px"}; margin: 6px 0;">
     <span class="bold">TOTAL PAID:</span>
     <span class="bold">UGX ${order.total}</span>
   </div>
 
   <div class="divider"></div>
 
-  <div class="text-center" style="margin: 6px 0; font-size: ${is58 ? "10px" : "12px"};">
+  <div class="text-center" style="margin: 6px 0; font-size: ${is58 ? "12px" : "14px"};">
     <div>PAYMENT METHOD: ${order.paymentMethod === "UPI" ? "MOBILE MONEY / UPI" : order.paymentMethod}</div>
-    <div class="bold" style="margin-top: 3px; font-size: ${is58 ? "11px" : "13px"};">STATUS: ${order.paymentStatus}</div>
+    <div class="bold" style="margin-top: 3px; font-size: ${is58 ? "13px" : "15px"};">STATUS: ${order.paymentStatus}</div>
   </div>
 
   <!-- STALL TEAR SLIPS FOR KITCHEN COUNTERS -->
@@ -303,13 +307,13 @@ export function printThermalReceipt(
     .map(
       ([category, items]) => `
     <div class="tear-slip">
-      <div class="text-center subtitle" style="font-size: ${is58 ? "8px" : "10px"}; font-weight: bold;">- - - TEAR SLIP: ${category.toUpperCase()} - - -</div>
+      <div class="text-center subtitle" style="font-size: ${is58 ? "10px" : "12px"}; font-weight: bold;">- - - TEAR SLIP: ${category.toUpperCase()} - - -</div>
       <div style="border: ${is58 ? "1.5px" : "2px"} solid #000; padding: 5px; margin-top: 4px;">
         <div class="row">
-          <span class="bold" style="font-size: ${is58 ? "12px" : "15px"};">TOKEN: ${order.tokenNumber}</span>
+          <span class="bold" style="font-size: ${is58 ? "14px" : "18px"};">TOKEN: ${order.tokenNumber}</span>
           <span class="stall-badge">${category}</span>
         </div>
-        <div class="row" style="font-size: ${is58 ? "9px" : "11px"}; font-weight: normal; margin-bottom: 4px;">
+        <div class="row" style="font-size: ${is58 ? "11px" : "13px"}; font-weight: normal; margin-bottom: 4px;">
           <span>Table: ${order.tableName}</span>
           <span>${order.timestamp}</span>
         </div>
@@ -317,11 +321,11 @@ export function printThermalReceipt(
         ${items
           .map(
             (i) => `
-          <div class="row" style="font-size: ${is58 ? "11px" : "13px"};">
+          <div class="row" style="font-size: ${is58 ? "13px" : "15px"};">
             <span>${i.item.name}</span>
-            <span class="bold" style="font-size: ${is58 ? "12px" : "14px"};">x ${i.qty}</span>
+            <span class="bold" style="font-size: ${is58 ? "14px" : "16px"};">x ${i.qty}</span>
           </div>
-          ${i.notes ? `<div style="font-size: ${is58 ? "8px" : "10px"}; font-style: italic;">Note: ${i.notes}</div>` : ""}
+          ${i.notes ? `<div style="font-size: ${is58 ? "10px" : "12px"}; font-style: italic;">Note: ${i.notes}</div>` : ""}
         `
           )
           .join("")}
@@ -332,7 +336,7 @@ export function printThermalReceipt(
     .join("")}
 
   <div class="divider"></div>
-  <div class="text-center subtitle" style="margin-top: 8px; font-size: ${is58 ? "9px" : "11px"};">
+  <div class="text-center subtitle" style="margin-top: 8px; font-size: ${is58 ? "11px" : "13px"};">
     Thank you! Present slip at pick-up counter.
   </div>
 </body>

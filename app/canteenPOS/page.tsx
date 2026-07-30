@@ -1217,14 +1217,18 @@ export default function CanteenPOSPage() {
                     <span className="font-semibold text-gray-650">Subtotal:</span>
                     <span className="font-black text-gray-800 text-[15px]">UGX {subtotal}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-gray-650">GST (5%):</span>
-                    <span className="font-black text-gray-800 text-[15px]">UGX {tax}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-gray-650">Service Charge (2.5%):</span>
-                    <span className="font-black text-gray-800 text-[15px]">UGX {serviceCharge}</span>
-                  </div>
+                  {tax > 0 && (
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-gray-650">GST (5%):</span>
+                      <span className="font-black text-gray-800 text-[15px]">UGX {tax}</span>
+                    </div>
+                  )}
+                  {serviceCharge > 0 && (
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-gray-650">Service Charge (2.5%):</span>
+                      <span className="font-black text-gray-800 text-[15px]">UGX {serviceCharge}</span>
+                    </div>
+                  )}
                   {discount > 0 && (
                     <div className="flex justify-between text-red-650 font-black">
                       <span>Discount:</span>
@@ -2622,14 +2626,18 @@ export default function CanteenPOSPage() {
                   <span>Subtotal:</span>
                   <span>UGX {selectedOrder.subtotal}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Taxes (5% GST):</span>
-                  <span>UGX {selectedOrder.tax}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Service charge (2.5%):</span>
-                  <span>UGX {selectedOrder.serviceCharge}</span>
-                </div>
+                {selectedOrder.tax > 0 && (
+                  <div className="flex justify-between">
+                    <span>Taxes (5% GST):</span>
+                    <span>UGX {selectedOrder.tax}</span>
+                  </div>
+                )}
+                {selectedOrder.serviceCharge > 0 && (
+                  <div className="flex justify-between">
+                    <span>Service charge (2.5%):</span>
+                    <span>UGX {selectedOrder.serviceCharge}</span>
+                  </div>
+                )}
                 {selectedOrder.discount > 0 && (
                   <div className="flex justify-between text-red-500 font-bold">
                     <span>Discount:</span>
@@ -2738,14 +2746,18 @@ export default function CanteenPOSPage() {
                   <span>Subtotal:</span>
                   <span>UGX {receiptOrder.subtotal}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>GST / Tax (5%):</span>
-                  <span>UGX {receiptOrder.tax}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Service tax (2.5%):</span>
-                  <span>UGX {receiptOrder.serviceCharge}</span>
-                </div>
+                {receiptOrder.tax > 0 && (
+                  <div className="flex justify-between">
+                    <span>GST / Tax (5%):</span>
+                    <span>UGX {receiptOrder.tax}</span>
+                  </div>
+                )}
+                {receiptOrder.serviceCharge > 0 && (
+                  <div className="flex justify-between">
+                    <span>Service tax (2.5%):</span>
+                    <span>UGX {receiptOrder.serviceCharge}</span>
+                  </div>
+                )}
                 {receiptOrder.discount > 0 && (
                   <div className="flex justify-between text-red-500 font-bold">
                     <span>Discount:</span>
