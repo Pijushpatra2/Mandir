@@ -134,6 +134,7 @@ interface CanteenContextType {
   handleRoleChange: (role: POSRole) => void;
   handleAddToCart: (item: FoodItem) => void;
   handleUpdateCartQty: (itemId: string, delta: number) => void;
+  handleSetCartQty: (itemId: string, qty: number) => void;
   handleUpdateItemNote: (itemId: string, note: string) => void;
   handlePosCheckout: (isPaymentProcessed: boolean) => void;
   handleUpdateOrderStatus: (orderId: string, nextStatus: CanteenOrder["status"]) => void;
@@ -559,6 +560,15 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
           }
           return c;
         })
+        .filter((c) => c.qty > 0)
+    );
+  };
+
+
+  const handleSetCartQty = (itemId: string, qty: number) => {
+    setCart(
+      cart
+        .map((c) => (c.item.id === itemId ? { ...c, qty: Math.max(0, qty) } : c))
         .filter((c) => c.qty > 0)
     );
   };
@@ -1076,6 +1086,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         handleRoleChange,
         handleAddToCart,
         handleUpdateCartQty,
+        handleSetCartQty,
         handleUpdateItemNote,
         handlePosCheckout,
         handleUpdateOrderStatus,

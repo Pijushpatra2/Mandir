@@ -72,6 +72,51 @@ type POSTab =
   | "reports"
   | "settings";
 
+interface CartQtyInputProps {
+  qty: number;
+  onChange: (val: number) => void;
+  className?: string;
+}
+
+const CartQtyInput: React.FC<CartQtyInputProps> = ({ qty, onChange, className }) => {
+  const [localVal, setLocalVal] = useState<string>(String(qty));
+
+  useEffect(() => {
+    setLocalVal(String(qty));
+  }, [qty]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    setLocalVal(text);
+    const parsed = parseInt(text);
+    if (!isNaN(parsed) && parsed > 0) {
+      onChange(parsed);
+    }
+  };
+
+  const handleBlur = () => {
+    const parsed = parseInt(localVal);
+    if (isNaN(parsed) || parsed <= 0) {
+      setLocalVal("1");
+      onChange(1);
+    } else {
+      setLocalVal(String(parsed));
+      onChange(parsed);
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      min="1"
+      value={localVal}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={className}
+    />
+  );
+};
+
 export default function CanteenPOSPage() {
   const { login, handleBulkDeleteOrders: contextBulkDelete } = useCanteen();
   const { mutate: apiAddMenuItem } = useAddMenuItem();
@@ -291,6 +336,14 @@ export default function CanteenPOSPage() {
           }
           return c;
         })
+        .filter((c) => c.qty > 0)
+    );
+  };
+
+  const handleSetCartQty = (itemId: string, qty: number) => {
+    setCart(
+      cart
+        .map((c) => (c.item.id === itemId ? { ...c, qty: Math.max(0, qty) } : c))
         .filter((c) => c.qty > 0)
     );
   };
@@ -1144,7 +1197,11 @@ export default function CanteenPOSPage() {
                         >
                           <MinusCircle className="w-6 h-6" />
                         </button>
-                        <span className="font-black text-gray-850 text-base w-6 text-center">{c.qty}</span>
+                        <CartQtyInput
+                          qty={c.qty}
+                          onChange={(val) => handleSetCartQty(c.item.id, val)}
+                          className="font-black text-gray-850 text-base w-10 text-center bg-white border border-gray-250 rounded focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
                         <button
                           onClick={() => handleUpdateCartQty(c.item.id, 1)}
                           className="text-gray-400 hover:text-blue-500 p-0.5 rounded cursor-pointer border-none bg-transparent"

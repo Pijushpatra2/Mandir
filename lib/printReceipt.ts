@@ -207,7 +207,7 @@ export function printThermalReceipt(
 <body>
   <!-- MAIN CANTEEN HEADER -->
   <div class="text-center">
-    <div class="title">SKSS KAMPALA CANTEEN</div>
+    <div class="title">SKSST KAMPALA PRASADAM</div>
     <div class="subtitle">Bukoto Complex, Kampala</div>
     <div class="subtitle">Swaminarayan Annakoot Seva</div>
   </div>
@@ -514,7 +514,7 @@ export function printA4Invoice(order: CanteenOrder) {
 <body>
   <div class="header">
     <div class="logo-section">
-      <h1>🕉️ SKSS KAMPALA CANTEEN</h1>
+      <h1>SKSST KAMPALA PRASADAM</h1>
       <p>Bukoto Complex, Plot 42-44, Kampala, Uganda</p>
       <p>Email: canteen@pujasoftware.com | Tel: +256 700 000 000</p>
     </div>

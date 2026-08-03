@@ -543,7 +543,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
             {/* Thermal Print Receipt Simulation layout */}
             <div id="thermal-receipt-content" className="border border-gray-150 p-4 rounded-xl bg-gray-50 text-xs font-mono text-gray-800 space-y-3.5 leading-normal shadow-inner max-h-[480px] overflow-y-auto">
               <div className="text-center border-b border-gray-200 pb-3">
-                <h4 className="font-bold text-sm tracking-wider uppercase">SKSS Kampala Canteen</h4>
+                <h4 className="font-bold text-sm tracking-wider uppercase">SKSST KAMPALA PRASADAM</h4>
                 <p className="text-[10px] text-gray-400 font-sans mt-0.5">Bukoto Complex, Kampala</p>
                 <p className="text-[9px] text-gray-400 font-sans">Swaminarayan Annakoot Seva</p>
               </div>

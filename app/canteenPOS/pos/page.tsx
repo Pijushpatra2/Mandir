@@ -698,6 +698,51 @@ const SkeletonLoader = () => {
   );
 };
 
+interface CartQtyInputProps {
+  qty: number;
+  onChange: (val: number) => void;
+  className?: string;
+}
+
+const CartQtyInput: React.FC<CartQtyInputProps> = ({ qty, onChange, className }) => {
+  const [localVal, setLocalVal] = useState<string>(String(qty));
+
+  useEffect(() => {
+    setLocalVal(String(qty));
+  }, [qty]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    setLocalVal(text);
+    const parsed = parseInt(text);
+    if (!isNaN(parsed) && parsed > 0) {
+      onChange(parsed);
+    }
+  };
+
+  const handleBlur = () => {
+    const parsed = parseInt(localVal);
+    if (isNaN(parsed) || parsed <= 0) {
+      setLocalVal("1");
+      onChange(1);
+    } else {
+      setLocalVal(String(parsed));
+      onChange(parsed);
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      min="1"
+      value={localVal}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={className}
+    />
+  );
+};
+
 export default function POSPage() {
   const { data: apiCategories = [], isLoading: categoriesLoading } = useCategories();
   const [isLoading, setIsLoading] = useState(true);
@@ -728,6 +773,7 @@ export default function POSPage() {
     currentRole,
     handleAddToCart,
     handleUpdateCartQty,
+    handleSetCartQty,
     handleUpdateItemNote,
     handlePosCheckout
   } = useCanteen();
@@ -1131,7 +1177,11 @@ export default function POSPage() {
                             >
                               <MinusCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                             </button>
-                            <span className="font-bold text-xs sm:text-body-sm md:text-body w-5 sm:w-6 md:w-8 text-center text-dark-surface">{c.qty}</span>
+                             <CartQtyInput
+                               qty={c.qty}
+                               onChange={(val) => handleSetCartQty(c.item.id, val)}
+                               className="font-bold text-xs sm:text-body-sm md:text-body w-8 sm:w-10 md:w-12 text-center text-dark-surface bg-surface-white border border-neutral-gray rounded focus:border-primary-gold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                             />
                             <button
                               onClick={() => handleUpdateCartQty(c.item.id, 1)}
                               className="text-dark-surface/40 hover:text-primary-gold cursor-pointer border-none bg-transparent p-0"
