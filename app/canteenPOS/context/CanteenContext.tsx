@@ -277,7 +277,10 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
             hour: "2-digit",
             minute: "2-digit",
           });
-          const formattedDate = orderDate.toISOString().split("T")[0];
+          const y = orderDate.getFullYear();
+          const m = String(orderDate.getMonth() + 1).padStart(2, "0");
+          const d = String(orderDate.getDate()).padStart(2, "0");
+          const formattedDate = `${y}-${m}-${d}`;
 
           return {
             id: o.id,
@@ -309,6 +312,8 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
             status: o.order_status,
             timestamp: formattedTimestamp,
             date: formattedDate,
+            createdAtMs: orderDate.getTime(),
+            orderedAt: orderDate.toISOString(),
             notes: o.notes ?? undefined,
           };
         });
