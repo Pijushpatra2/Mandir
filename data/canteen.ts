@@ -47,6 +47,8 @@ export interface CanteenOrder {
   status: "NEW" | "PREPARING" | "READY_TO_SERVE" | "COMPLETED" | "CANCELLED";
   timestamp: string;
   date: string;
+  createdAtMs?: number;
+  orderedAt?: string;
   notes?: string;
   note?: string;
 }

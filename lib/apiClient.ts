@@ -175,11 +175,11 @@ staffApiClient.interceptors.response.use(
 
     // Another refresh is already in-flight — queue this request
     if (staffRefreshing) {
-      original._retry = true;
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         staffQueue.push((token: string) => {
+          original._retry = true;
           original.headers.Authorization = `Bearer ${token}`;
-          resolve(staffApiClient(original));
+          staffApiClient(original).then(resolve).catch(reject);
         });
       });
     }
@@ -297,11 +297,11 @@ adminApiClient.interceptors.response.use(
 
     // Another refresh is already in-flight — queue this request
     if (adminRefreshing) {
-      original._retry = true;
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         adminQueue.push((token: string) => {
+          original._retry = true;
           original.headers.Authorization = `Bearer ${token}`;
-          resolve(adminApiClient(original));
+          adminApiClient(original).then(resolve).catch(reject);
         });
       });
     }

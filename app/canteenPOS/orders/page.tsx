@@ -67,9 +67,9 @@ export default function OrdersPage() {
       return matchesSearch && matchesDate;
     })
     .sort((a, b) => {
-      const dateA = new Date(`${a.date}T${a.timestamp || "00:00:00"}`).getTime();
-      const dateB = new Date(`${b.date}T${b.timestamp || "00:00:00"}`).getTime();
-      return orderDateSort === "desc" ? dateB - dateA : dateA - dateB;
+      const timeA = a.createdAtMs ?? (a.date ? new Date(a.date).getTime() : 0);
+      const timeB = b.createdAtMs ?? (b.date ? new Date(b.date).getTime() : 0);
+      return orderDateSort === "desc" ? timeB - timeA : timeA - timeB;
     });
 
   return (
