@@ -210,3 +210,80 @@ export function useOfflineCustomerSearch(search: string): OfflineCustomerSearchR
     source: 'api',
   };
 }
+
+// ─── useOfflineOrders ─────────────────────────────────────────────────────────
+
+import { useOrders } from '@/lib/api/canteen/useOrders';
+import type { CanteenOrder } from '@/lib/api/canteen.types';
+
+interface OfflineOrdersResult {
+  data: CanteenOrder[];
+  isLoading: boolean;
+  isOffline: boolean;
+  source: 'api' | 'indexeddb' | 'empty';
+}
+
+export function useOfflineOrders(
+  filters?: { status?: any; table_id?: string; date?: string },
+  options?: { enabled?: boolean }
+): OfflineOrdersResult {
+  const { isOffline } = useOfflineStatus();
+  const [offlineData, setOfflineData] = useState<CanteenOrder[]>([]);
+  const [offlineLoading, setOfflineLoading] = useState(false);
+
+  const enabled = options?.enabled ?? true;
+  const { data: apiData = EMPTY_ARRAY, isLoading: apiLoading } = useOrders(filters, options);
+
+  useEffect(() => {
+    if (!isOffline || !enabled) return;
+
+    setOfflineLoading(true);
+    db.local_orders
+      .toArray()
+      .then((items) => {
+        const mapped: CanteenOrder[] = items.map((l) => ({
+          id: l.clientId,
+          token_number: l.token_number,
+          customer_id: l.customer_id,
+          customer_name: l.customer_name,
+          customer_phone: l.customer_phone,
+          table_id: l.table_id,
+          table_name: l.table_name,
+          served_by: l.served_by,
+          subtotal: l.subtotal,
+          tax_amount: l.tax_amount,
+          service_charge: l.service_charge,
+          discount_amount: l.discount_amount,
+          total_amount: l.total_amount,
+          payment_method: l.payment_method,
+          payment_status: l.payment_status,
+          order_status: l.order_status,
+          notes: l.notes,
+          ordered_at: new Date(l.createdAt || Date.now()).toISOString(),
+          completed_at: null,
+          created_at: new Date(l.createdAt || Date.now()).toISOString(),
+          updated_at: new Date(l.createdAt || Date.now()).toISOString(),
+          items: l.items,
+        }));
+        setOfflineData(mapped);
+      })
+      .catch((err) => console.error('[useOfflineOrders]', err))
+      .finally(() => setOfflineLoading(false));
+  }, [isOffline, enabled]);
+
+  if (isOffline) {
+    return {
+      data: offlineData,
+      isLoading: offlineLoading,
+      isOffline: true,
+      source: offlineData.length > 0 ? 'indexeddb' : 'empty',
+    };
+  }
+
+  return {
+    data: apiData,
+    isLoading: apiLoading,
+    isOffline: false,
+    source: 'api',
+  };
+}

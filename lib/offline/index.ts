@@ -16,7 +16,7 @@ export { OfflineProvider, useOfflineStatus } from './OfflineContext';
 export { useDbSeed } from './useDbSeed';
 
 // ─── Offline-aware data hooks ─────────────────────────────────────────────────
-export { useOfflineMenu, useOfflineTables, useOfflineCustomerSearch } from './useOfflineData';
+export { useOfflineMenu, useOfflineTables, useOfflineCustomerSearch, useOfflineOrders } from './useOfflineData';
 
 // ─── Offline Queue Sync Worker ────────────────────────────────────────────────
 export { useSyncQueue } from './useSyncQueue';

@@ -19,6 +19,7 @@ import {
   useOfflineMenu,
   useOfflineTables,
   useOfflineOrder,
+  useOfflineOrders,
 } from "@/lib/offline";
 import {
   useOrders,
@@ -215,7 +216,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   // ─── API Query & Offline Hooks ──────────────────────────────────────────────
   const { data: apiMenu } = useOfflineMenu({ channel: 'canteen' }, { enabled: isLoggedIn });
   const { data: apiTables } = useOfflineTables(undefined, { enabled: isLoggedIn });
-  const { data: apiOrders } = useOrders(undefined, { enabled: isLoggedIn });
+  const { data: apiOrders } = useOfflineOrders(undefined, { enabled: isLoggedIn });
   const { data: apiBookings } = useBookings(undefined, { enabled: isLoggedIn });
   const { data: apiCustomers } = useCustomers(undefined, { enabled: isLoggedIn });
   const { data: apiCategories } = useCategories({ enabled: isLoggedIn });
@@ -261,42 +262,60 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   // Map API Orders Register to CanteenOrder[]
   useEffect(() => {
     if (apiOrders) {
-      const mappedOrders: CanteenOrder[] = apiOrders.map((o) => ({
-        id: o.id,
-        tokenNumber: o.token_number,
-        customerName: o.customer_name,
-        customerPhone: o.customer_phone ?? "N/A",
-        tableName: o.table_name,
-        items: o.items
-          ? o.items.map((item) => ({
-              item: {
-                id: item.menu_item_id,
-                name: item.item_name,
-                price: item.item_price,
-                category: "Mains",
-                variety: "Regular",
-                available: true,
-              },
-              qty: item.quantity,
-              notes: item.cooking_notes ?? undefined,
-            }))
-          : [],
-        subtotal: o.subtotal,
-        tax: o.tax_amount,
-        serviceCharge: o.service_charge,
-        discount: o.discount_amount,
-        total: o.total_amount,
-        paymentMethod: o.payment_method,
-        paymentStatus: o.payment_status === "PAID" ? "PAID" : "PENDING",
-        status: o.order_status,
-        timestamp: new Date(o.ordered_at).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        date: new Date(o.ordered_at).toISOString().split("T")[0],
-        notes: o.notes ?? undefined,
-      }));
-      setOrders(mappedOrders);
+      try {
+        const mappedOrders: CanteenOrder[] = apiOrders.map((o) => {
+          let orderDate = new Date();
+          if (o.ordered_at) {
+            const dateStr = typeof o.ordered_at === 'string' ? (o.ordered_at as string).replace(' ', 'T') : o.ordered_at;
+            const parsed = new Date(dateStr);
+            if (!isNaN(parsed.getTime())) {
+              orderDate = parsed;
+            }
+          }
+
+          const formattedTimestamp = orderDate.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const formattedDate = orderDate.toISOString().split("T")[0];
+
+          return {
+            id: o.id,
+            tokenNumber: o.token_number,
+            customerName: o.customer_name || "Guest Devotee",
+            customerPhone: o.customer_phone ?? "N/A",
+            tableName: o.table_name || "Counter Walk-in",
+            items: Array.isArray(o.items)
+              ? o.items.map((item) => ({
+                  item: {
+                    id: item.menu_item_id,
+                    name: item.item_name,
+                    price: Number(item.item_price) || 0,
+                    category: "Mains",
+                    variety: "Regular",
+                    available: true,
+                  },
+                  qty: Number(item.quantity) || 1,
+                  notes: item.cooking_notes ?? undefined,
+                }))
+              : [],
+            subtotal: Number(o.subtotal) || 0,
+            tax: Number(o.tax_amount) || 0,
+            serviceCharge: Number(o.service_charge) || 0,
+            discount: Number(o.discount_amount) || 0,
+            total: Number(o.total_amount) || 0,
+            paymentMethod: o.payment_method,
+            paymentStatus: o.payment_status === "PAID" ? "PAID" : "PENDING",
+            status: o.order_status,
+            timestamp: formattedTimestamp,
+            date: formattedDate,
+            notes: o.notes ?? undefined,
+          };
+        });
+        setOrders(mappedOrders);
+      } catch (err) {
+        console.error("❌ Error mapping apiOrders in CanteenContext:", err);
+      }
     }
   }, [apiOrders]);
 
