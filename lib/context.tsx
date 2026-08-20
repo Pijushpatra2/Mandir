@@ -11,6 +11,29 @@ import { NewsArticle, mockNews } from "@/data/news";
 import { ShopOrder, mockOrders, OrderItem } from "@/data/orders";
 import { Coupon, mockCoupons } from "@/data/coupons";
 import { Product } from "@/data/products";
+import { devoteeApiClient } from "@/lib/apiClient";
+import {
+  getDevoteeAccessToken,
+  setDevoteeTokens,
+  clearDevoteeTokens
+} from "@/lib/authStorage";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
+
+export interface DevoteeProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  membership_number: string;
+  membership_type: "Annual" | "Life" | "Patron";
+  status: "ACTIVE" | "PENDING" | "EXPIRED" | "SUSPENDED";
+  joined_date: string;
+  valid_until: string;
+  qr_code_url: string | null;
+  is_active: number | boolean;
+}
 
 export type UserRole = "DEVOTEE" | "SUPER_ADMIN" | "TRUSTEE" | "ACCOUNTANT" | "BOOKING_MANAGER" | "CONTENT_MANAGER";
 
@@ -68,6 +91,15 @@ interface AppContextType {
   applyCouponCode: (code: string) => boolean;
   removeCoupon: () => void;
   placeOrder: (order: ShopOrder) => void;
+  
+  // Devotee auth states & functions
+  devoteeProfile: DevoteeProfile | null;
+  setDevoteeProfile: (profile: DevoteeProfile | null) => void;
+  isDevoteeLoggedIn: boolean;
+  loginDevotee: (emailOrPhone: string, password: string) => Promise<any>;
+  registerDevotee: (data: any) => Promise<any>;
+  logoutDevotee: () => void;
+  showToast: (message: string, type?: "success" | "error" | "info") => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -99,9 +131,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [news, setNews] = useState<NewsArticle[]>([]);
   
   // New States
-  const [currentMemberNumber, setCurrentMemberNumber] = useState<string>("MEM-2026-0002");
+  const [currentMemberNumber, setCurrentMemberNumber] = useState<string>("");
   const [darshanBookings, setDarshanBookings] = useState<DarshanBookingRecord[]>([]);
   const [orders, setOrders] = useState<ShopOrder[]>([]);
+  
+  // Devotee States
+  const [devoteeProfile, setDevoteeProfile] = useState<DevoteeProfile | null>(null);
+  const [isDevoteeLoggedIn, setIsDevoteeLoggedIn] = useState<boolean>(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
+    setToast({ message, type });
+  };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
   
   // Cart & Wishlist States
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -110,6 +158,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Load initial mock data on mount
   useEffect(() => {
+    // Restore devotee session if token exists
+    if (typeof window !== "undefined") {
+      const devoteeToken = getDevoteeAccessToken();
+      const savedProfile = localStorage.getItem("devotee_profile");
+      if (devoteeToken && savedProfile) {
+        try {
+          const parsed = JSON.parse(savedProfile);
+          setDevoteeProfile(parsed);
+          setCurrentMemberNumber(parsed.membership_number);
+          setIsDevoteeLoggedIn(true);
+        } catch (e) {}
+      }
+      
+      // Fetch fresh devotee profile if logged in
+      if (devoteeToken) {
+        devoteeApiClient.get('/devotees/auth/me')
+          .then((res) => {
+            if (res.data?.data?.devotee) {
+              const profile = res.data.data.devotee;
+              setDevoteeProfile(profile);
+              setCurrentMemberNumber(profile.membership_number);
+              localStorage.setItem("devotee_profile", JSON.stringify(profile));
+            }
+          })
+          .catch(() => {
+            // Token expired/invalid, clear session
+            clearDevoteeTokens();
+            setDevoteeProfile(null);
+            setIsDevoteeLoggedIn(false);
+            setCurrentMemberNumber("");
+          });
+      }
+    }
+
     // Restore admin user session from localStorage if present
     if (typeof window !== "undefined") {
       const savedUser = localStorage.getItem("admin_user");
@@ -268,6 +350,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ]);
   };
 
+  const loginDevotee = async (emailOrPhone: string, password: string) => {
+    const res = await devoteeApiClient.post('/devotees/auth/login', {
+      email_or_phone: emailOrPhone,
+      password,
+    });
+    if (res.data?.data) {
+      const { devotee, accessToken, refreshToken } = res.data.data;
+      setDevoteeTokens(accessToken, refreshToken);
+      setDevoteeProfile(devotee);
+      setIsDevoteeLoggedIn(true);
+      setCurrentMemberNumber(devotee.membership_number);
+      setUserRole("DEVOTEE");
+      localStorage.setItem("devotee_is_logged_in", "true");
+      localStorage.setItem("devotee_profile", JSON.stringify(devotee));
+      showToast("Logged in successfully!", "success");
+      return res.data.data;
+    }
+    throw new Error("Invalid response format");
+  };
+
+  const registerDevotee = async (data: any) => {
+    const res = await devoteeApiClient.post('/devotees/auth/register', data);
+    if (res.data?.data) {
+      const { devotee, accessToken, refreshToken } = res.data.data;
+      setDevoteeTokens(accessToken, refreshToken);
+      setDevoteeProfile(devotee);
+      setIsDevoteeLoggedIn(true);
+      setCurrentMemberNumber(devotee.membership_number);
+      setUserRole("DEVOTEE");
+      localStorage.setItem("devotee_is_logged_in", "true");
+      localStorage.setItem("devotee_profile", JSON.stringify(devotee));
+      showToast("Account registered successfully!", "success");
+      return res.data.data;
+    }
+    throw new Error("Invalid response format");
+  };
+
+  const logoutDevotee = () => {
+    clearDevoteeTokens();
+    setDevoteeProfile(null);
+    setIsDevoteeLoggedIn(false);
+    setCurrentMemberNumber("");
+    showToast("Logged out successfully!", "info");
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -305,10 +432,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleWishlist,
         applyCouponCode,
         removeCoupon,
-        placeOrder
+        placeOrder,
+        
+        // Devotee auth
+        devoteeProfile,
+        setDevoteeProfile,
+        isDevoteeLoggedIn,
+        loginDevotee,
+        registerDevotee,
+        logoutDevotee,
+        showToast
       }}
     >
       {children}
+
+      {/* Dynamic Global Toast Overlay */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-6 right-6 z-50 max-w-sm p-4 rounded-2xl shadow-xl flex items-center gap-3 backdrop-blur-md border ${
+              toast.type === "success"
+                ? "bg-green-50/90 border-green-200/50 text-green-700"
+                : toast.type === "error"
+                ? "bg-red-50/90 border-red-200/50 text-red-700"
+                : "bg-blue-50/90 border-blue-200/50 text-blue-700"
+            }`}
+          >
+            {toast.type === "error" ? (
+              <AlertTriangle className="w-5 h-5 shrink-0 text-red-500" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-green-500" />
+            )}
+            <span className="text-xs font-semibold tracking-wide font-sans">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AppContext.Provider>
   );
 }

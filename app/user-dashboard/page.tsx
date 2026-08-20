@@ -24,7 +24,33 @@ export default function UserDashboardOverviewPage() {
   const [newFamilyRel, setNewFamilyRel] = useState("Spouse");
   const [newFamilyAge, setNewFamilyAge] = useState<number>(35);
 
-  const activeMember = members.find((m) => m.membershipNumber === currentMemberNumber) || members[0];
+  const { devoteeProfile } = useApp();
+
+  const activeMember = devoteeProfile ? {
+    firstName: devoteeProfile.first_name,
+    lastName: devoteeProfile.last_name,
+    email: devoteeProfile.email,
+    phone: devoteeProfile.phone,
+    membershipNumber: devoteeProfile.membership_number,
+    status: devoteeProfile.status,
+    membershipType: devoteeProfile.membership_type,
+    qrCodeUrl: devoteeProfile.qr_code_url || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${devoteeProfile.membership_number}`,
+    joinedDate: devoteeProfile.joined_date ? new Date(devoteeProfile.joined_date).toISOString().split("T")[0] : "",
+    validUntil: devoteeProfile.valid_until ? new Date(devoteeProfile.valid_until).toISOString().split("T")[0] : "",
+    familyMembers: [] as any[]
+  } : {
+    firstName: "Devotee",
+    lastName: "User",
+    email: "",
+    phone: "",
+    membershipNumber: "",
+    status: "PENDING",
+    membershipType: "Annual",
+    qrCodeUrl: "",
+    joinedDate: "",
+    validUntil: "",
+    familyMembers: [] as any[]
+  };
 
   const handleAddFamilyMember = (e: React.FormEvent) => {
     e.preventDefault();

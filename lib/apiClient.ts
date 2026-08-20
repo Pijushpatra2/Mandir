@@ -340,3 +340,25 @@ adminApiClient.interceptors.response.use(
     }
   },
 );
+
+// ─── Devotee API Client ───────────────────────────────────────────────────────
+
+import { getDevoteeAccessToken } from '@/lib/authStorage';
+
+export const devoteeApiClient = axios.create({
+  baseURL: BASE_URL,
+  timeout: 15000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+devoteeApiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = getDevoteeAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+

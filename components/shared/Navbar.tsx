@@ -132,7 +132,7 @@ export function Navbar() {
                 </Link>
               ) : (
                 <Link
-                  href="/membership"
+                  href="/login"
                   className="flex items-center space-x-2 px-4 py-2 text-xs font-semibold text-white bg-primary-gold hover:bg-secondary-bronze rounded-xl shadow-md transition-colors"
                 >
                   <User className="w-3.5 h-3.5" />
@@ -222,7 +222,7 @@ export function Navbar() {
                       </Link>
                     ) : (
                       <Link
-                        href="/membership"
+                        href="/login"
                         onClick={() => setIsOpen(false)}
                         className="w-full flex items-center justify-center space-x-2 py-3 text-sm font-semibold text-white bg-primary-gold hover:bg-secondary-bronze rounded-xl shadow-md transition-colors"
                       >

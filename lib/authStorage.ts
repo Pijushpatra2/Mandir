@@ -63,3 +63,33 @@ export function clearAdminTokens(): void {
   localStorage.removeItem(ADMIN_ACCESS_KEY);
   localStorage.removeItem(ADMIN_REFRESH_KEY);
 }
+
+// ─── Devotee (Website / Devotee Portal) ──────────────────────────────────────
+
+const DEVOTEE_ACCESS_KEY  = 'devotee_access_token';
+const DEVOTEE_REFRESH_KEY = 'devotee_refresh_token';
+
+export function getDevoteeAccessToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(DEVOTEE_ACCESS_KEY);
+}
+
+export function getDevoteeRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(DEVOTEE_REFRESH_KEY);
+}
+
+export function setDevoteeTokens(accessToken: string, refreshToken: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(DEVOTEE_ACCESS_KEY, accessToken);
+  localStorage.setItem(DEVOTEE_REFRESH_KEY, refreshToken);
+}
+
+export function clearDevoteeTokens(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(DEVOTEE_ACCESS_KEY);
+  localStorage.removeItem(DEVOTEE_REFRESH_KEY);
+  localStorage.removeItem('devotee_is_logged_in');
+  localStorage.removeItem('devotee_profile');
+}
+

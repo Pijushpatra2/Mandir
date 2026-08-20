@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   Menu,
   X,
-  UserCheck
+  UserCheck,
+  LogOut
 } from "lucide-react";
 
 export default function UserDashboardLayout({
@@ -23,10 +24,28 @@ export default function UserDashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { currentMemberNumber, members } = useApp();
+  const router = useRouter();
+  const { devoteeProfile, logoutDevotee } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const activeMember = members.find((m) => m.membershipNumber === currentMemberNumber) || members[0];
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const devoteeToken = localStorage.getItem("devotee_access_token");
+      if (!devoteeToken) {
+        router.push("/login");
+      }
+    }
+  }, [devoteeProfile, router]);
+
+  const activeMember = devoteeProfile ? {
+    firstName: devoteeProfile.first_name,
+    lastName: devoteeProfile.last_name,
+    membershipNumber: devoteeProfile.membership_number,
+  } : {
+    firstName: "Devotee",
+    lastName: "User",
+    membershipNumber: "",
+  };
 
   const menuItems = [
     { label: "Overview & ID Card", href: "/user-dashboard", icon: LayoutDashboard },
@@ -72,8 +91,8 @@ export default function UserDashboardLayout({
           })}
         </nav>
 
-        {/* Public view shortcut */}
-        <div className="p-4 border-t border-primary-gold/10">
+        {/* Public view shortcut & Logout */}
+        <div className="p-4 border-t border-primary-gold/10 space-y-1">
           <Link
             href="/"
             className="flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
@@ -81,6 +100,16 @@ export default function UserDashboardLayout({
             <ArrowLeft className="w-4 h-4 text-primary-gold" />
             <span>Back to Public Site</span>
           </Link>
+          <button
+            onClick={() => {
+              logoutDevotee();
+              router.push("/");
+            }}
+            className="w-full flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer text-left"
+          >
+            <LogOut className="w-4 h-4 text-red-500" />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
 
@@ -139,7 +168,7 @@ export default function UserDashboardLayout({
                 })}
               </nav>
 
-              <div className="p-4 border-t border-primary-gold/10">
+              <div className="p-4 border-t border-primary-gold/10 space-y-1">
                 <Link
                   href="/"
                   className="flex items-center space-x-2 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
@@ -147,6 +176,17 @@ export default function UserDashboardLayout({
                   <ArrowLeft className="w-4 h-4 text-primary-gold" />
                   <span>Back to Public Site</span>
                 </Link>
+                <button
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    logoutDevotee();
+                    router.push("/");
+                  }}
+                  className="w-full flex items-center space-x-2 px-4 py-3 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer text-left"
+                >
+                  <LogOut className="w-4 h-4 text-red-500" />
+                  <span>Logout</span>
+                </button>
               </div>
             </motion.aside>
           </>
@@ -169,7 +209,7 @@ export default function UserDashboardLayout({
                 Session Devotee
               </span>
               <span className="text-xs font-bold text-dark-surface">
-                {activeMember ? `${activeMember.firstName} ${activeMember.lastName}` : "Devotee User"} ({currentMemberNumber})
+                {activeMember ? `${activeMember.firstName} ${activeMember.lastName}` : "Devotee User"} ({activeMember?.membershipNumber})
               </span>
             </div>
           </div>
