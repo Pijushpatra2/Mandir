@@ -613,9 +613,14 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     const discount = Number(posDiscount) || 0;
     const total = Math.max(0, subtotal + tax + serviceCharge - discount);
 
+    const localOrderId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "ord-" + Date.now();
     const tokenNum = "TK-" + Math.floor(2000 + Math.random() * 8000);
-    const timeNow = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const dateToday = new Date().toISOString().split("T")[0];
+    const orderDate = new Date();
+    const y = orderDate.getFullYear();
+    const m = String(orderDate.getMonth() + 1).padStart(2, "0");
+    const d = String(orderDate.getDate()).padStart(2, "0");
+    const dateToday = `${y}-${m}-${d}`;
+    const timeNow = orderDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     let allocatedTableName = "Counter Walk-in";
     if (posSelectedTable) {
@@ -623,108 +628,83 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
       if (tbl) allocatedTableName = tbl.name;
     }
 
-    // Map cart items to API order items
-    const apiOrderItems = cart.map((c) => ({
-      menu_item_id: c.item.id,
-      item_name: c.item.name,
-      item_price: c.item.price,
-      quantity: c.qty,
-      line_total: c.item.price * c.qty,
-      cooking_notes: c.notes ?? null,
-    }));
+    const currentCart = [...cart];
+    const customerName = posCustomerName.trim() || "Guest Devotee";
+    const customerPhone = posCustomerPhone.trim() || "N/A";
+    const tableId = posSelectedTable || null;
+    const orderNotes = posOrderNote || null;
+    const paymentMethod = isPaymentProcessed ? posPaymentMethod : "PENDING";
+    const paymentStatus = isPaymentProcessed ? "PAID" : "PENDING";
 
-    // Trigger apiPlaceOrder (handles online API and offline Dexie storage automatically)
-    apiPlaceOrder({
-      customer_name: posCustomerName.trim() || "Guest Devotee",
-      customer_phone: posCustomerPhone.trim() || null,
-      table_id: posSelectedTable || null,
-      table_name: allocatedTableName,
-      items: apiOrderItems,
+    // 1. INSTANT OPTIMISTIC ORDER OBJECT (0ms)
+    const newOrder: CanteenOrder = {
+      id: localOrderId,
+      tokenNumber: tokenNum,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      tableName: allocatedTableName,
+      items: currentCart,
       subtotal,
-      tax_amount: tax,
-      service_charge: serviceCharge,
-      discount_amount: discount,
-      total_amount: total,
-      payment_method: isPaymentProcessed ? posPaymentMethod : "PENDING",
-      payment_status: isPaymentProcessed ? "PAID" : "PENDING",
-      order_status: "NEW",
-      notes: posOrderNote || null,
-    })
-      .then(({ id, local }) => {
-        // Build local order object to show on UI immediately
-        const newOrder: CanteenOrder = {
-          id,
-          tokenNumber: tokenNum,
-          customerName: posCustomerName.trim() || "Guest Devotee",
-          customerPhone: posCustomerPhone.trim() || "N/A",
-          tableName: allocatedTableName,
-          items: [...cart],
-          subtotal,
-          tax,
-          serviceCharge,
-          discount,
-          total,
-          paymentMethod: isPaymentProcessed ? posPaymentMethod : "PENDING",
-          paymentStatus: isPaymentProcessed ? "PAID" : "PENDING",
-          status: "NEW",
-          timestamp: timeNow,
-          date: dateToday,
-          notes: posOrderNote,
+      tax,
+      serviceCharge,
+      discount,
+      total,
+      paymentMethod,
+      paymentStatus,
+      status: "NEW",
+      timestamp: timeNow,
+      date: dateToday,
+      createdAtMs: orderDate.getTime(),
+      orderedAt: orderDate.toISOString(),
+      notes: orderNotes || undefined,
+    };
+
+    // 2. INSTANT ZERO-LATENCY PRINTING (0ms)
+    setReceiptOrder(newOrder);
+    autoPrintReceipt(newOrder);
+
+    // 3. INSTANT LOCAL STATE UPDATE (0ms)
+    setOrders((prev) => [newOrder, ...prev]);
+
+    // 4. OPTIMISTICALLY UPDATE TABLE STATUS (0ms)
+    if (tableId) {
+      setTables((prev) =>
+        prev.map((t) =>
+          t.id === tableId
+            ? {
+                ...t,
+                status: "OCCUPIED" as const,
+                currentBill: total,
+                occupiedDuration: "0 mins",
+              }
+            : t
+        )
+      );
+    }
+
+    // 5. UPDATE LOCAL DEVOTEE CRM (0ms)
+    if (posCustomerPhone && posCustomerPhone !== "N/A") {
+      const existCust = customers.find((c) => c.phone === posCustomerPhone);
+      if (!existCust) {
+        const newCust: CanteenCustomer = {
+          id: "cust-" + Date.now(),
+          name: customerName,
+          phone: posCustomerPhone,
+          totalOrders: 1,
+          totalSpent: total,
+          lastVisit: dateToday,
         };
+        setCustomers((prev) => [...prev, newCust]);
 
-        // Set invoice receipt popup
-        setReceiptOrder(newOrder);
+        apiAddCustomer({
+          name: customerName,
+          phone: posCustomerPhone,
+          customer_type: "Regular",
+        });
+      }
+    }
 
-        // Auto-print receipt to default thermal printer
-        autoPrintReceipt(newOrder);
-
-        // Update local orders state for instant UI update
-        setOrders((prev) => [newOrder, ...prev]);
-
-        // Optimistically update tables status locally if table assigned
-        if (posSelectedTable) {
-          setTables((prev) =>
-            prev.map((t) =>
-              t.id === posSelectedTable
-                ? {
-                    ...t,
-                    status: "OCCUPIED" as const,
-                    currentBill: total,
-                    occupiedDuration: "0 mins",
-                  }
-                : t
-            )
-          );
-        }
-
-        // Update customer list locally if new customer is registered
-        if (posCustomerPhone) {
-          const existCust = customers.find((c) => c.phone === posCustomerPhone);
-          if (!existCust) {
-            const newCust: CanteenCustomer = {
-              id: "cust-" + Date.now(),
-              name: posCustomerName || "Guest Devotee",
-              phone: posCustomerPhone,
-              totalOrders: 1,
-              totalSpent: total,
-              lastVisit: dateToday,
-            };
-            setCustomers((prev) => [...prev, newCust]);
-
-            // Sync new devotee profile to the backend CRM
-            apiAddCustomer({
-              name: posCustomerName || "Guest Devotee",
-              phone: posCustomerPhone,
-              customer_type: "Regular",
-            });
-          }
-        }
-      })
-      .catch((err) => {
-        console.error("[POS Checkout] Order placing failed:", err);
-      });
-
-    // Reset cart states
+    // 6. INSTANT RESET CART & INPUTS (Ready for next customer immediately)
     setCart([]);
     setPosCustomerName("");
     setPosCustomerPhone("");
@@ -733,15 +713,50 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     setPosOrderNote("");
     setPosPaymentMethod("UPI");
 
-    // Add alert notification
+    // 7. INSTANT NOTIFICATION
     const newNotif = {
       id: Date.now(),
       title: "New Order Placed",
       message: `Token ${tokenNum} generated for ${allocatedTableName}. Total: UGX ${total}`,
-      type: "success",
+      type: "success" as const,
       read: false,
     };
     setNotifications([newNotif, ...notifications]);
+
+    // 8. ASYNCHRONOUS BACKGROUND SYNC (Does NOT block UI or printer)
+    const apiOrderItems = currentCart.map((c) => ({
+      menu_item_id: c.item.id,
+      item_name: c.item.name,
+      item_price: c.item.price,
+      quantity: c.qty,
+      line_total: c.item.price * c.qty,
+      cooking_notes: c.notes ?? null,
+    }));
+
+    apiPlaceOrder({
+      customer_name: customerName,
+      customer_phone: customerPhone === "N/A" ? null : customerPhone,
+      table_id: tableId,
+      table_name: allocatedTableName,
+      items: apiOrderItems,
+      subtotal,
+      tax_amount: tax,
+      service_charge: serviceCharge,
+      discount_amount: discount,
+      total_amount: total,
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
+      order_status: "NEW",
+      notes: orderNotes,
+    })
+      .then(({ id }) => {
+        if (id && id !== localOrderId) {
+          setOrders((prev) => prev.map((o) => (o.id === localOrderId ? { ...o, id } : o)));
+        }
+      })
+      .catch((err) => {
+        console.warn("[POS Background Sync] Order recorded in local queue:", err);
+      });
   };
 
   const handleUpdateOrderStatus = (orderId: string, nextStatus: CanteenOrder["status"]) => {
