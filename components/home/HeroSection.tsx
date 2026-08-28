@@ -14,8 +14,8 @@ export function HeroSection() {
       <div className="absolute inset-0 -z-20 w-full h-full bg-[#FAF7F2]">
         <div className="absolute right-0 top-0 w-full lg:w-[62%] h-full">
           <img 
-            src="/temple_hero_bg.png" 
-            className="w-full h-full object-cover object-[72%_center] lg:object-[68%_center] xl:object-[65%_center] select-none" 
+            src="/images/hero-temple.jpg" 
+            className="w-full h-full object-cover object-center lg:object-right select-none" 
             alt="Shree Swaminarayan Temple Kampala Sunset Background" 
           />
           {/* Smooth Gradient Fades for Text Contrast */}
