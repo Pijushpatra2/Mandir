@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useApp, mapDbRoleToUserRole } from "@/lib/context";
 import { setAdminTokens } from "@/lib/authStorage";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Lock, Mail, AlertTriangle, CheckCircle, Loader2, ArrowRight } from "lucide-react";
+import { Lock, Mail, AlertTriangle, CheckCircle, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
@@ -17,6 +17,7 @@ export default function AdminLoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -149,14 +150,22 @@ export default function AdminLoginPage() {
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   disabled={isLoading}
-                  className="w-full bg-[#1F1914] border border-[#D4AF37]/20 rounded-xl py-3 pl-10 pr-4 text-sm text-[#F3EFE0] placeholder-white/20 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all disabled:opacity-50"
+                  className="w-full bg-[#1F1914] border border-[#D4AF37]/20 rounded-xl py-3 pl-10 pr-10 text-sm text-[#F3EFE0] placeholder-white/20 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all disabled:opacity-50"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/45 hover:text-[#D4AF37] transition-colors"
+                  disabled={isLoading}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
