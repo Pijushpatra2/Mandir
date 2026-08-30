@@ -50,4 +50,8 @@ export const QUERY_KEYS = {
 
   // ─── Staff (ONCE — manager login, 60 min) ───────────────────────────────
   staffList: () => ['staff-list'] as const,
+
+  // ─── Products (E-Commerce Catalog) ───────────────────────────────────────
+  products: (filters?: object) => filters ? ['products', filters] : ['products'] as const,
+  product: (idOrSlug: string) => ['products', idOrSlug] as const,
 } as const;

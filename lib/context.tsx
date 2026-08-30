@@ -83,6 +83,7 @@ interface AppContextType {
   cart: CartItem[];
   wishlist: string[]; // Product IDs
   appliedCoupon: Coupon | null;
+  setAppliedCoupon: React.Dispatch<React.SetStateAction<Coupon | null>>;
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
@@ -425,6 +426,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         cart,
         wishlist,
         appliedCoupon,
+        setAppliedCoupon,
         addToCart,
         removeFromCart,
         updateCartQuantity,

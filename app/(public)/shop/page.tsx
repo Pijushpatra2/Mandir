@@ -6,10 +6,12 @@ import Image from "next/image";
 import { mockCategories } from "@/data/categories";
 import { mockProducts } from "@/data/products";
 import { useApp } from "@/lib/context";
-import { useMenu } from "@/lib/api/canteen/useMenu";
+import { useShopProducts, useShopCategories } from "@/lib/api/shop";
 import { layout, cards, typography, buttons, inputs, badges } from "@/lib/design-system";
-import { Search, SlidersHorizontal, Star, ShoppingCart, Heart, RefreshCw, X } from "lucide-react";
+import { Search, SlidersHorizontal, Star, ShoppingCart, Heart, RefreshCw, X, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+
+const DEFAULT_PRODUCT_IMAGE = "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&q=80&w=600";
 
 export default function ShopPage() {
   const { addToCart, toggleWishlist, wishlist } = useApp();
@@ -22,45 +24,33 @@ export default function ShopPage() {
   const [sortBy, setSortBy] = useState("featured");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Fetch e-commerce visible products from database
-  const { data: dbItems = [] } = useMenu({ channel: "e-com" });
+  // Fetch e-commerce visible products and categories from real database API
+  const { data: dbProducts = [], isLoading } = useShopProducts();
+  const { data: dbCategories = [] } = useShopCategories();
 
-  // Map database food/e-com items into e-com product catalog structures
+  // Map database items with fallback to mockProducts if DB is loading/empty
   const products = useMemo(() => {
-    const dbProducts = dbItems.map((item) => ({
-      id: item.id,
-      name: item.name,
-      slug: item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      description: item.description || "Fresh, delicious temple prasadam and sweets made with pure love and devotion.",
-      categoryId: item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      price: item.price,
-      stock: 50,
-      images: [
-        item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600"
-      ],
-      rating: 4.8,
-      reviewsCount: 15,
-      specs: { "Origin": "Temple Kitchen", "Serving": "Fresh" },
-      isFeatured: true,
-      isNew: false
-    }));
-    return [...dbProducts, ...mockProducts];
-  }, [dbItems]);
+    if (dbProducts && dbProducts.length > 0) {
+      return dbProducts;
+    }
+    return mockProducts;
+  }, [dbProducts]);
 
   // Dynamically construct combined categories list with correct product counts
   const categoriesList = useMemo(() => {
-    const list = [...mockCategories];
+    const list: Array<{ id: string; name: string; slug: string; description?: string; image?: string; imageUrl?: string; count?: number }> =
+      dbCategories.length > 0 ? [...dbCategories] : [...mockCategories];
 
-    dbItems.forEach((item) => {
-      const slug = item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const exists = list.find((c) => c.slug === slug || c.id === slug);
-      if (!exists) {
+    products.forEach((p) => {
+      const exists = list.find((c) => c.id === p.categoryId || c.slug === p.categoryId);
+      if (!exists && p.categoryId) {
         list.push({
-          id: slug,
-          name: item.category,
-          slug: slug,
-          description: `Fresh, sacred ${item.category} offerings from the temple kitchen.`,
-          image: item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600",
+          id: p.categoryId,
+          name: p.categoryId.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+          slug: p.categoryId,
+          description: `Sacred ${p.categoryId} offerings.`,
+          image: p.images?.[0] || DEFAULT_PRODUCT_IMAGE,
+          imageUrl: p.images?.[0] || DEFAULT_PRODUCT_IMAGE,
           count: 0,
         });
       }
@@ -68,9 +58,9 @@ export default function ShopPage() {
 
     return list.map((cat) => {
       const count = products.filter((p) => p.categoryId === cat.id || p.categoryId === cat.slug).length;
-      return { ...cat, count };
+      return { ...cat, count, image: cat.image || cat.imageUrl || DEFAULT_PRODUCT_IMAGE };
     });
-  }, [dbItems, products]);
+  }, [dbCategories, products]);
 
   // Reset all filters
   const resetFilters = () => {
@@ -297,7 +287,7 @@ export default function ShopPage() {
                       {/* Image container */}
                       <Link href={`/shop/${product.slug}`} className="relative h-48 w-full overflow-hidden rounded-2xl bg-primary-gold/5 mb-4 block">
                         <Image
-                          src={product.images[0]}
+                          src={product.images?.[0] || DEFAULT_PRODUCT_IMAGE}
                           alt={product.name}
                           fill
                           sizes="(max-width: 640px) 100vw, 250px"

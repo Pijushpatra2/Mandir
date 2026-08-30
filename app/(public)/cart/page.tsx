@@ -8,6 +8,8 @@ import { layout, cards, typography, buttons, inputs, badges } from "@/lib/design
 import { Trash2, ShoppingBag, ArrowRight, ArrowLeft, Tag, Percent } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
+import { useValidateCoupon } from "@/lib/api/shop";
+
 export default function CartPage() {
   const {
     cart,
@@ -15,10 +17,11 @@ export default function CartPage() {
     updateCartQuantity,
     clearCart,
     appliedCoupon,
-    applyCouponCode,
+    setAppliedCoupon,
     removeCoupon,
   } = useApp();
 
+  const validateCouponMutation = useValidateCoupon();
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState(false);
@@ -42,17 +45,17 @@ export default function CartPage() {
   const tax = Math.round((subtotal - discount) * 0.05);
 
   // Shipping calculation
-  const shipping = subtotal > 0 && (subtotal - discount) < 999 ? 99 : 0; // Free shipping over 999
+  const shipping = subtotal > 0 && subtotal - discount < 999 ? 99 : 0; // Free shipping over 999
 
   // Total
   const total = subtotal - discount + tax + shipping;
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     setCouponError("");
     setCouponSuccess(false);
 
-    if (!couponInput) {
+    if (!couponInput.trim()) {
       setCouponError("Please enter a coupon code.");
       return;
     }
@@ -62,12 +65,16 @@ export default function CartPage() {
       return;
     }
 
-    const success = applyCouponCode(couponInput);
-    if (success) {
+    try {
+      const res = await validateCouponMutation.mutateAsync({
+        code: couponInput.trim(),
+        subtotal,
+      });
+      setAppliedCoupon(res.coupon as any);
       setCouponSuccess(true);
       setCouponInput("");
-    } else {
-      setCouponError("Invalid or inactive coupon code.");
+    } catch (err: any) {
+      setCouponError(err?.response?.data?.message || "Invalid or inactive coupon code.");
     }
   };
 

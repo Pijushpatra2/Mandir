@@ -7,25 +7,31 @@ import { useApp } from "@/lib/context";
 import { layout, cards, typography, buttons, inputs, badges } from "@/lib/design-system";
 import { ShoppingBag, ArrowLeft, ShieldCheck, CheckCircle2, CreditCard, Send, Sparkles } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { ShopOrder, ShippingAddress, OrderItem } from "@/data/orders";
+import { ShippingAddress, OrderItem } from "@/data/orders";
+import { useCreateShopOrder } from "@/lib/api/shop";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, appliedCoupon, placeOrder, currentMemberNumber, members } = useApp();
+  const createOrderMutation = useCreateShopOrder();
+  const { cart, appliedCoupon, clearCart, currentMemberNumber, members, devoteeProfile } = useApp();
 
-  const activeMember = members.find(m => m.membershipNumber === currentMemberNumber);
+  const activeMember = members.find((m) => m.membershipNumber === currentMemberNumber);
 
   // Steps state: 'shipping' | 'payment' | 'processing' | 'success'
   const [step, setStep] = useState<"shipping" | "payment" | "processing" | "success">("shipping");
 
   // Shipping form fields
   const [shippingForm, setShippingForm] = useState<ShippingAddress>({
-    name: activeMember ? `${activeMember.firstName} ${activeMember.lastName}` : "",
+    name: activeMember
+      ? `${activeMember.firstName} ${activeMember.lastName}`
+      : devoteeProfile
+      ? `${devoteeProfile.first_name} ${devoteeProfile.last_name}`
+      : "",
     line1: "",
     city: "",
     state: "",
     postalCode: "",
-    phone: activeMember?.phone || "",
+    phone: activeMember?.phone || devoteeProfile?.phone || "",
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -60,7 +66,7 @@ export default function CheckoutPage() {
   }
 
   const tax = Math.round((subtotal - discount) * 0.05);
-  const shipping = subtotal > 0 && (subtotal - discount) < 999 ? 99 : 0;
+  const shipping = subtotal > 0 && subtotal - discount < 999 ? 99 : 0;
   const total = subtotal - discount + tax + shipping;
 
   // Validate Shipping fields
@@ -107,44 +113,45 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleCompleteOrder = (e: React.FormEvent) => {
+  const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validatePayment()) {
       setFormErrors({});
       setStep("processing");
 
-      // Simulate network request delays
-      setTimeout(() => {
-        const orderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
-        setCreatedOrderId(orderId);
-
-        const newOrder: ShopOrder = {
-          id: orderId,
-          customerId: activeMember?.id || "cust-guest",
+      try {
+        const orderPayload = {
           customerName: shippingForm.name,
-          items: cart as OrderItem[],
+          customerEmail: activeMember?.email || devoteeProfile?.email || `${shippingForm.phone.replace(/[^0-9]/g, "")}@devotee.temple`,
+          customerPhone: shippingForm.phone,
+          devoteeId: activeMember?.id || devoteeProfile?.id || undefined,
+          shippingAddress: shippingForm,
           subtotal,
           discount,
           tax,
+          shippingFee: shipping,
           total,
-          shippingAddress: shippingForm,
           paymentMethod,
-          status: "PENDING",
-          date: new Date().toISOString().split("T")[0],
-          trackingNumber: `TRK${Math.floor(100000000 + Math.random() * 900000000)}`,
-          timeline: [
-            {
-              status: "PENDING",
-              timestamp: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              title: "Order Placed",
-              description: `Payment via ${paymentMethod} verified. Order is queued for altar blessing pack.`
-            }
-          ]
+          paymentStatus: paymentMethod === "COD" ? "PENDING" : "PAID",
+          couponCode: appliedCoupon?.code || undefined,
+          items: cart.map((item) => ({
+            productId: item.productId,
+            productName: item.name,
+            productImage: item.image,
+            price: Number(item.price),
+            quantity: Number(item.quantity),
+            total: Number(item.price * item.quantity),
+          })),
         };
 
-        placeOrder(newOrder);
+        const result = await createOrderMutation.mutateAsync(orderPayload);
+        setCreatedOrderId(result.id);
+        clearCart();
         setStep("success");
-      }, 2500);
+      } catch (err: any) {
+        alert(err?.response?.data?.message || "Failed to place order. Please try again.");
+        setStep("payment");
+      }
     }
   };
 

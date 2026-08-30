@@ -5,11 +5,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { mockProducts } from "@/data/products";
 import { mockCategories } from "@/data/categories";
-import { mockReviews } from "@/data/reviews";
 import { useApp } from "@/lib/context";
+import { useShopProducts, useProductReviews, useCreateReview, ShopProduct } from "@/lib/api/shop";
 import { layout, cards, typography, buttons, badges, inputs } from "@/lib/design-system";
-import { ArrowLeft, ShoppingCart, Heart, Star, ShieldCheck, CheckCircle2, ChevronRight } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Heart, Star, ShieldCheck, CheckCircle2, ChevronRight, Loader2, Send } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+
+const DEFAULT_PRODUCT_IMAGE = "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&q=80&w=600";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -18,35 +20,88 @@ interface PageProps {
 export default function ProductDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const { slug } = resolvedParams;
-  const { addToCart, toggleWishlist, wishlist } = useApp();
+  const { addToCart, toggleWishlist, wishlist, devoteeProfile } = useApp();
 
-  const product = mockProducts.find((p) => p.slug === slug);
-  const category = mockCategories.find((c) => c.id === product?.categoryId);
+  const { data: dbProducts = [], isLoading } = useShopProducts();
+
+  const allProducts = useMemo(() => {
+    if (dbProducts && dbProducts.length > 0) {
+      return dbProducts;
+    }
+    return mockProducts;
+  }, [dbProducts]);
+
+  const product = allProducts.find((p) => p.slug === slug || p.id === slug);
+  const category = mockCategories.find((c) => c.id === product?.categoryId || c.slug === product?.categoryId) || {
+    name: product?.categoryId ? product.categoryId.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) : "Sacred Item",
+    slug: product?.categoryId || "all",
+  };
 
   // Active States
-  const [activeImage, setActiveImage] = useState(product?.images[0] || "");
+  const [activeImage, setActiveImage] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState("specs"); // 'specs' | 'reviews'
+  const [activeTab, setActiveTab] = useState<"specs" | "reviews">("specs");
 
-  // Retrieve reviews for this specific product
-  const productReviews = useMemo(() => {
-    if (!product) return [];
-    return mockReviews.filter((r) => r.productId === product.id);
-  }, [product]);
+  // Real Database Reviews
+  const { data: dbReviews = [], isLoading: isLoadingReviews } = useProductReviews(product?.id || "");
+  const createReviewMutation = useCreateReview();
+
+  // Review Form States
+  const [reviewerName, setReviewerName] = useState(
+    devoteeProfile ? `${devoteeProfile.first_name} ${devoteeProfile.last_name}` : ""
+  );
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product) return;
+    if (!reviewerName.trim() || !reviewComment.trim()) {
+      alert("Please enter your name and review comments.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      await createReviewMutation.mutateAsync({
+        productId: product.id,
+        customerName: reviewerName.trim(),
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+        verifiedPurchase: Boolean(devoteeProfile),
+      });
+      setReviewComment("");
+      alert("Thank you! Your sacred review has been submitted.");
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Failed to submit review");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   // Retrieve related products (same category, excluding current product)
   const relatedProducts = useMemo(() => {
     if (!product) return [];
-    return mockProducts
-      .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
+    return allProducts
+      .filter((p) => (p.categoryId === product.categoryId || (p.categoryId && product.categoryId && p.categoryId.toLowerCase() === product.categoryId.toLowerCase())) && p.id !== product.id)
       .slice(0, 4);
-  }, [product]);
+  }, [product, allProducts]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-bg-warm min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-gold mb-3" />
+        <p className="text-secondary-bronze/70 text-sm">Loading divine product details...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
       <div className="bg-bg-warm min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <h1 className={`${typography.h2} text-dark-surface mb-2`}>Product Not Found</h1>
-        <p className="text-secondary-bronze/70 mb-6">The product you are looking for does not exist.</p>
+        <p className="text-secondary-bronze/70 mb-6">The sacred product you are looking for does not exist.</p>
         <Link href="/shop" className={buttons.primary}>
           Back to Shop
         </Link>
@@ -54,11 +109,8 @@ export default function ProductDetailPage({ params }: PageProps) {
     );
   }
 
-  // Ensure activeImage is set when product loads
-  if (!activeImage && product.images.length > 0) {
-    setActiveImage(product.images[0]);
-  }
-
+  const validImages = (product.images || []).filter(Boolean);
+  const mainDisplayImage = activeImage || validImages[0] || DEFAULT_PRODUCT_IMAGE;
   const isWishlisted = wishlist.includes(product.id);
 
   return (
@@ -87,7 +139,7 @@ export default function ProductDetailPage({ params }: PageProps) {
           <div className="lg:col-span-6 space-y-4">
             <div className="relative h-[400px] w-full overflow-hidden bg-white border border-primary-gold/10 rounded-3xl shadow-sm">
               <Image
-                src={activeImage || product.images[0]}
+                src={mainDisplayImage}
                 alt={product.name}
                 fill
                 sizes="(max-width: 768px) 100vw, 600px"
@@ -103,14 +155,14 @@ export default function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* Thumbnail Selectors */}
-            {product.images.length > 1 && (
+            {validImages.length > 1 && (
               <div className="flex gap-3">
-                {product.images.map((img, idx) => (
+                {validImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
                     className={`relative w-20 h-20 rounded-xl overflow-hidden bg-white border transition-all cursor-pointer p-1 ${
-                      activeImage === img ? "border-primary-gold ring-2 ring-primary-gold/25" : "border-primary-gold/10 hover:border-primary-gold/30"
+                      mainDisplayImage === img ? "border-primary-gold ring-2 ring-primary-gold/25" : "border-primary-gold/10 hover:border-primary-gold/30"
                     }`}
                   >
                     <Image
@@ -130,111 +182,97 @@ export default function ProductDetailPage({ params }: PageProps) {
           {/* 2. Details Column (lg:col-span-6) */}
           <div className="lg:col-span-6 space-y-6">
             <div>
-              <span className="text-primary-gold font-semibold tracking-wider text-xs uppercase">
-                {category?.name || "Devotional item"}
-              </span>
-              <h1 className={`${typography.h1} text-dark-surface mt-1`}>{product.name}</h1>
-              <div className="flex items-center space-x-4 mt-3">
-                <div className="flex items-center text-xs text-warning-amber">
+              <div className="flex items-center space-x-2 text-warning-amber mb-2">
+                <div className="flex">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
                       className={`w-4 h-4 ${
-                        i < Math.floor(product.rating) ? "fill-current" : "text-neutral-gray"
+                        i < Math.round(product.rating || 5) ? "fill-current text-warning-amber" : "text-neutral-gray"
                       }`}
                     />
                   ))}
-                  <span className="ml-1.5 font-bold text-dark-surface">{product.rating}</span>
                 </div>
-                <span className="text-secondary-bronze/35">|</span>
-                <span className="text-xs text-secondary-bronze/70">
-                  {product.reviewsCount} customer reviews
-                </span>
+                <span className="text-xs font-bold text-dark-surface">{product.rating || 5.0}</span>
+                <span className="text-xs text-secondary-bronze/50">({dbReviews.length || product.reviewsCount || 0} reviews)</span>
               </div>
-            </div>
 
-            <div className="text-3xl font-bold text-dark-surface bg-white/50 border border-primary-gold/5 rounded-2xl p-4 inline-block">
-              {formatCurrency(product.price)}
+              <h1 className={`${typography.h1} text-dark-surface font-semibold mb-3`}>{product.name}</h1>
+              <div className="text-2xl font-bold text-dark-surface font-heading">
+                {formatCurrency(product.price)}
+              </div>
             </div>
 
             <p className={`${typography.body} text-secondary-bronze/80 leading-relaxed`}>
               {product.description}
             </p>
 
-            {/* In-Stock Indicator */}
-            <div className="flex items-center space-x-2 text-xs font-semibold">
-              <span className="text-secondary-bronze/65">Availability:</span>
-              {product.stock > 0 ? (
-                <span className="text-success-green flex items-center">
-                  <CheckCircle2 className="w-4 h-4 mr-1 fill-success-green/10" />
-                  In Stock ({product.stock} units)
-                </span>
-              ) : (
-                <span className="text-error-red">Out of Stock</span>
-              )}
+            {/* Stock status indicator */}
+            <div className="flex items-center space-x-2">
+              <span className={`w-2 h-2 rounded-full ${(product.stock || 0) > 0 ? "bg-success-green" : "bg-error-red"}`} />
+              <span className="text-xs font-semibold text-secondary-bronze">
+                {(product.stock || 0) > 0 ? `In Stock (${product.stock} available)` : "Currently Out of Stock"}
+              </span>
             </div>
 
-            {/* Actions Panel */}
-            {product.stock > 0 && (
-              <div className="pt-6 border-t border-primary-gold/10 flex flex-col sm:flex-row gap-4 items-center">
-                {/* Quantity Incrementor */}
-                <div className="flex items-center border border-primary-gold/15 bg-white rounded-full px-2 py-1 shrink-0">
+            {/* Actions */}
+            <div className="space-y-4 pt-4 border-t border-primary-gold/10">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center border border-primary-gold/20 rounded-xl bg-white overflow-hidden">
                   <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="p-2 text-secondary-bronze hover:text-primary-gold text-lg font-bold"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="px-3.5 py-2 text-secondary-bronze hover:bg-primary-gold/10 transition-colors"
                   >
                     -
                   </button>
-                  <span className="w-10 text-center text-sm font-bold text-dark-surface">
-                    {quantity}
-                  </span>
+                  <span className="px-4 py-2 font-bold text-xs text-dark-surface">{quantity}</span>
                   <button
-                    onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                    className="p-2 text-secondary-bronze hover:text-primary-gold text-lg font-bold"
+                    onClick={() => setQuantity(Math.min(product.stock || 50, quantity + 1))}
+                    className="px-3.5 py-2 text-secondary-bronze hover:bg-primary-gold/10 transition-colors"
                   >
                     +
                   </button>
                 </div>
 
-                {/* Add to Cart */}
                 <button
                   onClick={() => addToCart(product, quantity)}
-                  className={`${buttons.primary} w-full sm:w-auto py-3 px-8 text-sm flex items-center justify-center space-x-2`}
+                  disabled={product.stock === 0}
+                  className={`${buttons.primary} flex-grow py-3 px-6 text-sm flex items-center justify-center space-x-2`}
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  <span>Add to Cart</span>
+                  <span>{product.stock === 0 ? "Out of Stock" : "Add to Sacred Cart"}</span>
                 </button>
 
-                {/* Wishlist Button */}
                 <button
                   onClick={() => toggleWishlist(product.id)}
-                  className={`${buttons.secondary} p-3 rounded-full shrink-0 border-primary-gold/15 text-secondary-bronze hover:text-error-red`}
+                  className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                    isWishlisted
+                      ? "border-error-red bg-error-red/10 text-error-red"
+                      : "border-primary-gold/20 hover:border-primary-gold/40 text-secondary-bronze bg-white"
+                  }`}
+                  title="Wishlist"
                 >
-                  <Heart className={`w-4 h-4 ${isWishlisted ? "fill-error-red text-error-red border-none" : ""}`} />
+                  <Heart className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} />
                 </button>
               </div>
-            )}
+            </div>
 
-            {/* Safe Shop Badges */}
-            <div className="bg-white/40 border border-primary-gold/5 rounded-2xl p-4 flex justify-around text-center text-[10px] font-semibold text-secondary-bronze/70">
-              <div className="flex flex-col items-center">
-                <ShieldCheck className="w-5 h-5 text-primary-gold mb-1" />
-                <span>100% Authentic</span>
+            {/* Quality Assurance Guarantees */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary-gold/10">
+              <div className="flex items-center space-x-3 text-xs text-secondary-bronze">
+                <ShieldCheck className="w-5 h-5 text-primary-gold shrink-0" />
+                <span>100% Authentic & Blessed Pooja Items</span>
               </div>
-              <div className="flex flex-col items-center">
-                <Star className="w-5 h-5 text-primary-gold mb-1" />
-                <span>Altar Offered</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <CheckCircle2 className="w-5 h-5 text-primary-gold mb-1" />
-                <span>Secure Payments</span>
+              <div className="flex items-center space-x-3 text-xs text-secondary-bronze">
+                <CheckCircle2 className="w-5 h-5 text-primary-gold shrink-0" />
+                <span>Secure Courier Packing</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tab System: Specs & Reviews */}
-        <div className="bg-white border border-primary-gold/10 rounded-3xl p-6 md:p-8 mb-16 shadow-sm">
+        {/* Product Information Tabs */}
+        <div className="bg-white border border-primary-gold/10 rounded-3xl p-8 shadow-sm mb-16">
           <div className="flex border-b border-primary-gold/10 pb-4 mb-6 gap-6">
             <button
               onClick={() => setActiveTab("specs")}
@@ -254,60 +292,120 @@ export default function ProductDetailPage({ params }: PageProps) {
                   : "border-transparent text-secondary-bronze/60 hover:text-secondary-bronze"
               }`}
             >
-              Devotee Reviews ({productReviews.length})
+              Devotee Reviews ({dbReviews.length})
             </button>
           </div>
 
           {/* Specs Content */}
           {activeTab === "specs" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(product.specs).map(([key, val]) => (
-                <div key={key} className="flex justify-between p-3 border-b border-primary-gold/5 text-sm">
-                  <span className="text-secondary-bronze/60 font-semibold">{key}</span>
-                  <span className="text-dark-surface font-bold">{val}</span>
-                </div>
-              ))}
+              {product.specs &&
+                Object.entries(product.specs).map(([key, val]) => (
+                  <div key={key} className="flex justify-between p-3 border-b border-primary-gold/5 text-sm">
+                    <span className="text-secondary-bronze/60 font-semibold">{key}</span>
+                    <span className="text-dark-surface font-bold">{val}</span>
+                  </div>
+                ))}
             </div>
           )}
 
           {/* Reviews Content */}
           {activeTab === "reviews" && (
-            <div className="space-y-6">
-              {productReviews.length === 0 ? (
-                <div className="text-center py-6 text-secondary-bronze/60 text-xs">
-                  No reviews submitted yet for this product. Be the first to leave a review!
-                </div>
-              ) : (
-                productReviews.map((rev) => (
-                  <div key={rev.id} className="p-4 border-b border-primary-gold/5 last:border-none space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-bold text-dark-surface">{rev.customerName}</span>
-                        {rev.verifiedPurchase && (
-                          <span className="bg-success-green/10 text-success-green border border-success-green/20 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center">
-                            <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
-                            Verified Buyer
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-secondary-bronze/50">{rev.date}</span>
+            <div className="space-y-8">
+              {/* Add Review Form */}
+              <div className="bg-bg-warm/30 border border-primary-gold/10 rounded-2xl p-6 space-y-4">
+                <h4 className="text-sm font-bold text-dark-surface">Write a Devotional Review</h4>
+                <form onSubmit={handleSubmitReview} className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={inputs.label}>Your Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Ramesh Patel"
+                        value={reviewerName}
+                        onChange={(e) => setReviewerName(e.target.value)}
+                        className={inputs.text}
+                      />
                     </div>
-                    <div className="flex text-warning-amber">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-3.5 h-3.5 ${
-                            i < rev.rating ? "fill-current" : "text-neutral-gray"
-                          }`}
-                        />
-                      ))}
+                    <div>
+                      <label className={inputs.label}>Star Rating</label>
+                      <select
+                        value={reviewRating}
+                        onChange={(e) => setReviewRating(Number(e.target.value))}
+                        className={inputs.select}
+                      >
+                        <option value={5}>⭐⭐⭐⭐⭐ (5 Stars - Divine)</option>
+                        <option value={4}>⭐⭐⭐⭐ (4 Stars - Great)</option>
+                        <option value={3}>⭐⭐⭐ (3 Stars - Good)</option>
+                        <option value={2}>⭐⭐ (2 Stars - Fair)</option>
+                        <option value={1}>⭐ (1 Star - Poor)</option>
+                      </select>
                     </div>
-                    <p className="text-sm text-secondary-bronze/80 italic leading-relaxed">
-                      "{rev.comment}"
-                    </p>
                   </div>
-                ))
-              )}
+
+                  <div>
+                    <label className={inputs.label}>Your Experience / Feedback</label>
+                    <textarea
+                      placeholder="Share your spiritual experience with this blessed item..."
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      className={`${inputs.text} h-20 resize-none`}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingReview}
+                    className={`${buttons.primary} px-5 py-2 text-xs flex items-center space-x-1.5 cursor-pointer`}
+                  >
+                    {isSubmittingReview ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    <span>{isSubmittingReview ? "Submitting..." : "Post Review"}</span>
+                  </button>
+                </form>
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                {isLoadingReviews ? (
+                  <div className="py-6 text-center text-xs text-secondary-bronze">Loading reviews...</div>
+                ) : dbReviews.length === 0 ? (
+                  <div className="text-center py-6 text-secondary-bronze/60 text-xs">
+                    No reviews submitted yet for this product. Be the first to leave a review!
+                  </div>
+                ) : (
+                  dbReviews.map((rev) => (
+                    <div key={rev.id} className="p-4 border-b border-primary-gold/5 last:border-none space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-bold text-dark-surface">{rev.customerName}</span>
+                          {rev.verifiedPurchase && (
+                            <span className="bg-success-green/10 text-success-green border border-success-green/20 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center">
+                              <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                              Verified Buyer
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-secondary-bronze/50">
+                          {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : "Recent"}
+                        </span>
+                      </div>
+                      <div className="flex text-warning-amber">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3.5 h-3.5 ${
+                              i < rev.rating ? "fill-current" : "text-neutral-gray"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm text-secondary-bronze/80 italic leading-relaxed">
+                        "{rev.comment}"
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -333,7 +431,7 @@ export default function ProductDetailPage({ params }: PageProps) {
 
                     <Link href={`/shop/${p.slug}`} className="relative h-40 w-full overflow-hidden rounded-xl bg-primary-gold/5 mb-4 block">
                       <Image
-                        src={p.images[0]}
+                        src={p.images?.[0] || DEFAULT_PRODUCT_IMAGE}
                         alt={p.name}
                         fill
                         sizes="200px"
