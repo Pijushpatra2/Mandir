@@ -4,6 +4,7 @@
   --font-heading: var(--font-cormorant);
   --font-sans: var(--font-inter);
   --font-jakarta: var(--font-jakarta);
+  --font-poppins: var(--font-poppins);
   
   --color-primary-gold: #C59D5F;
   --color-secondary-bronze: #8B5E34;
@@ -15,6 +16,12 @@
   --color-warning-amber: #F59E0B;
   --color-error-red: #DC2626;
   --color-neutral-gray: #E5E3DF;
+}
+
+/* Enforce Poppins strictly for entire Canteen POS */
+.canteen-pos-root,
+.canteen-pos-root * {
+  font-family: var(--font-poppins), "Poppins", sans-serif !important;
 }
 
 @utility glass-card {

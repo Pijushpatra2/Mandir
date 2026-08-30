@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Cormorant_Garamond, Inter, Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import { AppProvider } from "@/lib/context";
 import { QueryProvider } from "@/lib/QueryProvider";
 import "./globals.css";
@@ -23,6 +23,12 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ["300", "400", "500", "600", "700", "800"],
 });
 
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Shree Kutch Satsang Swaminarayan Temple, Kampala - Enterprise ERP",
   description:
@@ -37,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <body
-        className={`${cormorantGaramond.variable} ${inter.variable} ${plusJakartaSans.variable} antialiased bg-[#FAF7F2] text-[#111111]`}
+        className={`${cormorantGaramond.variable} ${inter.variable} ${plusJakartaSans.variable} ${poppins.variable} antialiased bg-[#FAF7F2] text-[#111111]`}
       >
         {/* QueryProvider must wrap AppProvider so all contexts can use useQuery */}
         <QueryProvider>

@@ -1012,91 +1012,78 @@ export default function CanteenPOSPage() {
                 {filteredMenu.map((item) => {
                   const cartItem = cart.find(c => c.item.id === item.id);
                   const qty = cartItem ? cartItem.qty : 0;
+                  const isAvailable = item.available !== false;
 
                   return (
                     <div
                       key={item.id}
-                      className="group border border-gray-150 rounded-[24px] p-5 flex gap-5 bg-white shadow-sm hover:shadow-md transition-all relative select-none"
+                      onClick={() => {
+                        if (isAvailable) {
+                          handleAddToCart(item);
+                        }
+                      }}
+                      className={`group border rounded-[24px] p-4 sm:p-5 flex gap-4 bg-white transition-all relative select-none font-poppins ${
+                        isAvailable
+                          ? "cursor-pointer hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]"
+                          : "cursor-not-allowed opacity-60 bg-gray-50"
+                      } ${
+                        qty > 0
+                          ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/10 shadow-sm"
+                          : "border-gray-150 shadow-xs"
+                      }`}
                     >
-                      {/* Left Side: Photo & Price */}
-                      <div className="flex flex-col items-center shrink-0 w-28 sm:w-32">
-                        <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-gray-50 overflow-hidden relative border border-gray-100 flex items-center justify-center text-4xl">
+                      {/* Left Side: Photo */}
+                      <div className="flex flex-col items-center shrink-0 w-24 sm:w-28">
+                        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gray-50 overflow-hidden relative border border-gray-100 flex items-center justify-center text-3xl sm:text-4xl">
                           {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           ) : (
                             <span>🍛</span>
                           )}
-                          {!item.available && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[13px] font-extrabold uppercase rounded-2xl">
+                          {qty > 0 && (
+                            <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold text-xs shadow-md z-10">
+                              ✓ {qty}
+                            </span>
+                          )}
+                          {!isAvailable && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs font-bold uppercase rounded-2xl">
                               Out of stock
                             </div>
                           )}
                         </div>
-                        <span className="text-[16px] font-bold text-gray-800 mt-2.5 pl-1 w-full text-center">
-                          UGX {item.price}
-                        </span>
                       </div>
 
-                      {/* Right Side: Details & Action Controls */}
+                      {/* Right Side: Details */}
                       <div className="flex flex-col justify-between flex-grow text-left">
                         <div>
                           <div className="flex items-start justify-between gap-1.5">
-                            <h4 className="font-extrabold text-gray-800 text-[16px] sm:text-[17px] tracking-wide leading-tight group-hover:text-blue-600 transition-colors">
+                            <h4 className="font-bold text-gray-800 text-sm sm:text-base tracking-wide leading-tight group-hover:text-blue-600 transition-colors">
                               {item.name}
                             </h4>
                             <span className="shrink-0 mt-0.5">
                               {item.variety === "Spicy" ? (
-                                <CheckCircle2 className="w-4 h-4 text-red-500" />
+                                <span className="px-2 py-0.5 rounded-full bg-amber-50 text-warning-amber text-xs font-semibold border border-amber-200/60">
+                                  Spicy
+                                </span>
                               ) : (
-                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200/60">
+                                  {item.variety || "Regular"}
+                                </span>
                               )}
                             </span>
                           </div>
                           
-                          <p className="text-[13px] text-gray-400 mt-2 font-sans">
-                            07:00 am - 09:00 pm
-                          </p>
-                          <p className="text-[13px] text-gray-500 font-bold mt-1 font-sans">
-                            Available: {item.available ? 15 : 0}
+                          <p className="text-xs text-gray-400 mt-1.5 font-poppins">
+                            {item.category || "Canteen Menu"}
                           </p>
                         </div>
 
-                        {/* Direct Quantity & Add basket actions */}
-                        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 flex-wrap">
-                          {/* Qty Counter Pill */}
-                          <div className="flex items-center gap-3.5 bg-[#2B132C] text-white px-4 py-1.5 rounded-full text-[13px] font-bold">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (qty > 0) handleUpdateCartQty(item.id, -1);
-                              }}
-                              className="text-white hover:text-red-300 font-black cursor-pointer border-none bg-transparent p-0 text-[14px]"
-                            >
-                              -
-                            </button>
-                            <span className="w-4 text-center">{qty}</span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateCartQty(item.id, 1);
-                              }}
-                              className="text-white hover:text-blue-300 font-black cursor-pointer border-none bg-transparent p-0 text-[14px]"
-                            >
-                              +
-                            </button>
-                          </div>
-
-                          {/* Add to Cart capsule button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddToCart(item);
-                            }}
-                            className="rounded-full border border-[#C21807] text-[#C21807] font-bold text-[13px] px-4.5 py-1.5 flex items-center gap-2 hover:bg-red-50 transition-colors border-none cursor-pointer bg-white"
-                          >
-                            <span>Add to cart</span>
-                            <ShoppingCart className="w-3.5 h-3.5 text-[#C21807]" />
-                          </button>
+                        {/* Price Tag */}
+                        <div className="flex items-center justify-between pt-2">
+                          <span className="text-xs text-gray-400 font-medium">Price</span>
+                          <span className="text-sm sm:text-base font-bold text-emerald-600 font-mono">
+                            UGX {item.price.toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -2502,16 +2489,16 @@ export default function CanteenPOSPage() {
             </nav>
           </div>
 
-          <div className="p-4 border-t border-gray-50 space-y-2">
+          <div className="p-4 border-t border-gray-50 space-y-2.5">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-2 bg-red-50 hover:bg-red-100 text-red-650 text-[10px] font-bold uppercase rounded-xl transition-all border border-red-100 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-red-200 hover:shadow-lg transition-all hover:scale-102 cursor-pointer active:scale-98"
             >
-              <LogOut className="w-3.5 h-3.5" /> Log Out
+              <LogOut className="w-4 h-4 text-white" /> Logout
             </button>
             <a
               href="/dashboard/canteen"
-              className="w-full flex items-center justify-center py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded-xl transition-all border border-gray-100"
+              className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
             >
               ↩️ Exit to ERP Admin
             </a>
@@ -2526,7 +2513,7 @@ export default function CanteenPOSPage() {
         <header className="h-16 bg-white border-b border-gray-100 px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
           
           <div className="flex items-center gap-4">
-            <span className="text-[11px] font-bold text-gray-400 font-mono">
+            <span className="text-xs font-bold text-slate-500 font-poppins">
               🕒 {dateTime}
             </span>
           </div>
@@ -2534,17 +2521,17 @@ export default function CanteenPOSPage() {
           {/* Quick Active Staff details */}
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Terminal User</span>
-              <span className="text-xs font-bold text-gray-800">{activeStaff.name} ({activeStaff.assignedRole.toUpperCase()})</span>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Terminal User</span>
+              <span className="text-xs font-bold text-slate-800">{activeStaff.name} ({activeStaff.assignedRole.toUpperCase()})</span>
             </div>
 
             {/* Logout button for KDS / Kitchen which doesn't have sidebar */}
             {userRole === "kitchen" && (
               <button
                 onClick={handleLogout}
-                className="p-1 px-3 bg-red-50 hover:bg-red-100 border border-red-150 rounded-xl text-red-650 text-[10px] font-bold uppercase cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl text-red-600 font-bold text-xs uppercase cursor-pointer flex items-center gap-1.5"
               >
-                <LogOut className="w-3.5 h-3.5" /> Sign Out
+                <LogOut className="w-3.5 h-3.5" /> Logout
               </button>
             )}
 

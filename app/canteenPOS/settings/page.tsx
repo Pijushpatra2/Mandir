@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Save } from "lucide-react";
+import { Save, LogOut } from "lucide-react";
 import { useCanteen } from "../context/CanteenContext";
 
 export default function SettingsPage() {
@@ -145,9 +145,11 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={logout}
-            className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-black text-xs rounded-xl transition-all border border-red-200 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-red-200 hover:shadow-lg transition-all hover:scale-102 cursor-pointer active:scale-98"
+            title="Logout from Terminal"
           >
-            🚪 Sign Out Terminal
+            <LogOut className="w-4 h-4 text-white" />
+            <span>Logout</span>
           </button>
         </div>
 

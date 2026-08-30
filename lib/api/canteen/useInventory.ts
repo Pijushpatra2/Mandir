@@ -3,14 +3,17 @@
 /**
  * useInventory.ts
  *
- * Strategy: CACHED 5-min — fetched when the inventory page opens.
- * Mutations invalidate inventory and low-stock.
+ * Real-time CRUD and stock management hooks for Canteen Inventory & Stock Ledger.
  *
  * Hooks:
- *   useInventory()          → GET /canteen/inventory (CACHED 5 min)
- *   useLowStock()           → GET /canteen/inventory/low-stock (CACHED 5 min)
- *   useAdjustInventory()    → POST /canteen/inventory/:id/adjust
- *   useLogWaste()           → POST /canteen/inventory/waste
+ *   useInventory()              → GET /canteen/inventory
+ *   useLowStock()               → GET /canteen/inventory/low-stock
+ *   useCreateInventoryItem()    → POST /canteen/inventory
+ *   useUpdateInventoryItem()    → PATCH /canteen/inventory/:id
+ *   useDeleteInventoryItem()    → DELETE /canteen/inventory/:id
+ *   useAddInventoryToMenu()     → POST /canteen/inventory/:id/add-to-menu
+ *   useAdjustInventory()        → POST /canteen/inventory/:id/adjust
+ *   useLogWaste()               → POST /canteen/inventory/waste
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,17 +25,11 @@ import type {
   LowStockItem,
 } from '@/lib/api/canteen.types';
 
-type InventoryTxType = 'RESTOCK' | 'USAGE' | 'WASTE' | 'ADJUSTMENT';
-
+export type { ApiResponse, CanteenInventoryItem, LowStockItem };
+export type InventoryTxType = 'RESTOCK' | 'USAGE' | 'WASTE' | 'ADJUSTMENT';
 
 // ─── Fetch Inventory ──────────────────────────────────────────────────────────
 
-/**
- * useInventory
- *
- * @example
- * const { data: items = [], isLoading } = useInventory();
- */
 export function useInventory() {
   return useQuery({
     queryKey: QUERY_KEYS.inventory(),
@@ -43,24 +40,15 @@ export function useInventory() {
       );
       return data.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
 }
 
-// ─── Fetch Low Stock ──────────────────────────────────────────────────────────
+// ─── Fetch Low Stock Alerts ───────────────────────────────────────────────────
 
-/**
- * useLowStock
- *
- * Fetches items below their minimum stock threshold.
- * Typically shown as an alert badge on the inventory page.
- *
- * @example
- * const { data: alerts = [] } = useLowStock();
- */
 export function useLowStock() {
   return useQuery({
     queryKey: QUERY_KEYS.lowStock(),
@@ -71,14 +59,128 @@ export function useLowStock() {
       );
       return data.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
 }
 
-// ─── Adjust Inventory ─────────────────────────────────────────────────────────
+// ─── Create Inventory Item ────────────────────────────────────────────────────
+
+export interface CreateInventoryPayload {
+  name: string;
+  category: 'Grains' | 'Dairy' | 'Spices' | 'Beverages' | 'Vegetables' | 'Other' | 'Prasad' | 'Snacks';
+  stock: number;
+  unit: string;
+  minStock: number;
+  supplierId?: string | null;
+  unitCost?: number | null;
+  addToMenu?: boolean;
+  menuPrice?: number;
+  menuCategory?: string;
+}
+
+export function useCreateInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: CreateInventoryPayload) => {
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<{ id: string }>>(
+        '/canteen/inventory',
+        payload,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.inventory() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lowStock() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.menu() });
+    },
+  });
+}
+
+// ─── Update Inventory Item ────────────────────────────────────────────────────
+
+export interface UpdateInventoryPayload {
+  id: string;
+  updates: {
+    name?: string;
+    category?: 'Grains' | 'Dairy' | 'Spices' | 'Beverages' | 'Vegetables' | 'Other' | 'Prasad' | 'Snacks';
+    stock?: number;
+    unit?: string;
+    minStock?: number;
+    supplierId?: string | null;
+    unitCost?: number | null;
+  };
+}
+
+export function useUpdateInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: UpdateInventoryPayload) => {
+      const client = getActiveClient();
+      const { data } = await client.patch<ApiResponse<null>>(
+        `/canteen/inventory/${id}`,
+        updates,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.inventory() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lowStock() });
+    },
+  });
+}
+
+// ─── Delete Inventory Item ────────────────────────────────────────────────────
+
+export function useDeleteInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const client = getActiveClient();
+      const { data } = await client.delete<ApiResponse<null>>(
+        `/canteen/inventory/${id}`,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.inventory() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lowStock() });
+    },
+  });
+}
+
+// ─── Add Inventory Item to Canteen Menu ───────────────────────────────────────
+
+export interface AddToMenuPayload {
+  inventoryId: string;
+  price: number;
+  category?: string;
+  variety?: 'Regular' | 'Jain' | 'Spicy' | 'Sweet';
+  description?: string;
+  imageUrl?: string;
+}
+
+export function useAddInventoryToMenu() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ inventoryId, ...payload }: AddToMenuPayload) => {
+      const client = getActiveClient();
+      const { data } = await client.post<ApiResponse<{ menuItemId: string }>>(
+        `/canteen/inventory/${inventoryId}/add-to-menu`,
+        payload,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.menu() });
+    },
+  });
+}
+
+// ─── Adjust Stock (RESTOCK, USAGE, ADJUSTMENT) ─────────────────────────────────
 
 interface AdjustInventoryPayload {
   id: string;
@@ -87,16 +189,6 @@ interface AdjustInventoryPayload {
   notes?: string;
 }
 
-/**
- * useAdjustInventory
- *
- * Strategy: ON-ACT — fires on kitchen/manager stock adjustment.
- * After success: invalidates inventory + low-stock.
- *
- * @example
- * const { mutate: adjust } = useAdjustInventory();
- * adjust({ id: itemId, quantity: 10, tx_type: 'RESTOCK' });
- */
 export function useAdjustInventory() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -104,7 +196,11 @@ export function useAdjustInventory() {
       const client = getActiveClient();
       const { data } = await client.post<ApiResponse<{ adjusted: boolean }>>(
         `/canteen/inventory/${id}/adjust`,
-        body,
+        {
+          type: body.tx_type,
+          quantity: body.quantity,
+          note: body.notes,
+        },
       );
       return data.data;
     },
@@ -119,18 +215,14 @@ export function useAdjustInventory() {
 // ─── Log Waste ────────────────────────────────────────────────────────────────
 
 interface WasteLogPayload {
-  inventory_id: string;
+  inventory_id?: string | null;
+  itemName: string;
   quantity: number;
-  reason?: string;
-  estimated_cost?: number;
+  unit: string;
+  estimated_cost: number;
+  reason: string;
 }
 
-/**
- * useLogWaste
- *
- * Strategy: ON-ACT — fires when kitchen logs a waste entry.
- * After success: invalidates inventory + low-stock.
- */
 export function useLogWaste() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -138,7 +230,14 @@ export function useLogWaste() {
       const client = getActiveClient();
       const { data } = await client.post<ApiResponse<{ logged: boolean }>>(
         '/canteen/inventory/waste',
-        payload,
+        {
+          inventoryId: payload.inventory_id || null,
+          itemName: payload.itemName,
+          quantity: payload.quantity,
+          unit: payload.unit,
+          estimatedCost: payload.estimated_cost,
+          reason: payload.reason,
+        },
       );
       return data.data;
     },

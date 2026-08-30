@@ -3,14 +3,7 @@
 /**
  * useReports.ts
  *
- * Strategy: CACHED 10-min — fetched when reports dashboard opens.
- * Each date range produces a separate cache entry so clicking between
- * different ranges never re-fetches unnecessarily.
- *
- * Hooks:
- *   useTodayReport()        → GET /canteen/reports/today     (10 min)
- *   useTopCustomers()       → GET /canteen/reports/top-customers (10 min)
- *   useReportsSummary()     → GET /canteen/reports/summary?start=&end= (10 min, per range)
+ * Real-time hooks for Canteen Analytics and Sales Reports.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -23,20 +16,80 @@ import type {
   ReportSummary,
 } from '@/lib/api/canteen.types';
 
-const REPORTS_STALE = 10 * 60 * 1000; // 10 minutes
-const REPORTS_GC    = 30 * 60 * 1000; // 30 minutes in memory
+export interface CanteenSalesReport {
+  summary: {
+    totalOrders: number;
+    paidOrders: number;
+    cancelledOrders: number;
+    grossRevenue: number;
+    subtotal: number;
+    discount: number;
+    tax: number;
+    serviceCharge: number;
+    averageOrderValue: number;
+    totalItemsSold: number;
+    uniqueCustomers: number;
+  };
+  paymentMethods: {
+    CASH: { count: number; revenue: number };
+    UPI: { count: number; revenue: number };
+    CARD: { count: number; revenue: number };
+  };
+  itemSales: Array<{
+    name: string;
+    quantity: number;
+    revenue: number;
+    unitPrice: number;
+  }>;
+  dailyTrend: Array<{
+    date: string;
+    ordersCount: number;
+    revenue: number;
+  }>;
+  orders: Array<{
+    id: string;
+    tokenNumber: string;
+    customerName: string;
+    customerPhone: string;
+    tableName: string;
+    subtotal: number;
+    discount: number;
+    tax: number;
+    total: number;
+    paymentMethod: string;
+    paymentStatus: string;
+    orderStatus: string;
+    orderedAt: string;
+    date: string;
+    time: string;
+  }>;
+}
 
-// ─── Today's Summary ──────────────────────────────────────────────────────────
+export function useCanteenSalesReport(startDate?: string, endDate?: string) {
+  return useQuery({
+    queryKey: ['canteen', 'sales-report', startDate || 'all', endDate || 'all'],
+    queryFn: async (): Promise<CanteenSalesReport> => {
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<CanteenSalesReport>>(
+        '/canteen/reports/summary',
+        {
+          params: {
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
+          },
+        },
+      );
+      return data.data;
+    },
+    staleTime: 2 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+}
 
-/**
- * useTodayReport
- *
- * CACHED 10-min. Called when the reports dashboard opens.
- * Tab switching does NOT trigger a refetch.
- *
- * @example
- * const { data: summary, isLoading } = useTodayReport();
- */
+// ─── Legacy / Compatibility Hooks ─────────────────────────────────────────────
+
 export function useTodayReport() {
   return useQuery({
     queryKey: QUERY_KEYS.reportsToday(),
@@ -47,23 +100,13 @@ export function useTodayReport() {
       );
       return data.data;
     },
-    staleTime: REPORTS_STALE,
-    gcTime: REPORTS_GC,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
 }
 
-// ─── Top Customers ────────────────────────────────────────────────────────────
-
-/**
- * useTopCustomers
- *
- * CACHED 10-min. Each `limit` value is a separate cache entry.
- *
- * @example
- * const { data: topCustomers = [] } = useTopCustomers({ limit: 10 });
- */
 export function useTopCustomers(options?: { limit?: number }) {
   const limit = options?.limit ?? 10;
   return useQuery({
@@ -76,27 +119,13 @@ export function useTopCustomers(options?: { limit?: number }) {
       );
       return data.data;
     },
-    staleTime: REPORTS_STALE,
-    gcTime: REPORTS_GC,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
 }
 
-// ─── Date Range Summary ───────────────────────────────────────────────────────
-
-/**
- * useReportsSummary
- *
- * CACHED 10-min per date range.
- * Each unique (start, end) pair is a separate cache entry — switching between
- * "This Week" and "Last Month" never refetches the cached range.
- *
- * Only fires when both start and end are provided.
- *
- * @example
- * const { data: summary = [] } = useReportsSummary({ start: '2026-07-01', end: '2026-07-05' });
- */
 export function useReportsSummary(range?: { start?: string; end?: string }) {
   const start = range?.start ?? '';
   const end   = range?.end ?? '';
@@ -107,16 +136,13 @@ export function useReportsSummary(range?: { start?: string; end?: string }) {
       const client = getActiveClient();
       const { data } = await client.get<ApiResponse<ReportSummary[]>>(
         '/canteen/reports/summary',
-        { params: { start, end } },
+        { params: { startDate: start, endDate: end } },
       );
       return data.data;
     },
-
-    // Only fetch when a complete date range is selected
     enabled: !!start && !!end,
-
-    staleTime: REPORTS_STALE,
-    gcTime: REPORTS_GC,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });

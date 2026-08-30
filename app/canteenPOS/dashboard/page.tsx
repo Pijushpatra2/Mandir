@@ -48,7 +48,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <h4 className="text-2xl font-bold text-gray-800 mt-2">UGX {getTodaySales().toLocaleString("en-UG")}</h4>
-          <p className="text-[10px] text-green-500 mt-1 font-semibold">12% from yesterday</p>
+          <p className="text-xs text-green-500 mt-1 font-semibold">12% from yesterday</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
@@ -59,7 +59,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <h4 className="text-2xl font-bold text-gray-800 mt-2">{getTodayOrdersCount().toLocaleString("en-UG")} Tickets</h4>
-          <p className="text-[10px] text-gray-500 mt-1">Cashier speed avg: 2.1m</p>
+          <p className="text-xs text-gray-500 mt-1">Cashier speed avg: 2.1m</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
@@ -72,7 +72,7 @@ export default function DashboardPage() {
           <h4 className="text-2xl font-bold text-gray-800 mt-2">
             {getActiveTablesCount()} / {tables.length}
           </h4>
-          <p className="text-[10px] text-red-500 mt-1 font-semibold">Peak load: 85%</p>
+          <p className="text-xs text-red-500 mt-1 font-semibold">Peak load: 85%</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
@@ -83,7 +83,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <h4 className="text-2xl font-bold text-gray-800 mt-2">{getUpcomingBookingsCount()} Booked</h4>
-          <p className="text-[10px] text-amber-500 mt-1 font-semibold">
+          <p className="text-xs text-amber-500 mt-1 font-semibold">
             {bookings.filter((b) => b.status === "CONFIRMED").length} total upcoming
           </p>
         </div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <h4 className="text-2xl font-bold text-gray-800 mt-2">UGX {getAverageOrderValue().toLocaleString("en-UG")}</h4>
-          <p className="text-[10px] text-gray-500 mt-1">Annadan sponsors active</p>
+          <p className="text-xs text-gray-500 mt-1">Annadan sponsors active</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md border-l-4 border-l-red-500">
@@ -107,7 +107,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <h4 className="text-2xl font-bold text-gray-800 mt-2">{getInventoryAlertsCount()} Low Items</h4>
-          <p className="text-[10px] text-red-500 mt-1 font-semibold">Immediate reorder needed</p>
+          <p className="text-xs text-red-500 mt-1 font-semibold">Immediate reorder needed</p>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export default function DashboardPage() {
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Live Table Floor Layout</h3>
             <p className="text-[11px] text-gray-400">Real-time table status updates. Click to configure status.</p>
           </div>
-          <div className="flex gap-3 text-[10px] font-bold">
+          <div className="flex gap-3 text-xs font-bold">
             <span className="flex items-center gap-1.5 font-sans">
               <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span> Available
             </span>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
                     <h4 className="font-bold text-gray-800 text-base">{table.name}</h4>
                     <span className="text-xs text-gray-400 font-medium">{table.capacity} Seats</span>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${badgeColor}`}>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${badgeColor}`}>
                     {table.status}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                <div className="flex gap-2 justify-end border-t border-gray-55 pt-2 text-[10px] font-bold">
+                <div className="flex gap-2 justify-end border-t border-gray-55 pt-2 text-xs font-bold">
                   {table.status !== "AVAILABLE" && (
                     <button
                       onClick={() => handleUpdateTableStatus(table.id, "AVAILABLE")}
@@ -215,11 +215,11 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Today's Bookings</h3>
-              <p className="text-[10px] text-gray-400">Total {todayBookings.length} bookings scheduled today</p>
+              <p className="text-xs text-gray-400">Total {todayBookings.length} bookings scheduled today</p>
             </div>
             <button
               onClick={() => setShowBookingModal(true)}
-              className="p-1 bg-amber-50 text-amber-700 border border-amber-200/50 hover:bg-amber-100 rounded-lg text-[10px] font-bold px-2 py-1 transition-all flex items-center gap-1 cursor-pointer"
+              className="p-1 bg-amber-50 text-amber-700 border border-amber-200/50 hover:bg-amber-100 rounded-lg text-xs font-bold px-2 py-1 transition-all flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" /> Book Table
             </button>
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                     <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-2.5">
                         <p className="font-bold text-gray-800">{b.customerName}</p>
-                        <span className="text-[10px] text-gray-400">{b.customerPhone}</span>
+                        <span className="text-xs text-gray-400">{b.customerPhone}</span>
                       </td>
                       <td className="py-2.5">
                         <p className="font-semibold text-gray-700">{b.tableName}</p>

@@ -35,7 +35,8 @@ import {
   Printer,
   ArrowRight,
   Clock,
-  Trash2
+  Trash2,
+  LogOut
 } from "lucide-react";
 import { CanteenProvider, useCanteen, POSRole, POSTab } from "./context/CanteenContext";
 import { SeatingTable, FoodItem } from "@/data/canteen";
@@ -223,7 +224,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] font-sans flex text-gray-800">
+    <div className="min-h-screen bg-[#FAF7F2] font-poppins canteen-pos-root flex text-slate-800">
       {/* 1. SIDEBAR NAVIGATION */}
       <aside className="w-64 bg-white border-r border-gray-100 shrink-0 flex flex-col justify-between hidden lg:flex">
         <div>
@@ -231,8 +232,8 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
           <div className="h-16 px-6 border-b border-gray-50 flex items-center gap-2">
             <span className="text-2xl">🕉️</span>
             <div className="text-left">
-              <h1 className="text-xs font-bold uppercase tracking-wider text-gray-800 font-sans">Swami POS</h1>
-              <p className="text-[9px] text-gray-400 font-semibold">Canteen SaaS Desk</p>
+              <h1 className="text-sm font-bold uppercase tracking-wider text-slate-900 font-poppins">Swami POS</h1>
+              <p className="text-xs text-slate-400 font-semibold">Canteen SaaS Desk</p>
             </div>
           </div>
 
@@ -248,10 +249,10 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={link.id}
                   href={link.path}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
                     isActive
                       ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
@@ -261,17 +262,17 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
                   {/* Add visual badge counts */}
                   {link.id === "kitchen" && (
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600" : "bg-blue-50 text-blue-600"}`}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600" : "bg-blue-50 text-blue-600"}`}>
                       {orders.filter(o => o.status === "NEW" || o.status === "PREPARING").length}
                     </span>
                   )}
                   {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-red-600" : "bg-red-50 text-red-600"}`}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-red-600" : "bg-red-50 text-red-600"}`}>
                       {getInventoryAlertsCount()}
                     </span>
                   )}
                   {link.id === "tables" && (
-                    <span className="text-[9px] text-gray-400 font-normal lowercase">
+                    <span className="text-xs text-slate-400 font-normal lowercase">
                       {getActiveTablesCount()} active
                     </span>
                   )}
@@ -281,19 +282,21 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
 
-        {/* Back Link to admin dashboard */}
-        <div className="p-4 border-t border-gray-50 space-y-2">
+        {/* Back Link to admin dashboard & Highlighted Logout */}
+        <div className="p-4 border-t border-gray-100 space-y-2.5">
           <a
             href="/dashboard/canteen"
-            className="w-full flex items-center justify-center py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded-xl transition-all border border-gray-100"
+            className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
           >
             ↩️ Exit to ERP Admin
           </a>
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center py-2 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold uppercase rounded-xl transition-all border border-red-100 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-red-200 hover:shadow-lg transition-all hover:scale-102 cursor-pointer active:scale-98"
+            title="Logout from Terminal"
           >
-            🚪 Sign Out Terminal
+            <LogOut className="w-4 h-4 text-white" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -304,7 +307,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
         <header className="h-16 bg-white border-b border-gray-100 px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
           {/* Left profile name & clock */}
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline-block text-[11px] font-bold text-gray-400 font-mono">
+            <span className="hidden sm:inline-block text-xs font-bold text-slate-500 font-poppins">
               🕒 {dateTime}
             </span>
           </div>
@@ -333,9 +336,9 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4 relative">
             {/* Static role display of logged in member */}
             {currentRole && (
-              <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-xl">
-                <span className="text-[9px] font-bold uppercase text-gray-400">Terminal Role:</span>
-                <span className="text-[10px] font-bold uppercase text-gray-700">
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                <span className="text-xs font-semibold uppercase text-slate-400">Role:</span>
+                <span className="text-xs font-bold uppercase text-slate-800">
                   {currentRole === "manager" && "Canteen Manager"}
                   {currentRole === "receptionist" && "Receptionist"}
                   {currentRole === "cashier" && "Cashier Desk"}
@@ -348,11 +351,11 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-1.5 border border-gray-100 hover:bg-gray-50 rounded-xl transition-all relative cursor-pointer"
+                className="p-2 border border-slate-200 hover:bg-slate-50 rounded-xl transition-all relative cursor-pointer"
               >
-                <Bell className="w-4 h-4 text-gray-500" />
+                <Bell className="w-4 h-4 text-slate-600" />
                 {notifications.filter(n => !n.read).length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white font-bold text-[8px] flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white font-bold text-xs flex items-center justify-center">
                     {notifications.filter(n => !n.read).length}
                   </span>
                 )}
@@ -367,24 +370,24 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-72 rounded-2xl bg-white border border-gray-100 shadow-xl z-30 overflow-hidden text-left"
+                      className="absolute right-0 mt-2 w-80 rounded-2xl bg-white border border-slate-200 shadow-xl z-30 overflow-hidden text-left"
                     >
-                      <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center text-[10px] font-bold uppercase text-gray-500">
+                      <div className="p-3.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center text-xs font-bold uppercase text-slate-600">
                         <span>Terminal Alerts</span>
                         <button
                           onClick={() => {
                             setNotifications(notifications.map(n => ({ ...n, read: true })));
                           }}
-                          className="text-blue-600 hover:underline cursor-pointer"
+                          className="text-blue-600 hover:underline cursor-pointer font-bold text-xs"
                         >
                           Clear all
                         </button>
                       </div>
-                      <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
+                      <div className="max-h-64 overflow-y-auto divide-y divide-slate-100">
                         {notifications.map((n) => (
-                          <div key={n.id} className={`p-3 text-[11px] font-sans ${n.read ? "bg-white" : "bg-blue-50/20"}`}>
-                            <p className="font-bold text-gray-800">{n.title}</p>
-                            <p className="text-gray-500 text-[10px] mt-0.5">{n.message}</p>
+                          <div key={n.id} className={`p-3 text-xs ${n.read ? "bg-white" : "bg-blue-50/30"}`}>
+                            <p className="font-bold text-slate-900">{n.title}</p>
+                            <p className="text-slate-500 text-xs mt-0.5">{n.message}</p>
                           </div>
                         ))}
                       </div>
@@ -393,6 +396,16 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Quick Logout Button */}
+            <button
+              onClick={logout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold text-xs rounded-xl border border-red-200 shadow-xs transition-all cursor-pointer active:scale-98"
+              title="Logout from POS Terminal"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Logout</span>
+            </button>
 
             {/* Profile avatar representation */}
             {currentRole && (
@@ -740,7 +753,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
             <form onSubmit={handleCreateBooking} className="space-y-4 font-sans text-xs text-gray-600">
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Customer / Devotee Name *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Customer / Devotee Name *</label>
                 <input
                   type="text"
                   required
@@ -751,7 +764,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Contact Phone *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Contact Phone *</label>
                 <input
                   type="tel"
                   required
@@ -763,7 +776,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Party Size *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Party Size *</label>
                   <input
                     type="number"
                     required
@@ -774,7 +787,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Allocate Table *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Allocate Table *</label>
                   <select
                     name="tableId"
                     required
@@ -787,7 +800,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Booking Date *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Booking Date *</label>
                   <input
                     type="date"
                     required
@@ -797,7 +810,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Booking Time *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Booking Time *</label>
                   <select
                     name="time"
                     required
@@ -865,7 +878,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               className="space-y-4 font-sans text-xs text-gray-600"
             >
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Table Label / Name *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Table Label / Name *</label>
                 <input
                   type="text"
                   required
@@ -876,7 +889,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Seating Capacity *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Seating Capacity *</label>
                 <input
                   type="number"
                   required
@@ -940,7 +953,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               className="space-y-4 font-sans text-xs text-gray-600"
             >
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Food Item Name *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Food Item Name *</label>
                 <input
                   type="text"
                   required
@@ -951,7 +964,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Price (INR) *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Price (INR) *</label>
                 <input
                   type="number"
                   required
@@ -964,7 +977,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Category *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Category *</label>
                   <select
                     name="foodCategory"
                     required
@@ -978,7 +991,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Variety *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Variety *</label>
                   <select
                     name="foodVariety"
                     required
@@ -993,7 +1006,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Sales Channel *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Sales Channel *</label>
                 <select
                   value={newFoodChannel}
                   onChange={(e: any) => setNewFoodChannel(e.target.value)}
@@ -1006,7 +1019,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Food Item Image</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Food Item Image</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="file"
@@ -1059,7 +1072,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               className="space-y-4 font-sans text-xs text-gray-600"
             >
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Category Name *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Category Name *</label>
                 <input
                   type="text"
                   required
@@ -1133,7 +1146,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               className="space-y-4 font-sans text-xs text-gray-600"
             >
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Item / Ingredient Name *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Item / Ingredient Name *</label>
                 <select
                   name="wasteName"
                   required
@@ -1145,7 +1158,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Wasted Quantity *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Wasted Quantity *</label>
                   <input
                     type="number"
                     step="0.1"
@@ -1156,7 +1169,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Estimated Cost Loss *</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Estimated Cost Loss *</label>
                   <input
                     type="number"
                     required
@@ -1168,7 +1181,7 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Reason for Waste *</label>
+                <label className="text-xs font-bold uppercase text-slate-500 block mb-1">Reason for Waste *</label>
                 <input
                   type="text"
                   required

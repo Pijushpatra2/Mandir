@@ -205,9 +205,9 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <div className="flex-grow overflow-x-auto">
-        <table className="w-full text-xs text-left font-sans">
+        <table className="w-full text-xs text-left font-poppins">
           <thead>
-            <tr className="border-b border-gray-100 text-gray-400 uppercase font-bold text-[9px] pb-3">
+            <tr className="border-b border-gray-100 text-slate-400 uppercase font-bold text-xs pb-3">
               {isAuthorizedToDelete && (
                 <th className="pb-3 pl-3 w-8">
                   <input
@@ -283,36 +283,36 @@ export default function OrdersPage() {
                       </td>
                     )}
                     <td className="py-3 font-bold text-gray-800 font-mono pl-2">{o.tokenNumber}</td>
-                    <td className="py-3 text-gray-400 text-[10px]">
+                    <td className="py-3 text-slate-500 text-xs font-mono">
                       {o.date} • {o.timestamp}
                     </td>
                     <td className="py-3">
                       <p className="font-semibold text-gray-700">{o.customerName}</p>
-                      <span className="text-[10px] text-gray-400">{o.customerPhone}</span>
+                      <span className="text-xs text-slate-400">{o.customerPhone}</span>
                     </td>
                     <td className="py-3 text-gray-600 font-semibold">{o.tableName}</td>
-                    <td className="py-3 font-bold text-gray-800">UGX {o.total}</td>
+                    <td className="py-3 font-bold text-gray-800 font-mono">UGX {o.total}</td>
                     <td className="py-3">
-                      <span className={`text-[8px] font-bold px-2 py-0.5 border rounded uppercase ${payBadge}`}>
+                      <span className={`text-xs font-bold px-2 py-0.5 border rounded uppercase ${payBadge}`}>
                         {o.paymentStatus}
                       </span>
                     </td>
                     <td className="py-3">
-                      <span className={`text-[8px] font-bold px-2 py-0.5 rounded uppercase ${orderStatusBadge}`}>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${orderStatusBadge}`}>
                         {o.status.replace(/_/g, " ")}
                       </span>
                     </td>
                     <td className="py-3 text-right pr-3 space-x-1.5">
                       <button
                         onClick={() => printA4Invoice(o)}
-                        className="px-2.5 py-1 text-[10px] font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border-none cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border-none cursor-pointer"
                         title="Print A4 Invoice"
                       >
                         📄 A4 Invoice
                       </button>
                       <button
                         onClick={() => printThermalReceipt(o)}
-                        className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors border-none cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                        className="px-2.5 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors border-none cursor-pointer inline-flex items-center gap-1 shadow-sm"
                         title="Print Thermal Receipt Slip"
                       >
                         <Printer className="w-3 h-3" /> Slip

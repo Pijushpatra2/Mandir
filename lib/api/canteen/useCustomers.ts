@@ -3,13 +3,13 @@
 /**
  * useCustomers.ts
  *
- * Strategy: CACHED 5-min. Only fetches when searchQuery has content.
- * Empty search → no API call (enabled: !!search).
+ * Real-time CRUD and CRM hooks for Canteen Customer management.
  *
  * Hooks:
- *   useCustomers()       → GET /canteen/customers?search=&page= (CACHED 5 min)
+ *   useCustomers()       → GET /canteen/customers?search=&customerType=&page=
  *   useAddCustomer()     → POST /canteen/customers
  *   useEditCustomer()    → PATCH /canteen/customers/:id
+ *   useDeleteCustomer()  → DELETE /canteen/customers/:id
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,34 +23,25 @@ import type {
   PaginationMeta,
 } from '@/lib/api/canteen.types';
 
+export type { CanteenCustomer, CustomerType, PaginatedResult, PaginationMeta };
+
 // ─── Fetch Customers ──────────────────────────────────────────────────────────
 
-interface CustomerFilters {
+export interface CustomerFilters {
   search?: string;
+  customerType?: string;
   page?: number;
   limit?: number;
 }
 
-/**
- * useCustomers
- *
- * Only fires an API request when `search` has a value.
- * An empty search box → zero API calls.
- *
- * @example
- * // Fires API only when user types something
- * const { data, isLoading } = useCustomers({ search: inputValue, page: 1 });
- *
- * // Full customer list on customers page (no search filter)
- * const { data } = useCustomers({ page: 1 });
- */
 export function useCustomers(filters?: CustomerFilters, options?: { enabled?: boolean }) {
   const search = filters?.search ?? '';
+  const customerType = filters?.customerType ?? '';
   const page   = filters?.page ?? 1;
-  const limit  = filters?.limit ?? 20;
+  const limit  = filters?.limit ?? 50;
 
   return useQuery({
-    queryKey: QUERY_KEYS.customers(search, page),
+    queryKey: ['canteen', 'customers', search, customerType, page, limit],
     queryFn: async (): Promise<PaginatedResult<CanteenCustomer>> => {
       const client = getActiveClient();
       const { data } = await client.get<{
@@ -60,18 +51,15 @@ export function useCustomers(filters?: CustomerFilters, options?: { enabled?: bo
         meta: PaginationMeta;
       }>(
         '/canteen/customers',
-        { params: { search, page, limit } },
+        { params: { search, customerType: customerType || undefined, page, limit } },
       );
       return {
-        data: data.data,
-        meta: data.meta,
+        data: data.data || [],
+        meta: data.meta || { page: 1, limit: 50, total: 0, totalPages: 1 },
       };
     },
-
-    // Default to true, or merge from options
     enabled: options?.enabled ?? true,
-
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
@@ -81,11 +69,7 @@ export function useCustomers(filters?: CustomerFilters, options?: { enabled?: bo
 /**
  * useCustomerSearch
  *
- * Lighter hook for the POS quick-search input — enabled ONLY when user types.
- * Empty input → zero API calls.
- *
- * @example
- * const { data } = useCustomerSearch(searchInput);
+ * Lighter hook for POS quick-search input.
  */
 export function useCustomerSearch(search: string) {
   return useQuery({
@@ -102,15 +86,12 @@ export function useCustomerSearch(search: string) {
         { params: { search, limit: 10 } },
       );
       return {
-        data: data.data,
-        meta: data.meta,
+        data: data.data || [],
+        meta: data.meta || { page: 1, limit: 10, total: 0, totalPages: 1 },
       };
     },
-
-    // CRITICAL: Only fire when user has typed at least 2 characters
     enabled: search.length >= 2,
-
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
@@ -118,33 +99,27 @@ export function useCustomerSearch(search: string) {
 
 // ─── Add Customer ─────────────────────────────────────────────────────────────
 
-interface AddCustomerPayload {
+export interface AddCustomerPayload {
   name: string;
   phone: string;
-  email?: string;
+  email?: string | null;
   customer_type?: CustomerType;
-  notes?: string;
+  notes?: string | null;
 }
 
-/**
- * useAddCustomer
- *
- * Strategy: ON-ACT — fires on receptionist form submit.
- * After success: invalidates ['customers'] cache.
- */
 export function useAddCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: AddCustomerPayload) => {
       const client = getActiveClient();
-      const { data } = await client.post<ApiResponse<CanteenCustomer>>(
+      const { data } = await client.post<ApiResponse<{ id: string }>>(
         '/canteen/customers',
         payload,
       );
       return data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.customers() });
+      queryClient.invalidateQueries({ queryKey: ['canteen', 'customers'] });
     },
     retry: false,
   });
@@ -152,31 +127,43 @@ export function useAddCustomer() {
 
 // ─── Edit Customer ────────────────────────────────────────────────────────────
 
-interface EditCustomerPayload {
+export interface EditCustomerPayload {
   id: string;
   updates: Partial<AddCustomerPayload & { is_active: boolean }>;
 }
 
-/**
- * useEditCustomer
- *
- * Strategy: ON-ACT — fires on form submit.
- * After success: invalidates ['customers', id] and ['customers'] list.
- */
 export function useEditCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, updates }: EditCustomerPayload) => {
       const client = getActiveClient();
-      const { data } = await client.patch<ApiResponse<CanteenCustomer>>(
+      const { data } = await client.patch<ApiResponse<null>>(
         `/canteen/customers/${id}`,
         updates,
       );
       return data.data;
     },
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.customer(id) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.customers() });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['canteen', 'customers'] });
+    },
+    retry: false,
+  });
+}
+
+// ─── Delete Customer ──────────────────────────────────────────────────────────
+
+export function useDeleteCustomer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const client = getActiveClient();
+      const { data } = await client.delete<ApiResponse<null>>(
+        `/canteen/customers/${id}`,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['canteen', 'customers'] });
     },
     retry: false,
   });
