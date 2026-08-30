@@ -36,7 +36,9 @@ import {
   Lock,
   Mail,
   LogOut,
-  UserCheck
+  UserCheck,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import {
   SeatingTable,
@@ -126,6 +128,7 @@ export default function CanteenPOSPage() {
   const [staffAccounts, setStaffAccounts] = useState<CanteenStaffAccount[]>([]);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
 
   const [activeTab, setActiveTab] = useState<POSTab>("dashboard");
@@ -2373,15 +2376,32 @@ export default function CanteenPOSPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><Lock className="w-3.5 h-3.5" /> Password</label>
-              <input
-                type="password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full p-3 border border-gray-150 rounded-2xl outline-none bg-gray-50 focus:bg-white focus:border-blue-500 transition-all text-xs"
-              />
+              <label className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1">
+                <Lock className="w-3.5 h-3.5" /> Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showLoginPassword ? "text" : "password"}
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full p-3 pr-10 border border-gray-150 rounded-2xl outline-none bg-gray-50 focus:bg-white focus:border-blue-500 transition-all text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center"
+                  aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                  title={showLoginPassword ? "Hide password" : "Show password"}
+                >
+                  {showLoginPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
@@ -2392,32 +2412,6 @@ export default function CanteenPOSPage() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Quick Shortcuts for Testing Roles */}
-          <div className="mt-8 pt-6 border-t border-gray-100 text-left">
-            <h4 className="text-[9px] font-bold uppercase text-gray-400 tracking-wider mb-3">Quick Demo Logins (Click to Auto-fill)</h4>
-            <div className="grid grid-cols-2 gap-2 text-[9px]">
-              {[
-                { email: "manager@swami.com", pass: "manager123", label: "Canteen Manager" },
-                { email: "receptionist@swami.com", pass: "receptionist123", label: "Receptionist" },
-                { email: "cashier@swami.com", pass: "cashier123", label: "Cashier" },
-                { email: "kitchen@swami.com", pass: "kitchen123", label: "Kitchen Display" }
-              ].map((demo, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setLoginEmail(demo.email);
-                    setLoginPassword(demo.pass);
-                    setLoginError("");
-                  }}
-                  className="p-2 border border-gray-100 rounded-xl bg-gray-50/50 hover:bg-blue-50 hover:border-blue-200 transition-all text-left truncate cursor-pointer font-sans"
-                >
-                  <span className="font-bold text-gray-700 block">{demo.label}</span>
-                  <span className="text-gray-400 block text-[8px]">{demo.email}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     );

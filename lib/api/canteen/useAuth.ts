@@ -133,26 +133,38 @@ export function useStaffList(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: QUERY_KEYS.staffList(),
     queryFn: async (): Promise<CanteenStaffProfile[]> => {
-      // Admin dashboard requests go through adminApiClient
       const { data } = await adminApiClient.get<ApiResponse<CanteenStaffProfile[]>>(
         '/canteen/staff'
       );
       return data.data;
     },
-    staleTime: 60 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
     ...options,
   });
 }
 
-interface CreateStaffPayload {
+export interface CreateStaffPayload {
   name: string;
   email: string;
-  password_hash?: string; // standard password passed by client is hashed/processed by server
   password?: string;
-  assigned_role: CanteenStaffRole;
+  assignedRole?: CanteenStaffRole;
+  assigned_role?: CanteenStaffRole;
+}
+
+export interface UpdateStaffPayload {
+  id: number;
+  updates: {
+    name?: string;
+    email?: string;
+    password?: string;
+    assignedRole?: CanteenStaffRole;
+    assigned_role?: CanteenStaffRole;
+    isActive?: number;
+    is_active?: number;
+  };
 }
 
 /**
@@ -165,9 +177,36 @@ export function useAddStaff() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: CreateStaffPayload) => {
-      const { data } = await adminApiClient.post<ApiResponse<CanteenStaffProfile>>(
+      const { data } = await adminApiClient.post<ApiResponse<{ id: number }>>(
         '/canteen/staff',
-        payload
+        {
+          name: payload.name,
+          email: payload.email,
+          password: payload.password,
+          assignedRole: payload.assignedRole || payload.assigned_role,
+        }
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.staffList() });
+    },
+  });
+}
+
+/**
+ * useUpdateStaff
+ *
+ * Updates an existing staff account.
+ * Invalidates staffList on success.
+ */
+export function useUpdateStaff() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: UpdateStaffPayload) => {
+      const { data } = await adminApiClient.patch<ApiResponse<null>>(
+        `/canteen/staff/${id}`,
+        updates
       );
       return data.data;
     },

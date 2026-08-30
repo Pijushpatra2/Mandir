@@ -15,6 +15,7 @@ export {
   useStaffLogout,
   useStaffList,
   useAddStaff,
+  useUpdateStaff,
   useDeleteStaff,
 } from './useAuth';
 
@@ -40,7 +41,7 @@ export { useBookings, useAddBooking, useUpdateBooking } from './useBookings';
 export { useInventory, useLowStock, useAdjustInventory, useLogWaste } from './useInventory';
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
-export { useTodayReport, useTopCustomers, useReportsSummary } from './useReports';
+export { useTodayReport, useTopCustomers, useReportsSummary, useCanteenSalesReport } from './useReports';
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 export { useCategories, useAddCategory, useDeleteCategory, useUpdateCategory } from './useCategories';
