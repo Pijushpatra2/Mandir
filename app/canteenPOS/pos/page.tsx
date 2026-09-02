@@ -920,23 +920,21 @@ export default function POSPage() {
             </div>
           </div>
 
-          {/* Category Tabs - Horizontal Scroll with visible themed scrollbar */}
-          <div
-            className="px-3.5 sm:px-4 md:px-6 pt-3.5 sm:pt-4 md:pt-5 pb-2 sm:pb-2.5 md:pb-3.5 overflow-x-auto overflow-y-hidden flex-shrink-0 min-w-0 [&::-webkit-scrollbar]:h-1.5 sm:[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-neutral-gray/40 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary-gold/60 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-primary-gold"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--tw-color-primary-gold, #c8973f) transparent' }}
-          >
-            <div className="flex gap-1.5 sm:gap-2.5 md:gap-3 min-w-max">
+          {/* Category Tabs - All Categories Visible at Once (Zero Scrolling) */}
+          <div className="px-3.5 sm:px-4 md:px-6 pt-3 sm:pt-4 pb-2.5 sm:pb-3 flex-shrink-0 border-b border-neutral-gray/30 bg-surface-white/20">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-2.5">
               {categoriesList.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setPosCategory(cat)}
-                  className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2.5 text-[10px] sm:text-xs md:text-body-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1 sm:gap-1.5 md:gap-2.5 border-2 rounded-[10px] sm:rounded-xl md:rounded-2xl flex-shrink-0 ${posCategory === cat
-                      ? "bg-primary-gold text-surface-white border-primary-gold"
-                      : "bg-surface-white text-dark-surface/70 border-neutral-gray hover:border-primary-gold hover:text-primary-gold"
-                    }`}
+                  className={`px-3 sm:px-3.5 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 border-2 rounded-xl cursor-pointer select-none active:scale-95 ${
+                    posCategory === cat
+                      ? "bg-primary-gold text-surface-white border-primary-gold shadow-xs"
+                      : "bg-surface-white text-dark-surface/75 border-neutral-gray hover:border-primary-gold hover:text-primary-gold"
+                  }`}
                 >
                   {getCategoryIcon(cat)}
-                  <span className="text-[10px] sm:text-xs md:text-sm">{cat}</span>
+                  <span className="text-xs sm:text-sm">{cat}</span>
                 </button>
               ))}
             </div>
@@ -1287,8 +1285,8 @@ export default function POSPage() {
                 </label>
                 <div className="flex flex-wrap gap-1 sm:gap-1.5 md:gap-2.5">
                   {[
-                    { id: "UPI", icon: <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />, label: "Mobile" },
                     { id: "CASH", icon: <Landmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />, label: "Cash" },
+                    { id: "UPI", icon: <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />, label: "Mobile" },
                     { id: "CARD", icon: <CardIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />, label: "Card" }
                   ].map(({ id, icon, label }) => (
                     <button

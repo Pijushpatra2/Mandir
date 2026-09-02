@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -38,7 +39,8 @@ import {
   LogOut,
   UserCheck,
   Eye,
-  EyeOff
+  EyeOff,
+  Menu
 } from "lucide-react";
 import {
   SeatingTable,
@@ -132,6 +134,16 @@ export default function CanteenPOSPage() {
   const [loginError, setLoginError] = useState("");
 
   const [activeTab, setActiveTab] = useState<POSTab>("dashboard");
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setIsDesktopSidebarOpen((prev) => !prev);
+    } else {
+      setIsMobileSidebarOpen((prev) => !prev);
+    }
+  };
 
   // Core Data States
   const [tables, setTables] = useState<SeatingTable[]>([]);
@@ -182,7 +194,7 @@ export default function CanteenPOSPage() {
   const [posCustomerPhone, setPosCustomerPhone] = useState("");
   const [posDiscount, setPosDiscount] = useState<number>(0);
   const [posOrderNote, setPosOrderNote] = useState("");
-  const [posPaymentMethod, setPosPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "PENDING">("UPI");
+  const [posPaymentMethod, setPosPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "PENDING">("CASH");
 
   // Time & Date Clock state
   const [dateTime, setDateTime] = useState<string>("");
@@ -458,7 +470,7 @@ export default function CanteenPOSPage() {
     setPosSelectedTable("");
     setPosDiscount(0);
     setPosOrderNote("");
-    setPosPaymentMethod("UPI");
+    setPosPaymentMethod("CASH");
 
     // Add alert notification
     const newNotif = {
@@ -961,16 +973,16 @@ export default function CanteenPOSPage() {
         {/* ROW 1: Canteen Menu */}
         <div className="bg-white p-8 rounded-3xl border border-gray-150 shadow-sm flex flex-col w-full">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 flex-shrink-0">
-            {/* Category tabs */}
-            <div className="flex gap-3 overflow-x-auto pb-2 select-none scrollbar-thin max-w-full md:max-w-[70%]">
+            {/* Category tabs - All Categories Visible (No Scrolling) */}
+            <div className="flex flex-wrap gap-2 select-none w-full md:max-w-[70%]">
               {categoriesList.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setPosCategory(cat)}
-                  className={`px-6 py-3 rounded-full text-[15px] font-bold transition-all cursor-pointer border border-[#C21807] flex items-center gap-2.5 ${
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer border flex items-center gap-2 active:scale-95 ${
                     posCategory === cat
-                      ? "bg-[#C21807] text-white shadow-md shadow-red-100"
-                      : "bg-white text-gray-700 hover:bg-red-50/50"
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700"
                   }`}
                 >
                   {getCategoryIcon(cat)}
@@ -1293,7 +1305,7 @@ export default function CanteenPOSPage() {
                   <div className="space-y-3.5 text-left">
                     <label className="text-[14px] font-extrabold uppercase text-gray-500 block">Select Payment Method</label>
                     <div className="grid grid-cols-3 gap-3 text-sm font-extrabold">
-                      {["UPI", "CASH", "CARD"].map((method) => (
+                      {["CASH", "UPI", "CARD"].map((method) => (
                         <button
                           key={method}
                           onClick={() => setPosPaymentMethod(method as any)}
@@ -2425,89 +2437,120 @@ export default function CanteenPOSPage() {
       
       {/* 1. SIDEBAR NAVIGATION - Hide if kitchen staff */}
       {userRole !== "kitchen" && (
-        <aside className="w-64 bg-white border-r border-gray-100 shrink-0 flex flex-col justify-between hidden lg:flex">
-          <div>
-            <div className="h-16 px-6 border-b border-gray-50 flex items-center gap-2">
-              <span className="text-2xl">🕉️</span>
-              <div className="text-left">
-                <h1 className="text-xs font-bold uppercase tracking-wider text-gray-800 font-sans">Swami POS</h1>
-                <p className="text-[9px] text-gray-400 font-semibold">{activeStaff.name}</p>
+        <aside
+          className={cn(
+            "bg-white border-r border-gray-100 shrink-0 flex flex-col justify-between hidden lg:flex transition-all duration-300 ease-in-out overflow-hidden z-20",
+            isDesktopSidebarOpen ? "w-64 opacity-100" : "w-0 border-r-0 opacity-0 pointer-events-none"
+          )}
+        >
+          <div className="w-64 flex flex-col justify-between h-full">
+            <div>
+              <div className="h-16 px-5 border-b border-gray-50 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-2xl">🕉️</span>
+                  <div className="text-left truncate">
+                    <h1 className="text-xs font-bold uppercase tracking-wider text-gray-800 font-sans truncate">Swami POS</h1>
+                    <p className="text-[9px] text-gray-400 font-semibold">{activeStaff.name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsDesktopSidebarOpen(false)}
+                  className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Close Sidebar"
+                  aria-label="Close Sidebar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
+
+              <nav className="p-4 space-y-1">
+                {[
+                  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["manager"] },
+                  { id: "pos", label: "Counter POS", icon: ShoppingCart, roles: ["manager", "receptionist", "cashier"] },
+                  { id: "orders", label: "Orders Register", icon: ClipboardList, roles: ["manager", "receptionist", "cashier"] },
+                  { id: "tables", label: "Table Layout", icon: Grid, roles: ["manager"] },
+                  { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"] },
+                  { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"] },
+                  { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"] },
+                  { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"] },
+                  { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"] },
+                  { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"] },
+                  { id: "settings", label: "System Settings", icon: Settings, roles: ["manager"] }
+                ].map((link) => {
+                  if (!link.roles.includes(userRole)) return null;
+                  const isActive = activeTab === link.id;
+
+                  return (
+                    <button
+                      key={link.id}
+                      onClick={() => setActiveTab(link.id as any)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                          : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <link.icon className="w-4 h-4" />
+                        <span>{link.label}</span>
+                      </span>
+
+                      {link.id === "kitchen" && (
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600":"bg-blue-50 text-blue-600"}`}>
+                          {orders.filter(o=>o.status==="NEW"||o.status==="PREPARING").length}
+                        </span>
+                      )}
+                      {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-red-600":"bg-red-50 text-red-600"}`}>
+                          {getInventoryAlertsCount()}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
 
-            <nav className="p-4 space-y-1">
-              {[
-                { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["manager"] },
-                { id: "pos", label: "Counter POS", icon: ShoppingCart, roles: ["manager", "receptionist", "cashier"] },
-                { id: "orders", label: "Orders Register", icon: ClipboardList, roles: ["manager", "receptionist", "cashier"] },
-                { id: "tables", label: "Table Layout", icon: Grid, roles: ["manager"] },
-                { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"] },
-                { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"] },
-                { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"] },
-                { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"] },
-                { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"] },
-                { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"] },
-                { id: "settings", label: "System Settings", icon: Settings, roles: ["manager"] }
-              ].map((link) => {
-                if (!link.roles.includes(userRole)) return null;
-                const isActive = activeTab === link.id;
-
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => setActiveTab(link.id as any)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
-                      isActive
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <link.icon className="w-4 h-4" />
-                      <span>{link.label}</span>
-                    </span>
-
-                    {link.id === "kitchen" && (
-                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600":"bg-blue-50 text-blue-600"}`}>
-                        {orders.filter(o=>o.status==="NEW"||o.status==="PREPARING").length}
-                      </span>
-                    )}
-                    {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
-                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-red-600":"bg-red-50 text-red-600"}`}>
-                        {getInventoryAlertsCount()}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          <div className="p-4 border-t border-gray-50 space-y-2.5">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-red-200 hover:shadow-lg transition-all hover:scale-102 cursor-pointer active:scale-98"
-            >
-              <LogOut className="w-4 h-4 text-white" /> Logout
-            </button>
-            <a
-              href="/dashboard/canteen"
-              className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
-            >
-              ↩️ Exit to ERP Admin
-            </a>
+            <div className="p-4 border-t border-gray-50 space-y-2.5 shrink-0">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-red-200 hover:shadow-lg transition-all hover:scale-102 cursor-pointer active:scale-98"
+              >
+                <LogOut className="w-4 h-4 text-white" /> Logout
+              </button>
+              <a
+                href="/dashboard/canteen"
+                className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
+              >
+                ↩️ Exit to ERP Admin
+              </a>
+            </div>
           </div>
         </aside>
       )}
 
       {/* 2. MAIN APP CONTENT PANEL */}
-      <div className="flex-grow flex flex-col h-screen overflow-hidden">
+      <div className="flex-grow flex flex-col h-screen overflow-hidden min-w-0">
         
         {/* Header Toolbar */}
-        <header className="h-16 bg-white border-b border-gray-100 px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
+        <header className="h-16 bg-white border-b border-gray-100 px-4 sm:px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
           
-          <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-slate-500 font-poppins">
+          <div className="flex items-center gap-3">
+            {userRole !== "kitchen" && (
+              <button
+                onClick={toggleSidebar}
+                className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center text-slate-700 bg-white"
+                title={
+                  typeof window !== "undefined" && window.innerWidth >= 1024
+                    ? (isDesktopSidebarOpen ? "Close Sidebar" : "Open Sidebar")
+                    : (isMobileSidebarOpen ? "Close Menu" : "Open Menu")
+                }
+                aria-label="Toggle Sidebar"
+              >
+                <Menu className="w-4 h-4 text-slate-600" />
+              </button>
+            )}
+            <span className="hidden sm:inline-block text-xs font-bold text-slate-500 font-poppins">
               🕒 {dateTime}
             </span>
           </div>
@@ -3292,6 +3335,116 @@ export default function CanteenPOSPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* 3. MOBILE SIDEBAR DRAWER OVERLAY */}
+      {userRole !== "kitchen" && (
+        <AnimatePresence>
+          {isMobileSidebarOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.4 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="fixed inset-0 bg-black z-40 lg:hidden"
+              />
+              <motion.aside
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                className="fixed top-0 bottom-0 left-0 w-64 bg-white z-50 lg:hidden border-r border-gray-100 flex flex-col justify-between shadow-2xl"
+              >
+                <div>
+                  <div className="h-16 px-5 border-b border-gray-50 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="text-2xl">🕉️</span>
+                      <div className="text-left truncate">
+                        <h1 className="text-xs font-bold uppercase tracking-wider text-gray-800 font-sans truncate">Swami POS</h1>
+                        <p className="text-[9px] text-gray-400 font-semibold">{activeStaff.name}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsMobileSidebarOpen(false)}
+                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)]">
+                    {[
+                      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["manager"] },
+                      { id: "pos", label: "Counter POS", icon: ShoppingCart, roles: ["manager", "receptionist", "cashier"] },
+                      { id: "orders", label: "Orders Register", icon: ClipboardList, roles: ["manager", "receptionist", "cashier"] },
+                      { id: "tables", label: "Table Layout", icon: Grid, roles: ["manager"] },
+                      { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"] },
+                      { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"] },
+                      { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"] },
+                      { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"] },
+                      { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"] },
+                      { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"] },
+                      { id: "settings", label: "System Settings", icon: Settings, roles: ["manager"] }
+                    ].map((link) => {
+                      if (!link.roles.includes(userRole)) return null;
+                      const isActive = activeTab === link.id;
+
+                      return (
+                        <button
+                          key={link.id}
+                          onClick={() => {
+                            setActiveTab(link.id as any);
+                            setIsMobileSidebarOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
+                            isActive
+                              ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                              : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <link.icon className="w-4 h-4" />
+                            <span>{link.label}</span>
+                          </span>
+
+                          {link.id === "kitchen" && (
+                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600":"bg-blue-50 text-blue-600"}`}>
+                              {orders.filter(o=>o.status==="NEW"||o.status==="PREPARING").length}
+                            </span>
+                          )}
+                          {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
+                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white text-red-600":"bg-red-50 text-red-600"}`}>
+                              {getInventoryAlertsCount()}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+
+                <div className="p-4 border-t border-gray-50 space-y-2 shrink-0">
+                  <a
+                    href="/dashboard/canteen"
+                    className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
+                  >
+                    ↩️ Exit to ERP Admin
+                  </a>
+                  <button
+                    onClick={() => {
+                      setIsMobileSidebarOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 text-white" /> Logout
+                  </button>
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
       )}
 
     </div>

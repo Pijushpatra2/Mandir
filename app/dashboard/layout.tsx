@@ -41,8 +41,17 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { userRole, setUserRole, notifications } = useApp();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const toggleSidebar = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setIsDesktopSidebarOpen((prev) => !prev);
+    } else {
+      setIsMobileSidebarOpen((prev) => !prev);
+    }
+  };
 
   const isLoginPage = pathname === "/dashboard/login";
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -124,70 +133,91 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-bg-warm flex font-jakarta">
       
       {/* 1. SIDEBAR (Desktop) */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-primary-gold/15 bg-white shrink-0">
-        {/* Brand Logo */}
-        <div className="h-20 border-b border-primary-gold/10 px-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2.5">
-            <span className="text-2xl">🕉️</span>
-            <span className="font-heading text-lg font-semibold tracking-wide text-dark-surface">
-              SKSS Kampala ERP
-            </span>
-          </Link>
-        </div>
+      <aside
+        className={cn(
+          "hidden lg:flex flex-col border-r border-primary-gold/15 bg-white shrink-0 transition-all duration-300 ease-in-out overflow-hidden z-20",
+          isDesktopSidebarOpen ? "w-64 opacity-100" : "w-0 border-r-0 opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="w-64 flex flex-col h-full">
+          {/* Brand Logo & Desktop Close Button */}
+          <div className="h-20 border-b border-primary-gold/10 px-5 flex items-center justify-between shrink-0">
+            <Link href="/" className="flex items-center space-x-2.5 truncate">
+              <span className="text-2xl">🕉️</span>
+              <span className="font-heading text-base font-semibold tracking-wide text-dark-surface truncate">
+                SKSS Kampala ERP
+              </span>
+            </Link>
+            <button
+              onClick={() => setIsDesktopSidebarOpen(false)}
+              className="p-1.5 rounded-lg border border-primary-gold/15 text-secondary-bronze hover:bg-primary-gold/10 transition-colors cursor-pointer"
+              title="Close Sidebar"
+              aria-label="Close Sidebar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-        {/* Menu Navigation */}
-        <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
-          {currentMenu.map((item: any) => {
-            // Check roles access if not devotee
-            if (userRole !== "DEVOTEE" && item.roles && !item.roles.includes(userRole)) {
-              return null;
-            }
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all",
-                  isActive
-                    ? "bg-primary-gold text-white shadow-md shadow-primary-gold/15"
-                    : "text-secondary-bronze/75 hover:bg-primary-gold/10 hover:text-secondary-bronze"
-                )}
-              >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+          {/* Menu Navigation */}
+          <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
+            {currentMenu.map((item: any) => {
+              // Check roles access if not devotee
+              if (userRole !== "DEVOTEE" && item.roles && !item.roles.includes(userRole)) {
+                return null;
+              }
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all",
+                    isActive
+                      ? "bg-primary-gold text-white shadow-md shadow-primary-gold/15"
+                      : "text-secondary-bronze/75 hover:bg-primary-gold/10 hover:text-secondary-bronze"
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-        {/* Public view shortcut */}
-        <div className="p-4 border-t border-primary-gold/10">
-          <Link
-            href="/"
-            className="flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
-          >
-            <ArrowLeft className="w-4 h-4 text-primary-gold" />
-            <span>Go to Public Site</span>
-          </Link>
+          {/* Public view shortcut */}
+          <div className="p-4 border-t border-primary-gold/10 shrink-0">
+            <Link
+              href="/"
+              className="flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
+            >
+              <ArrowLeft className="w-4 h-4 text-primary-gold" />
+              <span>Go to Public Site</span>
+            </Link>
+          </div>
         </div>
       </aside>
 
       {/* 2. MAIN APP CONTENT PANEL */}
-      <div className="flex-grow flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-grow flex flex-col min-h-screen overflow-hidden min-w-0">
         
         {/* Top Navbar Header */}
-        <header className="h-20 border-b border-primary-gold/10 bg-white px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm">
+        <header className="h-20 border-b border-primary-gold/10 bg-white px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm shrink-0">
           
-          {/* Mobile menu toggle */}
-          <div className="flex items-center space-x-4">
+          {/* Universal Sidebar Open/Close Toggle (Big Screen & Mobile) */}
+          <div className="flex items-center space-x-3.5">
             <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 lg:hidden rounded-xl border border-primary-gold/25 text-dark-surface hover:bg-primary-gold/10"
+              onClick={toggleSidebar}
+              className="p-2.5 rounded-xl border border-primary-gold/25 text-dark-surface hover:bg-primary-gold/10 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center bg-white"
+              title={
+                typeof window !== "undefined" && window.innerWidth >= 1024
+                  ? (isDesktopSidebarOpen ? "Close Sidebar" : "Open Sidebar")
+                  : (isMobileSidebarOpen ? "Close Menu" : "Open Menu")
+              }
+              aria-label="Toggle Sidebar"
             >
-              {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="w-5 h-5 text-secondary-bronze" />
             </button>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-secondary-bronze/75 font-sans">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-secondary-bronze/75 font-sans truncate">
               {userRole === "DEVOTEE" ? "Devotee Portal" : "Administrative Desk"}
             </h2>
           </div>
@@ -282,29 +312,32 @@ export default function DashboardLayout({
 
       {/* 3. MOBILE SIDEBAR DRAWER OVERLAY */}
       <AnimatePresence>
-        {isSidebarOpen && (
+        {isMobileSidebarOpen && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black z-30 lg:hidden"
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="fixed inset-0 bg-black z-40 lg:hidden"
             />
             <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed top-0 bottom-0 left-0 w-64 bg-white z-40 lg:hidden border-r border-primary-gold/15 flex flex-col"
+              className="fixed top-0 bottom-0 left-0 w-64 bg-white z-50 lg:hidden border-r border-primary-gold/15 flex flex-col shadow-2xl"
             >
-              <div className="h-20 border-b border-primary-gold/10 px-6 flex items-center justify-between">
-                <span className="font-heading text-lg font-semibold text-dark-surface">
-                  SKSS Kampala ERP
-                </span>
+              <div className="h-20 border-b border-primary-gold/10 px-6 flex items-center justify-between shrink-0">
+                <Link href="/" onClick={() => setIsMobileSidebarOpen(false)} className="flex items-center space-x-2">
+                  <span className="text-xl">🕉️</span>
+                  <span className="font-heading text-lg font-semibold text-dark-surface">
+                    SKSS Kampala ERP
+                  </span>
+                </Link>
                 <button
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="p-1.5 rounded-lg border border-primary-gold/15"
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className="p-1.5 rounded-lg border border-primary-gold/15 text-secondary-bronze hover:bg-primary-gold/10"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -319,7 +352,7 @@ export default function DashboardLayout({
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => setIsSidebarOpen(false)}
+                      onClick={() => setIsMobileSidebarOpen(false)}
                       className={cn(
                         "flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all",
                         pathname === item.href
@@ -334,10 +367,10 @@ export default function DashboardLayout({
                 })}
               </nav>
 
-              <div className="p-4 border-t border-primary-gold/10">
+              <div className="p-4 border-t border-primary-gold/10 shrink-0">
                 <Link
                   href="/"
-                  onClick={() => setIsSidebarOpen(false)}
+                  onClick={() => setIsMobileSidebarOpen(false)}
                   className="flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5"
                 >
                   <ArrowLeft className="w-4 h-4 text-primary-gold" />

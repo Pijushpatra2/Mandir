@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { OfflineProvider } from "@/lib/offline/OfflineContext";
 import { useDbSeed } from "@/lib/offline/useDbSeed";
 import { useSyncQueue } from "@/lib/offline/useSyncQueue";
@@ -36,7 +37,8 @@ import {
   ArrowRight,
   Clock,
   Trash2,
-  LogOut
+  LogOut,
+  Menu
 } from "lucide-react";
 import { CanteenProvider, useCanteen, POSRole, POSTab } from "./context/CanteenContext";
 import { SeatingTable, FoodItem } from "@/data/canteen";
@@ -59,6 +61,16 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setIsDesktopSidebarOpen((prev) => !prev);
+    } else {
+      setIsMobileSidebarOpen((prev) => !prev);
+    }
+  };
 
   const {
     isLoggedIn,
@@ -225,88 +237,117 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] font-poppins canteen-pos-root flex text-slate-800">
-      {/* 1. SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-white border-r border-gray-100 shrink-0 flex flex-col justify-between hidden lg:flex">
-        <div>
-          {/* Logo brand */}
-          <div className="h-16 px-6 border-b border-gray-50 flex items-center gap-2">
-            <span className="text-2xl">🕉️</span>
-            <div className="text-left">
-              <h1 className="text-sm font-bold uppercase tracking-wider text-slate-900 font-poppins">Swami POS</h1>
-              <p className="text-xs text-slate-400 font-semibold">Canteen SaaS Desk</p>
+      {/* 1. SIDEBAR NAVIGATION (Desktop) */}
+      <aside
+        className={cn(
+          "bg-white border-r border-gray-100 shrink-0 flex flex-col justify-between hidden lg:flex transition-all duration-300 ease-in-out overflow-hidden z-20",
+          isDesktopSidebarOpen ? "w-64 opacity-100" : "w-0 border-r-0 opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="w-64 flex flex-col justify-between h-full">
+          <div>
+            {/* Logo brand & Desktop Close button */}
+            <div className="h-16 px-5 border-b border-gray-50 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-2xl">🕉️</span>
+                <div className="text-left truncate">
+                  <h1 className="text-sm font-bold uppercase tracking-wider text-slate-900 font-poppins truncate">Swami POS</h1>
+                  <p className="text-xs text-slate-400 font-semibold">Canteen SaaS Desk</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDesktopSidebarOpen(false)}
+                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close Sidebar"
+                aria-label="Close Sidebar"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
+
+            {/* Navigation Links list */}
+            <nav className="p-4 space-y-1">
+              {sidebarLinks.map((link) => {
+                // Restrict tab visibility if role doesn't have permissions
+                if (currentRole && !link.roles.includes(currentRole)) return null;
+
+                const isActive = activeTab === link.id;
+
+                return (
+                  <Link
+                    key={link.id}
+                    href={link.path}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
+                      isActive
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <link.icon className="w-4 h-4" />
+                      <span>{link.label}</span>
+                    </span>
+
+                    {/* Add visual badge counts */}
+                    {link.id === "kitchen" && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600" : "bg-blue-50 text-blue-600"}`}>
+                        {orders.filter(o => o.status === "NEW" || o.status === "PREPARING").length}
+                      </span>
+                    )}
+                    {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-red-600" : "bg-red-50 text-red-600"}`}>
+                        {getInventoryAlertsCount()}
+                      </span>
+                    )}
+                    {link.id === "tables" && (
+                      <span className="text-xs text-slate-400 font-normal lowercase">
+                        {getActiveTablesCount()} active
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
-          {/* Navigation Links list */}
-          <nav className="p-4 space-y-1">
-            {sidebarLinks.map((link) => {
-              // Restrict tab visibility if role doesn't have permissions
-              if (currentRole && !link.roles.includes(currentRole)) return null;
-
-              const isActive = activeTab === link.id;
-
-              return (
-                <Link
-                  key={link.id}
-                  href={link.path}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
-                    isActive
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <link.icon className="w-4 h-4" />
-                    <span>{link.label}</span>
-                  </span>
-
-                  {/* Add visual badge counts */}
-                  {link.id === "kitchen" && (
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600" : "bg-blue-50 text-blue-600"}`}>
-                      {orders.filter(o => o.status === "NEW" || o.status === "PREPARING").length}
-                    </span>
-                  )}
-                  {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-red-600" : "bg-red-50 text-red-600"}`}>
-                      {getInventoryAlertsCount()}
-                    </span>
-                  )}
-                  {link.id === "tables" && (
-                    <span className="text-xs text-slate-400 font-normal lowercase">
-                      {getActiveTablesCount()} active
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Back Link to admin dashboard & Highlighted Logout */}
-        <div className="p-4 border-t border-gray-100 space-y-2.5">
-          <a
-            href="/dashboard/canteen"
-            className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
-          >
-            ↩️ Exit to ERP Admin
-          </a>
-          <button
-            onClick={logout}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-red-200 hover:shadow-lg transition-all hover:scale-102 cursor-pointer active:scale-98"
-            title="Logout from Terminal"
-          >
-            <LogOut className="w-4 h-4 text-white" />
-            <span>Logout</span>
-          </button>
+          {/* Back Link to admin dashboard & Highlighted Logout */}
+          <div className="p-4 border-t border-gray-100 space-y-2.5 shrink-0">
+            <a
+              href="/dashboard/canteen"
+              className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
+            >
+              ↩️ Exit to ERP Admin
+            </a>
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-red-200 hover:shadow-lg transition-all hover:scale-102 cursor-pointer active:scale-98"
+              title="Logout from Terminal"
+            >
+              <LogOut className="w-4 h-4 text-white" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* 2. MAIN APPLICATION WORKSPACE */}
-      <div className="flex-grow flex flex-col h-screen overflow-hidden">
+      <div className="flex-grow flex flex-col h-screen overflow-hidden min-w-0">
         {/* Header toolbar panel */}
-        <header className="h-16 bg-white border-b border-gray-100 px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
-          {/* Left profile name & clock */}
-          <div className="flex items-center gap-4">
+        <header className="h-16 bg-white border-b border-gray-100 px-4 sm:px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
+          {/* Left toggle button & clock */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center text-slate-700 bg-white"
+              title={
+                typeof window !== "undefined" && window.innerWidth >= 1024
+                  ? (isDesktopSidebarOpen ? "Close Sidebar" : "Open Sidebar")
+                  : (isMobileSidebarOpen ? "Close Menu" : "Open Menu")
+              }
+              aria-label="Toggle Sidebar"
+            >
+              <Menu className="w-4 h-4 text-slate-600" />
+            </button>
             <span className="hidden sm:inline-block text-xs font-bold text-slate-500 font-poppins">
               🕒 {dateTime}
             </span>
@@ -1201,6 +1242,101 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+
+      {/* 3. MOBILE SIDEBAR DRAWER OVERLAY */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="fixed inset-0 bg-black z-40 lg:hidden"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed top-0 bottom-0 left-0 w-64 bg-white z-50 lg:hidden border-r border-gray-100 flex flex-col justify-between shadow-2xl"
+            >
+              <div>
+                <div className="h-16 px-5 border-b border-gray-50 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="text-2xl">🕉️</span>
+                    <div className="text-left truncate">
+                      <h1 className="text-sm font-bold uppercase tracking-wider text-slate-900 font-poppins truncate">Swami POS</h1>
+                      <p className="text-xs text-slate-400 font-semibold">Canteen SaaS Desk</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)]">
+                  {sidebarLinks.map((link) => {
+                    if (currentRole && !link.roles.includes(currentRole)) return null;
+                    const isActive = activeTab === link.id;
+
+                    return (
+                      <Link
+                        key={link.id}
+                        href={link.path}
+                        onClick={() => setIsMobileSidebarOpen(false)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
+                          isActive
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <link.icon className="w-4 h-4" />
+                          <span>{link.label}</span>
+                        </span>
+
+                        {link.id === "kitchen" && (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-blue-600" : "bg-blue-50 text-blue-600"}`}>
+                            {orders.filter(o => o.status === "NEW" || o.status === "PREPARING").length}
+                          </span>
+                        )}
+                        {link.id === "inventory" && getInventoryAlertsCount() > 0 && (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white text-red-600" : "bg-red-50 text-red-600"}`}>
+                            {getInventoryAlertsCount()}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              <div className="p-4 border-t border-gray-100 space-y-2 shrink-0">
+                <a
+                  href="/dashboard/canteen"
+                  className="w-full flex items-center justify-center py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-xl transition-all border border-gray-200"
+                >
+                  ↩️ Exit to ERP Admin
+                </a>
+                <button
+                  onClick={() => {
+                    setIsMobileSidebarOpen(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 text-white" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

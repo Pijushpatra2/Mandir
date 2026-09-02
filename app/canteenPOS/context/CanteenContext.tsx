@@ -406,7 +406,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   const [posCustomerPhone, setPosCustomerPhone] = useState("");
   const [posDiscount, setPosDiscount] = useState<number>(0);
   const [posOrderNote, setPosOrderNote] = useState("");
-  const [posPaymentMethod, setPosPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "PENDING">("UPI");
+  const [posPaymentMethod, setPosPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "PENDING">("CASH");
 
   // Load static elements or non-REST states on mount
   useEffect(() => {
@@ -711,7 +711,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     setPosSelectedTable("");
     setPosDiscount(0);
     setPosOrderNote("");
-    setPosPaymentMethod("UPI");
+    setPosPaymentMethod("CASH");
 
     // 7. INSTANT NOTIFICATION
     const newNotif = {
