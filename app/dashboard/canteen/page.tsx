@@ -65,6 +65,13 @@ import {
 import { exportTableToExcel, exportCanteenOrdersToExcel } from "@/lib/exportExcel";
 import { printThermalReceipt, printA4Invoice } from "@/lib/printReceipt";
 import { formatCurrency } from "@/lib/utils";
+import {
+  formatKampalaDate,
+  formatKampalaTime,
+  formatKampalaDateTime,
+  getKampalaTodayString,
+  getKampalaYesterdayString,
+} from "@/lib/dateUtils";
 import * as XLSX from "xlsx";
 
 type AdminCanteenTab = "overview" | "sales" | "orders" | "menu" | "categories" | "customers" | "staff";
@@ -102,22 +109,18 @@ export default function CanteenCRMPage() {
   const { mutate: apiUpdateCategory } = useUpdateCategory();
 
   // ─── Sales Report Date Presets & State ──────────────────────────────────────
+  const todayStr = getKampalaTodayString();
+  const yesterdayStr = getKampalaYesterdayString();
+
+  const sevenDaysAgoDate = new Date();
+  sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 6);
+  const sevenDaysAgoStr = formatKampalaDate(sevenDaysAgoDate);
+
+  const startOfMonthStr = `${todayStr.slice(0, 7)}-01`;
+
   const [salesDatePreset, setSalesDatePreset] = useState<"today" | "yesterday" | "week" | "month" | "custom" | "all">("today");
-  const [salesCustomStart, setSalesCustomStart] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [salesCustomEnd, setSalesCustomEnd] = useState<string>(new Date().toISOString().slice(0, 10));
-
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
-
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
-
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  const startOfMonthStr = startOfMonth.toISOString().slice(0, 10);
+  const [salesCustomStart, setSalesCustomStart] = useState<string>(todayStr);
+  const [salesCustomEnd, setSalesCustomEnd] = useState<string>(todayStr);
 
   let queryStartDate: string | undefined = todayStr;
   let queryEndDate: string | undefined = todayStr;
@@ -202,10 +205,8 @@ export default function CanteenCRMPage() {
     paymentMethod: o.payment_method === "PENDING" ? "UPI" : (o.payment_method as any),
     paymentStatus: o.payment_status === "PAID" ? "PAID" : "PENDING",
     status: o.order_status as any,
-    timestamp: o.ordered_at
-      ? new Date(o.ordered_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : "—",
-    date: o.ordered_at ? new Date(o.ordered_at).toISOString().split("T")[0] : "—",
+    timestamp: o.ordered_at ? formatKampalaTime(o.ordered_at) : "—",
+    date: o.ordered_at ? formatKampalaDate(o.ordered_at) : "—",
     createdAtMs: o.ordered_at ? new Date(o.ordered_at).getTime() : 0,
   }));
 
@@ -523,11 +524,11 @@ export default function CanteenCRMPage() {
       XLSX.utils.book_append_sheet(wb, wsOrders, "Orders Ledger");
     }
 
-    XLSX.writeFile(wb, `Canteen_Sales_Report_${salesDatePreset}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `Canteen_Sales_Report_${salesDatePreset}_${formatKampalaDate()}.xlsx`);
   };
 
   const handleExportSalesText = () => {
-    const timestamp = new Date().toLocaleString();
+    const timestamp = formatKampalaDateTime(new Date()) + " EAT";
     const periodLabel =
       salesDatePreset === "today"
         ? `Today (${todayStr})`
@@ -546,6 +547,7 @@ export default function CanteenCRMPage() {
     t += `=================================================\n`;
     t += `Period       : ${periodLabel}\n`;
     t += `Generated At : ${timestamp}\n`;
+    t += `Timezone     : East Africa Time (EAT / UTC+3)\n`;
     t += `-------------------------------------------------\n\n`;
 
     t += `1. FINANCIAL & SALES METRICS:\n`;

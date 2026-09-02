@@ -16,6 +16,11 @@ import {
 } from "@/data/canteen";
 import { autoPrintReceipt } from "@/lib/printReceipt";
 import {
+  formatKampalaDate,
+  formatKampalaTime,
+  getLiveTerminalClockString
+} from "@/lib/dateUtils";
+import {
   useOfflineMenu,
   useOfflineTables,
   useOfflineOrder,
@@ -273,14 +278,8 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
-          const formattedTimestamp = orderDate.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-          const y = orderDate.getFullYear();
-          const m = String(orderDate.getMonth() + 1).padStart(2, "0");
-          const d = String(orderDate.getDate()).padStart(2, "0");
-          const formattedDate = `${y}-${m}-${d}`;
+          const formattedTimestamp = formatKampalaTime(orderDate);
+          const formattedDate = formatKampalaDate(orderDate);
 
           return {
             id: o.id,
@@ -455,19 +454,10 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshKey]);
 
-  // Synchronize clock
+  // Synchronize clock with East Africa Time (EAT)
   useEffect(() => {
     const updateTime = () => {
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      };
-      setDateTime(new Date().toLocaleDateString("en-US", options));
+      setDateTime(getLiveTerminalClockString());
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -615,12 +605,9 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
 
     const localOrderId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "ord-" + Date.now();
     const tokenNum = "TK-" + Math.floor(2000 + Math.random() * 8000);
-    const orderDate = new Date();
-    const y = orderDate.getFullYear();
-    const m = String(orderDate.getMonth() + 1).padStart(2, "0");
-    const d = String(orderDate.getDate()).padStart(2, "0");
-    const dateToday = `${y}-${m}-${d}`;
-    const timeNow = orderDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const now = new Date();
+    const dateToday = formatKampalaDate(now);
+    const timeNow = formatKampalaTime(now);
 
     let allocatedTableName = "Counter Walk-in";
     if (posSelectedTable) {
@@ -654,8 +641,8 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
       status: "NEW",
       timestamp: timeNow,
       date: dateToday,
-      createdAtMs: orderDate.getTime(),
-      orderedAt: orderDate.toISOString(),
+      createdAtMs: now.getTime(),
+      orderedAt: now.toISOString(),
       notes: orderNotes || undefined,
     };
 

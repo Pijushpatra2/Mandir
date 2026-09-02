@@ -233,7 +233,7 @@ export function printThermalReceipt(
   </div>
   <div class="row">
     <span>Time:</span>
-    <span>${order.date} ${order.timestamp}</span>
+    <span>${order.date} ${order.timestamp} EAT</span>
   </div>
 
   <div class="divider"></div>
@@ -537,8 +537,8 @@ export function printA4Invoice(order: CanteenOrder) {
     </div>
     <div>
       <div class="info-block" style="margin-bottom: 10px;">
-        <label>Date & Time Placed</label>
-        <p>${order.date} • ${order.timestamp}</p>
+        <label>Date & Time Placed (EAT)</label>
+        <p>${order.date} • ${order.timestamp} EAT</p>
       </div>
       <div class="info-block">
         <label>Table / Allocation</label>

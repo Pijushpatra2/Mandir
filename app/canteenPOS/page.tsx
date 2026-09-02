@@ -62,6 +62,7 @@ import {
 } from "@/data/canteen";
 import { useCanteen } from "./context/CanteenContext";
 import { useCategories, useAddMenuItem } from "@/lib/api/canteen";
+import { formatKampalaDate, formatKampalaTime, getLiveTerminalClockString } from "@/lib/dateUtils";
 
 type POSTab =
   | "dashboard"
@@ -256,16 +257,7 @@ export default function CanteenPOSPage() {
     }
 
     const updateTime = () => {
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      };
-      setDateTime(new Date().toLocaleDateString("en-US", options));
+      setDateTime(getLiveTerminalClockString());
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -380,8 +372,8 @@ export default function CanteenPOSPage() {
     const total = Math.max(0, subtotal + tax + serviceCharge - discount);
 
     const tokenNum = "TK-" + Math.floor(2000 + Math.random() * 8000);
-    const timeNow = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const dateToday = new Date().toISOString().split("T")[0];
+    const timeNow = formatKampalaTime();
+    const dateToday = formatKampalaDate();
 
     let allocatedTableName = "Counter Walk-in";
     if (posSelectedTable) {
