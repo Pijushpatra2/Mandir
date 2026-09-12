@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useApp } from "@/lib/context";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { CheckCircle2, ShieldCheck, Mail, Phone, Lock, AlertTriangle, KeyRound, ArrowLeft, RefreshCw } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Mail, Phone, Lock, Eye, EyeOff, AlertTriangle, KeyRound, ArrowLeft, RefreshCw, Send } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +19,9 @@ export default function MembershipPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("Kampala");
   
@@ -27,7 +30,6 @@ export default function MembershipPage() {
   const [otpCode, setOtpCode] = useState("");
   const [otpTimer, setOtpTimer] = useState(600); // 10 minutes countdown
   const [isOtpTimerActive, setIsOtpTimerActive] = useState(false);
-  const [otpPreviewMsg, setOtpPreviewMsg] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -61,7 +63,7 @@ export default function MembershipPage() {
   // Step 1: Send OTP handler
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email || !phone || !password) {
+    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
       setErrorMsg("Please fill in all required fields.");
       showToast("Please fill in all fields", "error");
       return;
@@ -72,19 +74,22 @@ export default function MembershipPage() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      setErrorMsg("Passwords do not match. Please ensure both password fields are identical.");
+      showToast("Passwords do not match", "error");
+      return;
+    }
+
     setIsLoading(true);
     setErrorMsg("");
 
     try {
-      const res = await sendDevoteeOtp({ email, phone });
+      const res = await sendDevoteeOtp({ email, phone, first_name: firstName });
+      setOtpCode(""); // Keep input empty so devotee types the received OTP
       setStep("otp");
       setOtpTimer(res.data?.expiresInSeconds || 600);
       setIsOtpTimerActive(true);
-      if (res.data?.otpPreview) {
-        setOtpPreviewMsg(res.data.otpPreview);
-        setOtpCode(res.data.otpPreview); // Auto-filled for convenient registration
-      }
-      showToast("Verification code generated!", "success");
+      showToast("Verification code dispatched to your email!", "success");
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to send verification code. Please check your details.";
       setErrorMsg(msg);
@@ -99,14 +104,11 @@ export default function MembershipPage() {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      const res = await sendDevoteeOtp({ email, phone });
+      const res = await sendDevoteeOtp({ email, phone, first_name: firstName });
+      setOtpCode(""); // Reset input on resend
       setOtpTimer(res.data?.expiresInSeconds || 600);
       setIsOtpTimerActive(true);
-      if (res.data?.otpPreview) {
-        setOtpPreviewMsg(res.data.otpPreview);
-        setOtpCode(res.data.otpPreview);
-      }
-      showToast("New verification code sent!", "info");
+      showToast("New verification code sent to your email!", "info");
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to resend code.";
       setErrorMsg(msg);
@@ -325,18 +327,65 @@ export default function MembershipPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
-                      Choose Password *
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Min. 6 characters"
-                      className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        Choose Password *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-secondary-bronze/45 pointer-events-none">
+                          <Lock className="w-4 h-4" />
+                        </span>
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Min. 6 characters"
+                          className="w-full pl-10 pr-10 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-secondary-bronze/45 hover:text-dark-surface cursor-pointer"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        Confirm Password *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-secondary-bronze/45 pointer-events-none">
+                          <Lock className="w-4 h-4" />
+                        </span>
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          required
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Re-enter password"
+                          className={`w-full pl-10 pr-10 py-3 rounded-xl border ${
+                            confirmPassword && password !== confirmPassword
+                              ? "border-error-red focus:border-error-red"
+                              : "border-primary-gold/25 focus:border-primary-gold"
+                          } bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-secondary-bronze/45 hover:text-dark-surface cursor-pointer"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {confirmPassword && password !== confirmPassword && (
+                        <p className="text-xs text-error-red mt-1 font-poppins">Passwords do not match</p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="pt-2">
@@ -345,8 +394,8 @@ export default function MembershipPage() {
                       disabled={isLoading}
                       className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-sm sm:text-base tracking-wide cursor-pointer disabled:opacity-50 font-poppins flex items-center justify-center space-x-2"
                     >
-                      <KeyRound className="w-5 h-5" />
-                      <span>{isLoading ? "Generating OTP..." : "Continue to OTP Verification"}</span>
+                      <Send className="w-5 h-5" />
+                      <span>{isLoading ? "Sending OTP..." : "Send Verification Code"}</span>
                     </button>
                   </div>
                 </form>
@@ -357,13 +406,13 @@ export default function MembershipPage() {
                 <form onSubmit={handleVerifyAndRegister} className="space-y-6 text-left font-poppins">
                   <div className="text-center space-y-2">
                     <div className="w-14 h-14 rounded-2xl bg-primary-gold/15 text-primary-gold mx-auto flex items-center justify-center">
-                      <KeyRound className="w-7 h-7" />
+                      <Mail className="w-7 h-7" />
                     </div>
                     <h4 className="font-heading text-xl sm:text-2xl font-bold text-dark-surface">
                       Enter Verification OTP
                     </h4>
                     <p className="text-sm sm:text-base text-secondary-bronze/80 max-w-md mx-auto">
-                      A 6-digit one-time code was sent to <span className="font-semibold text-dark-surface">{email}</span> and phone <span className="font-semibold text-dark-surface">{phone}</span>.
+                      A 6-digit one-time code was sent to <strong className="text-dark-surface">{email}</strong> via official temple email.
                     </p>
                   </div>
 

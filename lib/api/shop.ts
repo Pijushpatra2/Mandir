@@ -169,6 +169,21 @@ export function useShopOrderById(id: string, options?: { enabled?: boolean }) {
   });
 }
 
+export function useMyDevoteeOrders(params?: { devoteeId?: string; email?: string; phone?: string }, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['shop', 'orders', 'my', params],
+    queryFn: async (): Promise<ShopOrder[]> => {
+      const client = getActiveClient();
+      const { data } = await client.get<ApiResponse<ShopOrder[]>>('/shop/orders/my', {
+        params,
+      });
+      return data.data;
+    },
+    staleTime: 10 * 1000,
+    ...options,
+  });
+}
+
 export function useCreateShopOrder() {
   const queryClient = useQueryClient();
   return useMutation({

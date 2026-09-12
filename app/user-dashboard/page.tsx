@@ -5,8 +5,9 @@ import { useApp } from "@/lib/context";
 import { formatCurrency } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { layout, cards, typography, buttons } from "@/lib/design-system";
-import { Download, Plus, Award, ArrowRight, Star, Users, Trash2 } from "lucide-react";
+import { Download, Plus, Award, ArrowRight, Star, Users, Trash2, ShoppingBag, Package } from "lucide-react";
 import Link from "next/link";
+import { useMyDevoteeOrders } from "@/lib/api/shop";
 
 interface FamilyMember {
   fullName: string;
@@ -27,6 +28,19 @@ export default function UserDashboardOverviewPage() {
     updateDevoteeProfile,
     showToast
   } = useApp();
+
+  const activeMemberFallback = members.find((m) => m.membershipNumber === currentMemberNumber);
+  
+  // Real-time shopping orders
+  const { data: myLiveOrders } = useMyDevoteeOrders({
+    devoteeId: devoteeProfile?.id || activeMemberFallback?.id,
+    email: devoteeProfile?.email || activeMemberFallback?.email,
+    phone: devoteeProfile?.phone || activeMemberFallback?.phone,
+  }, {
+    enabled: Boolean(devoteeProfile || activeMemberFallback),
+  });
+
+  const totalStoreOrdersCount = myLiveOrders ? myLiveOrders.length : (orders?.length || 0);
 
   // Family profile creation state
   const [newFamilyName, setNewFamilyName] = useState("");
@@ -424,20 +438,39 @@ export default function UserDashboardOverviewPage() {
       </div>
 
       {/* Stats Quick Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <GlassCard className="p-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <GlassCard className="p-5 sm:p-6">
           <p className="text-[10px] uppercase font-bold tracking-wider text-secondary-bronze/60 font-sans">My Puja Bookings</p>
-          <h4 className="text-2xl font-bold text-dark-surface mt-2">{devoteeBookings.length} Booked</h4>
+          <h4 className="text-xl sm:text-2xl font-bold text-dark-surface mt-2">{devoteeBookings.length} Booked</h4>
+          <Link href="/user-dashboard/bookings" className="text-[11px] text-primary-gold hover:underline font-semibold mt-1 inline-block">
+            View Bookings →
+          </Link>
         </GlassCard>
-        <GlassCard className="p-6">
+
+        <GlassCard className="p-5 sm:p-6">
           <p className="text-[10px] uppercase font-bold tracking-wider text-secondary-bronze/60 font-sans">My Donations</p>
-          <h4 className="text-2xl font-bold text-dark-surface mt-2">
-            {formatCurrency(devoteeDonations.reduce((sum, d) => sum + d.amount, 0))} Paid
+          <h4 className="text-xl sm:text-2xl font-bold text-dark-surface mt-2 truncate">
+            {formatCurrency(devoteeDonations.reduce((sum, d) => sum + d.amount, 0))}
           </h4>
+          <Link href="/user-dashboard/donations" className="text-[11px] text-primary-gold hover:underline font-semibold mt-1 inline-block">
+            View Receipts →
+          </Link>
         </GlassCard>
-        <GlassCard className="p-6">
+
+        <GlassCard className="p-5 sm:p-6">
           <p className="text-[10px] uppercase font-bold tracking-wider text-secondary-bronze/60 font-sans">My Darshan Passes</p>
-          <h4 className="text-2xl font-bold text-dark-surface mt-2">{devoteeDarshans.length} Slots</h4>
+          <h4 className="text-xl sm:text-2xl font-bold text-dark-surface mt-2">{devoteeDarshans.length} Passes</h4>
+          <Link href="/user-dashboard/bookings" className="text-[11px] text-primary-gold hover:underline font-semibold mt-1 inline-block">
+            View Passes →
+          </Link>
+        </GlassCard>
+
+        <GlassCard className="p-5 sm:p-6">
+          <p className="text-[10px] uppercase font-bold tracking-wider text-secondary-bronze/60 font-sans">My Store Purchases</p>
+          <h4 className="text-xl sm:text-2xl font-bold text-dark-surface mt-2">{totalStoreOrdersCount} Orders</h4>
+          <Link href="/user-dashboard/orders" className="text-[11px] text-primary-gold hover:underline font-semibold mt-1 inline-block">
+            Track Deliveries →
+          </Link>
         </GlassCard>
       </div>
     </div>

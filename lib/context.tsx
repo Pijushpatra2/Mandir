@@ -105,8 +105,11 @@ interface AppContextType {
   isDevoteeLoggedIn: boolean;
   loginDevotee: (emailOrPhone: string, password: string) => Promise<any>;
   registerDevotee: (data: any) => Promise<any>;
-  sendDevoteeOtp: (data: { email: string; phone: string }) => Promise<any>;
+  sendDevoteeOtp: (data: { email: string; phone: string; first_name?: string }) => Promise<any>;
+  verifyDevoteeOtp: (data: { email: string; otp_code: string }) => Promise<any>;
   updateDevoteeProfile: (updates: Partial<DevoteeProfile>) => Promise<DevoteeProfile>;
+  updateDevoteeStatus: (id: string, status: string) => Promise<any>;
+  getDevoteeDetails: (idOrNumber: string) => Promise<any>;
   verifyMemberPass: (membershipNumber: string) => Promise<any>;
   logoutDevotee: () => void;
   showToast: (message: string, type?: "success" | "error" | "info") => void;
@@ -397,8 +400,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     throw new Error("Invalid response format");
   };
 
-  const sendDevoteeOtp = async (data: { email: string; phone: string }) => {
+  const sendDevoteeOtp = async (data: { email: string; phone: string; first_name?: string }) => {
     const res = await devoteeApiClient.post('/devotees/auth/send-otp', data);
+    return res.data;
+  };
+
+  const verifyDevoteeOtp = async (data: { email: string; otp_code: string }) => {
+    const res = await devoteeApiClient.post('/devotees/auth/verify-otp', data);
     return res.data;
   };
 
@@ -412,6 +420,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return updated;
     }
     throw new Error("Invalid update response");
+  };
+
+  const updateDevoteeStatus = async (id: string, status: string) => {
+    const res = await devoteeApiClient.patch(`/devotees/admin/${id}/status`, { status });
+    if (res.data?.data?.devotee) {
+      showToast(`Member status updated to ${status}`, "success");
+      return res.data.data.devotee;
+    }
+    return res.data;
+  };
+
+  const getDevoteeDetails = async (idOrNumber: string) => {
+    const res = await devoteeApiClient.get(`/devotees/admin/${encodeURIComponent(idOrNumber)}/details`);
+    return res.data?.data;
   };
 
   const verifyMemberPass = async (membershipNumber: string) => {
@@ -474,7 +496,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         loginDevotee,
         registerDevotee,
         sendDevoteeOtp,
+        verifyDevoteeOtp,
         updateDevoteeProfile,
+        updateDevoteeStatus,
+        getDevoteeDetails,
         verifyMemberPass,
         logoutDevotee,
         showToast
