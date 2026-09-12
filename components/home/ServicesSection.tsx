@@ -12,7 +12,7 @@ export function ServicesSection() {
       title: "Pooja Booking",
       desc: "Book personalized or family poojas with resident priests.",
       icon: Flame,
-      href: "/services",
+      href: "/booking?type=puja",
       colorClass: "text-orange-600",
       bgClass: "bg-orange-500/10 border-orange-500/20",
       exploreColor: "text-orange-600 hover:text-orange-700"
@@ -21,7 +21,7 @@ export function ServicesSection() {
       title: "Hall Booking",
       desc: "Reserve Shree Swaminarayan Hall for weddings and holy functions.",
       icon: Building,
-      href: "/hall-booking",
+      href: "/booking?type=hall",
       colorClass: "text-purple-600",
       bgClass: "bg-purple-500/10 border-purple-500/20",
       exploreColor: "text-purple-600 hover:text-purple-700"
@@ -115,7 +115,7 @@ export function ServicesSection() {
             <div className="h-[1.5px] bg-[#B47F35]/30 w-6" />
           </div>
 
-          <p className="text-xs sm:text-sm text-secondary-bronze leading-relaxed font-light font-sans max-w-xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-2xl mx-auto">
             Manage your spiritual, social, and devotional requests with a modern, premium interface.
           </p>
         </div>
@@ -143,8 +143,8 @@ export function ServicesSection() {
 
                 {/* Content */}
                 <div className="space-y-3 mb-6">
-                  <h3 className="text-sm font-bold text-[#2B132C] tracking-wide">{item.title}</h3>
-                  <p className="text-[11px] sm:text-xs text-secondary-bronze/75 font-sans leading-relaxed font-light">
+                  <h3 className="text-base sm:text-lg font-bold text-[#2B132C] tracking-wide font-poppins">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-secondary-bronze/85 font-poppins leading-relaxed font-normal">
                     {item.desc}
                   </p>
                 </div>
@@ -152,10 +152,10 @@ export function ServicesSection() {
                 {/* Explore Link CTA */}
                 <Link 
                   href={item.href}
-                  className={`inline-flex items-center space-x-1 text-[11px] font-bold tracking-wider uppercase transition-all ${item.exploreColor} cursor-pointer`}
+                  className={`inline-flex items-center space-x-1.5 text-xs sm:text-sm md:text-base font-bold tracking-wider uppercase transition-all ${item.exploreColor} cursor-pointer font-poppins`}
                 >
                   <span>Explore Service</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </GlassCard>
             );
@@ -163,17 +163,17 @@ export function ServicesSection() {
         </div>
 
         {/* Bottom Feature trust Banner */}
-        <div className="bg-[#FAF7F2] border border-[#B47F35]/15 rounded-2xl p-6 shadow-sm">
+        <div className="bg-[#FAF7F2] border border-[#B47F35]/15 rounded-2xl p-6 sm:p-8 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
             
             {/* Feature 1 */}
             <div className="flex items-center space-x-3.5 text-left">
-              <div className="w-10 h-10 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
-                <ShieldCheck className="w-5 h-5" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
+                <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#2B132C]">Secure & Trusted</h4>
-                <p className="text-[10px] text-secondary-bronze/80 font-light mt-0.5 leading-tight font-sans">
+                <h4 className="text-sm sm:text-base font-bold text-[#2B132C] font-poppins">Secure & Trusted</h4>
+                <p className="text-xs sm:text-sm text-secondary-bronze/80 font-normal mt-0.5 leading-tight font-poppins">
                   Bank-level security for all transactions and data.
                 </p>
               </div>
@@ -181,12 +181,12 @@ export function ServicesSection() {
 
             {/* Feature 2 */}
             <div className="flex items-center space-x-3.5 text-left">
-              <div className="w-10 h-10 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
-                <Headphones className="w-5 h-5" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
+                <Headphones className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#2B132C]">24/7 Support</h4>
-                <p className="text-[10px] text-secondary-bronze/80 font-light mt-0.5 leading-tight font-sans">
+                <h4 className="text-sm sm:text-base font-bold text-[#2B132C] font-poppins">24/7 Support</h4>
+                <p className="text-xs sm:text-sm text-secondary-bronze/80 font-normal mt-0.5 leading-tight font-poppins">
                   We&apos;re here to help you every step of the way.
                 </p>
               </div>
@@ -194,12 +194,12 @@ export function ServicesSection() {
 
             {/* Feature 3 */}
             <div className="flex items-center space-x-3.5 text-left">
-              <div className="w-10 h-10 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
-                <Zap className="w-5 h-5" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
+                <Zap className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#2B132C]">Instant Access</h4>
-                <p className="text-[10px] text-secondary-bronze/80 font-light mt-0.5 leading-tight font-sans">
+                <h4 className="text-sm sm:text-base font-bold text-[#2B132C] font-poppins">Instant Access</h4>
+                <p className="text-xs sm:text-sm text-secondary-bronze/80 font-normal mt-0.5 leading-tight font-poppins">
                   Quick approvals and real-time updates on requests.
                 </p>
               </div>
@@ -207,16 +207,16 @@ export function ServicesSection() {
 
             {/* Feature 4 */}
             <div className="flex items-center space-x-3.5 text-left">
-              <div className="w-10 h-10 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm border border-[#B47F35]/15">
                 {/* SVG Lotus Icon */}
-                <svg className="w-5 h-5 text-[#B47F35]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg className="w-6 h-6 text-[#B47F35]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M12 22C12 22 20 18 20 12C20 9 18 8 16 8C14 8 13 10 12 11C11 10 10 8 8 8C6 8 4 9 4 12C4 18 12 22 12 22Z" />
                   <path d="M12 22C12 22 16 17 16 12C16 7 12 4 12 4C12 4 8 7 8 12C8 17 12 22 12 22Z" />
                 </svg>
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#2B132C]">Devotee First</h4>
-                <p className="text-[10px] text-secondary-bronze/80 font-light mt-0.5 leading-tight font-sans">
+                <h4 className="text-sm sm:text-base font-bold text-[#2B132C] font-poppins">Devotee First</h4>
+                <p className="text-xs sm:text-sm text-secondary-bronze/80 font-normal mt-0.5 leading-tight font-poppins">
                   Everything we build is with devotees in mind.
                 </p>
               </div>

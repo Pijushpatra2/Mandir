@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
+  User,
   Calendar,
   ShoppingBag,
   Heart,
@@ -58,6 +60,7 @@ export default function UserDashboardLayout({
 
   const menuItems = [
     { label: "Overview & ID Card", href: "/user-dashboard", icon: LayoutDashboard },
+    { label: "My Profile", href: "/user-dashboard/profile", icon: User },
     { label: "My Bookings", href: "/user-dashboard/bookings", icon: Calendar },
     { label: "My Shopping", href: "/user-dashboard/orders", icon: ShoppingBag },
     { label: "My Donations", href: "/user-dashboard/donations", icon: Heart },
@@ -66,19 +69,27 @@ export default function UserDashboardLayout({
   return (
     <div className="min-h-screen bg-[#FAF7F2] flex font-jakarta">
       
-      {/* 1. SIDEBAR (Desktop) */}
+      {/* 1. SIDEBAR (Desktop) - Pinned, Non-stretching, Viewport-bounded */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col border-r border-primary-gold/15 bg-white shrink-0 transition-all duration-300 ease-in-out overflow-hidden z-20",
+          "hidden lg:flex flex-col sticky top-0 h-screen max-h-screen border-r border-primary-gold/15 bg-white shrink-0 transition-all duration-300 ease-in-out z-20",
           isDesktopSidebarOpen ? "w-64 opacity-100" : "w-0 border-r-0 opacity-0 pointer-events-none"
         )}
       >
-        <div className="w-64 flex flex-col h-full">
+        <div className="w-64 flex flex-col h-full max-h-screen overflow-hidden">
           {/* Brand Logo & Desktop Close Button */}
-          <div className="h-20 border-b border-primary-gold/10 px-5 flex items-center justify-between shrink-0">
+          <div className="h-16 border-b border-primary-gold/10 px-4 flex items-center justify-between shrink-0">
             <Link href="/" className="flex items-center space-x-2.5 truncate">
-              <span className="text-2xl">🕉️</span>
-              <span className="font-heading text-base font-semibold tracking-wide text-dark-surface truncate">
+              <div className="relative w-8 h-8 shrink-0 flex items-center justify-center">
+                <Image
+                  src="/temple-logo.png"
+                  alt="SKSS Kampala Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="font-heading text-sm font-semibold tracking-wide text-dark-surface truncate">
                 Devotee Portal
               </span>
             </Link>
@@ -92,8 +103,8 @@ export default function UserDashboardLayout({
             </button>
           </div>
 
-          {/* Menu Navigation */}
-          <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
+          {/* Menu Navigation - Scrolls internally only when tabs exceed viewport */}
+          <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto overflow-x-hidden">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -101,26 +112,26 @@ export default function UserDashboardLayout({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all",
+                    "flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all",
                     isActive
                       ? "bg-primary-gold text-white shadow-md shadow-primary-gold/15"
                       : "text-secondary-bronze/75 hover:bg-primary-gold/10 hover:text-secondary-bronze"
                   )}
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
           {/* Public view shortcut & Logout */}
-          <div className="p-4 border-t border-primary-gold/10 space-y-1 shrink-0">
+          <div className="p-3 border-t border-primary-gold/10 space-y-1 shrink-0 bg-white">
             <Link
               href="/"
-              className="flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
+              className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
             >
-              <ArrowLeft className="w-4 h-4 text-primary-gold" />
+              <ArrowLeft className="w-4 h-4 text-primary-gold shrink-0" />
               <span>Back to Public Site</span>
             </Link>
             <button
@@ -128,9 +139,9 @@ export default function UserDashboardLayout({
                 logoutDevotee();
                 router.push("/");
               }}
-              className="w-full flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer text-left"
+              className="w-full flex items-center space-x-2.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer text-left"
             >
-              <LogOut className="w-4 h-4 text-red-500" />
+              <LogOut className="w-4 h-4 text-red-500 shrink-0" />
               <span>Logout</span>
             </button>
           </div>
@@ -143,34 +154,42 @@ export default function UserDashboardLayout({
           <>
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.3 }}
+              animate={{ opacity: 0.4 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="fixed inset-0 bg-black z-40 lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 lg:hidden"
             />
             <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-64 bg-white z-50 flex flex-col border-r border-primary-gold/15 lg:hidden shadow-2xl"
+              className="fixed inset-y-0 left-0 w-64 max-w-[80vw] h-full max-h-screen bg-white z-50 flex flex-col border-r border-primary-gold/15 lg:hidden shadow-2xl overflow-hidden"
             >
-              <div className="h-20 border-b border-primary-gold/10 px-6 flex items-center justify-between shrink-0">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl">🕉️</span>
-                  <span className="font-heading text-base font-semibold text-dark-surface">
+              <div className="h-16 border-b border-primary-gold/10 px-5 flex items-center justify-between shrink-0">
+                <div className="flex items-center space-x-2.5 truncate">
+                  <div className="relative w-8 h-8 shrink-0 flex items-center justify-center">
+                    <Image
+                      src="/temple-logo.png"
+                      alt="SKSS Kampala Logo"
+                      width={32}
+                      height={32}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <span className="font-heading text-sm font-semibold text-dark-surface truncate">
                     Devotee Portal
                   </span>
                 </div>
                 <button
                   onClick={() => setIsMobileSidebarOpen(false)}
-                  className="p-1.5 rounded-lg border border-primary-gold/10 text-secondary-bronze"
+                  className="p-1.5 rounded-lg border border-primary-gold/10 text-secondary-bronze cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
+              <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto overflow-x-hidden">
                 {menuItems.map((item) => {
                   const isActive = pathname === item.href;
                   return (
@@ -179,25 +198,25 @@ export default function UserDashboardLayout({
                       href={item.href}
                       onClick={() => setIsMobileSidebarOpen(false)}
                       className={cn(
-                        "flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all",
+                        "flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all",
                         isActive
                           ? "bg-primary-gold text-white shadow-md shadow-primary-gold/15"
                           : "text-secondary-bronze/75 hover:bg-primary-gold/10 hover:text-secondary-bronze"
                       )}
                     >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.label}</span>
+                      <item.icon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   );
                 })}
               </nav>
 
-              <div className="p-4 border-t border-primary-gold/10 space-y-1 shrink-0">
+              <div className="p-3 border-t border-primary-gold/10 space-y-1 shrink-0 bg-white">
                 <Link
                   href="/"
-                  className="flex items-center space-x-2 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
+                  className="flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
                 >
-                  <ArrowLeft className="w-4 h-4 text-primary-gold" />
+                  <ArrowLeft className="w-4 h-4 text-primary-gold shrink-0" />
                   <span>Back to Public Site</span>
                 </Link>
                 <button
@@ -206,9 +225,9 @@ export default function UserDashboardLayout({
                     logoutDevotee();
                     router.push("/");
                   }}
-                  className="w-full flex items-center space-x-2 px-4 py-3 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer text-left"
+                  className="w-full flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer text-left"
                 >
-                  <LogOut className="w-4 h-4 text-red-500" />
+                  <LogOut className="w-4 h-4 text-red-500 shrink-0" />
                   <span>Logout</span>
                 </button>
               </div>
@@ -218,18 +237,14 @@ export default function UserDashboardLayout({
       </AnimatePresence>
 
       {/* 3. MAIN CONTENT CONTAINER */}
-      <div className="flex-grow flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Top Header Navbar */}
-        <header className="h-20 bg-white border-b border-primary-gold/15 px-4 sm:px-6 md:px-8 flex items-center justify-between shrink-0">
+        <header className="sticky top-0 z-10 h-16 bg-white/95 backdrop-blur-md border-b border-primary-gold/15 px-4 sm:px-6 md:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3.5">
             <button
               onClick={toggleSidebar}
-              className="p-2.5 rounded-xl border border-primary-gold/25 text-dark-surface hover:bg-primary-gold/10 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center bg-white"
-              title={
-                typeof window !== "undefined" && window.innerWidth >= 1024
-                  ? (isDesktopSidebarOpen ? "Close Sidebar" : "Open Sidebar")
-                  : (isMobileSidebarOpen ? "Close Menu" : "Open Menu")
-              }
+              className="p-2 rounded-xl border border-primary-gold/25 text-dark-surface hover:bg-primary-gold/10 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center bg-white"
+              title="Toggle Sidebar"
               aria-label="Toggle Sidebar"
             >
               <Menu className="w-5 h-5 text-secondary-bronze" />
@@ -253,7 +268,7 @@ export default function UserDashboardLayout({
         </header>
 
         {/* Content Wrapper */}
-        <main className="flex-grow p-6 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 min-w-0">
           {children}
         </main>
       </div>

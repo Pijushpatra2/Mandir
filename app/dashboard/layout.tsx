@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp, UserRole } from "@/lib/context";
@@ -132,19 +133,27 @@ export default function DashboardLayout({
     <OfflineProvider>
       <div className="min-h-screen bg-bg-warm flex font-jakarta">
       
-      {/* 1. SIDEBAR (Desktop) */}
+      {/* 1. SIDEBAR (Desktop) - Pinned, Non-stretching, Viewport-bounded */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col border-r border-primary-gold/15 bg-white shrink-0 transition-all duration-300 ease-in-out overflow-hidden z-20",
+          "hidden lg:flex flex-col sticky top-0 h-screen max-h-screen border-r border-primary-gold/15 bg-white shrink-0 transition-all duration-300 ease-in-out z-20",
           isDesktopSidebarOpen ? "w-64 opacity-100" : "w-0 border-r-0 opacity-0 pointer-events-none"
         )}
       >
-        <div className="w-64 flex flex-col h-full">
+        <div className="w-64 flex flex-col h-full max-h-screen overflow-hidden">
           {/* Brand Logo & Desktop Close Button */}
-          <div className="h-20 border-b border-primary-gold/10 px-5 flex items-center justify-between shrink-0">
+          <div className="h-16 border-b border-primary-gold/10 px-4 flex items-center justify-between shrink-0">
             <Link href="/" className="flex items-center space-x-2.5 truncate">
-              <span className="text-2xl">🕉️</span>
-              <span className="font-heading text-base font-semibold tracking-wide text-dark-surface truncate">
+              <div className="relative w-8 h-8 shrink-0 flex items-center justify-center">
+                <NextImage
+                  src="/temple-logo.png"
+                  alt="SKSS Kampala Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="font-heading text-sm font-semibold tracking-wide text-dark-surface truncate">
                 SKSS Kampala ERP
               </span>
             </Link>
@@ -158,8 +167,8 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {/* Menu Navigation */}
-          <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
+          {/* Menu Navigation - Scrollable internally if tabs exceed screen height */}
+          <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto overflow-x-hidden">
             {currentMenu.map((item: any) => {
               // Check roles access if not devotee
               if (userRole !== "DEVOTEE" && item.roles && !item.roles.includes(userRole)) {
@@ -171,26 +180,26 @@ export default function DashboardLayout({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all",
+                    "flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all",
                     isActive
                       ? "bg-primary-gold text-white shadow-md shadow-primary-gold/15"
                       : "text-secondary-bronze/75 hover:bg-primary-gold/10 hover:text-secondary-bronze"
                   )}
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Public view shortcut */}
-          <div className="p-4 border-t border-primary-gold/10 shrink-0">
+          {/* Public view shortcut / footer */}
+          <div className="p-3 border-t border-primary-gold/10 shrink-0 bg-white">
             <Link
               href="/"
-              className="flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
+              className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5 transition-all"
             >
-              <ArrowLeft className="w-4 h-4 text-primary-gold" />
+              <ArrowLeft className="w-4 h-4 text-primary-gold shrink-0" />
               <span>Go to Public Site</span>
             </Link>
           </div>
@@ -198,16 +207,16 @@ export default function DashboardLayout({
       </aside>
 
       {/* 2. MAIN APP CONTENT PANEL */}
-      <div className="flex-grow flex flex-col min-h-screen overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         
         {/* Top Navbar Header */}
-        <header className="h-20 border-b border-primary-gold/10 bg-white px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm shrink-0">
+        <header className="sticky top-0 z-10 h-16 border-b border-primary-gold/10 bg-white/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-xs shrink-0">
           
-          {/* Universal Sidebar Open/Close Toggle (Big Screen & Mobile) */}
+          {/* Universal Sidebar Open/Close Toggle */}
           <div className="flex items-center space-x-3.5">
             <button
               onClick={toggleSidebar}
-              className="p-2.5 rounded-xl border border-primary-gold/25 text-dark-surface hover:bg-primary-gold/10 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center bg-white"
+              className="p-2 rounded-xl border border-primary-gold/25 text-dark-surface hover:bg-primary-gold/10 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center bg-white"
               title={
                 typeof window !== "undefined" && window.innerWidth >= 1024
                   ? (isDesktopSidebarOpen ? "Close Sidebar" : "Open Sidebar")
@@ -217,13 +226,13 @@ export default function DashboardLayout({
             >
               <Menu className="w-5 h-5 text-secondary-bronze" />
             </button>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-secondary-bronze/75 font-sans truncate">
+            <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-secondary-bronze/75 font-sans truncate">
               {userRole === "DEVOTEE" ? "Devotee Portal" : "Administrative Desk"}
             </h2>
           </div>
 
           {/* Quick controls right */}
-          <div className="flex items-center space-x-4 relative">
+          <div className="flex items-center space-x-3 sm:space-x-4 relative">
             
             {/* Quick role display badge */}
             <span className="hidden sm:inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-wider border border-primary-gold/30 rounded-xl bg-bg-warm text-secondary-bronze">
@@ -286,8 +295,8 @@ export default function DashboardLayout({
             </div>
 
             {/* Profile Avatar / Settings Shortcut */}
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-gold to-secondary-bronze flex items-center justify-center text-white font-bold text-sm shadow-md">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-primary-gold to-secondary-bronze flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md">
                 U
               </div>
               <button
@@ -304,7 +313,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Inner Content Area */}
-        <main className="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
           {children}
         </main>
 
@@ -319,31 +328,39 @@ export default function DashboardLayout({
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="fixed inset-0 bg-black z-40 lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 lg:hidden"
             />
             <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed top-0 bottom-0 left-0 w-64 bg-white z-50 lg:hidden border-r border-primary-gold/15 flex flex-col shadow-2xl"
+              className="fixed top-0 bottom-0 left-0 w-64 max-w-[80vw] h-full max-h-screen bg-white z-50 lg:hidden border-r border-primary-gold/15 flex flex-col shadow-2xl overflow-hidden"
             >
-              <div className="h-20 border-b border-primary-gold/10 px-6 flex items-center justify-between shrink-0">
-                <Link href="/" onClick={() => setIsMobileSidebarOpen(false)} className="flex items-center space-x-2">
-                  <span className="text-xl">🕉️</span>
-                  <span className="font-heading text-lg font-semibold text-dark-surface">
+              <div className="h-16 border-b border-primary-gold/10 px-5 flex items-center justify-between shrink-0">
+                <Link href="/" onClick={() => setIsMobileSidebarOpen(false)} className="flex items-center space-x-2.5 truncate">
+                  <div className="relative w-8 h-8 shrink-0 flex items-center justify-center">
+                    <NextImage
+                      src="/temple-logo.png"
+                      alt="SKSS Kampala Logo"
+                      width={32}
+                      height={32}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <span className="font-heading text-base font-semibold text-dark-surface truncate">
                     SKSS Kampala ERP
                   </span>
                 </Link>
                 <button
                   onClick={() => setIsMobileSidebarOpen(false)}
-                  className="p-1.5 rounded-lg border border-primary-gold/15 text-secondary-bronze hover:bg-primary-gold/10"
+                  className="p-1.5 rounded-lg border border-primary-gold/15 text-secondary-bronze hover:bg-primary-gold/10 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
+              <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto overflow-x-hidden">
                 {currentMenu.map((item: any) => {
                   if (userRole !== "DEVOTEE" && item.roles && !item.roles.includes(userRole)) {
                     return null;
@@ -354,26 +371,26 @@ export default function DashboardLayout({
                       href={item.href}
                       onClick={() => setIsMobileSidebarOpen(false)}
                       className={cn(
-                        "flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all",
+                        "flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all",
                         pathname === item.href
                           ? "bg-primary-gold text-white shadow-md"
                           : "text-secondary-bronze/75 hover:bg-primary-gold/10 hover:text-secondary-bronze"
                       )}
                     >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.label}</span>
+                      <item.icon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   );
                 })}
               </nav>
 
-              <div className="p-4 border-t border-primary-gold/10 shrink-0">
+              <div className="p-3 border-t border-primary-gold/10 shrink-0 bg-white">
                 <Link
                   href="/"
                   onClick={() => setIsMobileSidebarOpen(false)}
-                  className="flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5"
+                  className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-secondary-bronze hover:bg-primary-gold/5"
                 >
-                  <ArrowLeft className="w-4 h-4 text-primary-gold" />
+                  <ArrowLeft className="w-4 h-4 text-primary-gold shrink-0" />
                   <span>Go to Public Site</span>
                 </Link>
               </div>

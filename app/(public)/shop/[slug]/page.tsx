@@ -114,20 +114,20 @@ export default function ProductDetailPage({ params }: PageProps) {
   const isWishlisted = wishlist.includes(product.id);
 
   return (
-    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding}`}>
+    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding} font-poppins`}>
       <div className={layout.container}>
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center space-x-2 text-xs font-semibold text-secondary-bronze/65 mb-8">
+        <nav className="flex items-center space-x-2 text-sm sm:text-base font-medium text-secondary-bronze/75 mb-8 font-poppins">
           <Link href="/shop" className="hover:text-primary-gold transition-colors">
             Shop
           </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-4 h-4" />
           {category && (
             <>
               <Link href={`/categories/${category.slug}`} className="hover:text-primary-gold transition-colors">
                 {category.name}
               </Link>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-4 h-4" />
             </>
           )}
           <span className="text-secondary-bronze font-bold line-clamp-1">{product.name}</span>
@@ -148,7 +148,7 @@ export default function ProductDetailPage({ params }: PageProps) {
               />
               {/* Featured Badge */}
               {product.isFeatured && (
-                <span className="absolute top-6 left-6 bg-primary-gold text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                <span className="absolute top-6 left-6 bg-primary-gold text-white text-xs sm:text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm font-poppins">
                   Featured
                 </span>
               )}
@@ -182,7 +182,7 @@ export default function ProductDetailPage({ params }: PageProps) {
           {/* 2. Details Column (lg:col-span-6) */}
           <div className="lg:col-span-6 space-y-6">
             <div>
-              <div className="flex items-center space-x-2 text-warning-amber mb-2">
+              <div className="flex items-center space-x-2 text-warning-amber mb-2 font-poppins">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -193,24 +193,24 @@ export default function ProductDetailPage({ params }: PageProps) {
                     />
                   ))}
                 </div>
-                <span className="text-xs font-bold text-dark-surface">{product.rating || 5.0}</span>
-                <span className="text-xs text-secondary-bronze/50">({dbReviews.length || product.reviewsCount || 0} reviews)</span>
+                <span className="text-sm font-bold text-dark-surface">{product.rating || 5.0}</span>
+                <span className="text-sm text-secondary-bronze/60">({dbReviews.length || product.reviewsCount || 0} reviews)</span>
               </div>
 
-              <h1 className={`${typography.h1} text-dark-surface font-semibold mb-3`}>{product.name}</h1>
-              <div className="text-2xl font-bold text-dark-surface font-heading">
+              <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-dark-surface font-semibold mb-3">{product.name}</h1>
+              <div className="text-2xl sm:text-3xl font-bold text-dark-surface font-heading">
                 {formatCurrency(product.price)}
               </div>
             </div>
 
-            <p className={`${typography.body} text-secondary-bronze/80 leading-relaxed`}>
+            <p className="text-base sm:text-lg text-secondary-bronze/85 leading-relaxed font-normal font-poppins">
               {product.description}
             </p>
 
             {/* Stock status indicator */}
-            <div className="flex items-center space-x-2">
-              <span className={`w-2 h-2 rounded-full ${(product.stock || 0) > 0 ? "bg-success-green" : "bg-error-red"}`} />
-              <span className="text-xs font-semibold text-secondary-bronze">
+            <div className="flex items-center space-x-2.5 font-poppins">
+              <span className={`w-2.5 h-2.5 rounded-full ${(product.stock || 0) > 0 ? "bg-success-green" : "bg-error-red"}`} />
+              <span className="text-sm sm:text-base font-medium text-secondary-bronze">
                 {(product.stock || 0) > 0 ? `In Stock (${product.stock} available)` : "Currently Out of Stock"}
               </span>
             </div>
@@ -221,14 +221,14 @@ export default function ProductDetailPage({ params }: PageProps) {
                 <div className="flex items-center border border-primary-gold/20 rounded-xl bg-white overflow-hidden">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3.5 py-2 text-secondary-bronze hover:bg-primary-gold/10 transition-colors"
+                    className="px-4 py-2.5 text-secondary-bronze hover:bg-primary-gold/10 transition-colors text-base font-bold"
                   >
                     -
                   </button>
-                  <span className="px-4 py-2 font-bold text-xs text-dark-surface">{quantity}</span>
+                  <span className="px-4 py-2.5 font-bold text-sm sm:text-base text-dark-surface font-poppins">{quantity}</span>
                   <button
                     onClick={() => setQuantity(Math.min(product.stock || 50, quantity + 1))}
-                    className="px-3.5 py-2 text-secondary-bronze hover:bg-primary-gold/10 transition-colors"
+                    className="px-4 py-2.5 text-secondary-bronze hover:bg-primary-gold/10 transition-colors text-base font-bold"
                   >
                     +
                   </button>
@@ -237,15 +237,15 @@ export default function ProductDetailPage({ params }: PageProps) {
                 <button
                   onClick={() => addToCart(product, quantity)}
                   disabled={product.stock === 0}
-                  className={`${buttons.primary} flex-grow py-3 px-6 text-sm flex items-center justify-center space-x-2`}
+                  className={`${buttons.primary} flex-grow py-3.5 px-6 text-sm sm:text-base font-semibold flex items-center justify-center space-x-2 font-poppins`}
                 >
-                  <ShoppingCart className="w-4 h-4" />
+                  <ShoppingCart className="w-5 h-5" />
                   <span>{product.stock === 0 ? "Out of Stock" : "Add to Sacred Cart"}</span>
                 </button>
 
                 <button
                   onClick={() => toggleWishlist(product.id)}
-                  className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
                     isWishlisted
                       ? "border-error-red bg-error-red/10 text-error-red"
                       : "border-primary-gold/20 hover:border-primary-gold/40 text-secondary-bronze bg-white"
@@ -259,11 +259,11 @@ export default function ProductDetailPage({ params }: PageProps) {
 
             {/* Quality Assurance Guarantees */}
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary-gold/10">
-              <div className="flex items-center space-x-3 text-xs text-secondary-bronze">
+              <div className="flex items-center space-x-3 text-sm sm:text-base text-secondary-bronze font-poppins">
                 <ShieldCheck className="w-5 h-5 text-primary-gold shrink-0" />
                 <span>100% Authentic & Blessed Pooja Items</span>
               </div>
-              <div className="flex items-center space-x-3 text-xs text-secondary-bronze">
+              <div className="flex items-center space-x-3 text-sm sm:text-base text-secondary-bronze font-poppins">
                 <CheckCircle2 className="w-5 h-5 text-primary-gold shrink-0" />
                 <span>Secure Courier Packing</span>
               </div>
@@ -272,11 +272,11 @@ export default function ProductDetailPage({ params }: PageProps) {
         </div>
 
         {/* Product Information Tabs */}
-        <div className="bg-white border border-primary-gold/10 rounded-3xl p-8 shadow-sm mb-16">
+        <div className="bg-white border border-primary-gold/10 rounded-3xl p-6 sm:p-8 shadow-sm mb-16">
           <div className="flex border-b border-primary-gold/10 pb-4 mb-6 gap-6">
             <button
               onClick={() => setActiveTab("specs")}
-              className={`text-sm font-semibold pb-2 border-b-2 transition-all cursor-pointer ${
+              className={`text-sm sm:text-base font-semibold pb-2 border-b-2 transition-all cursor-pointer font-poppins ${
                 activeTab === "specs"
                   ? "border-primary-gold text-primary-gold"
                   : "border-transparent text-secondary-bronze/60 hover:text-secondary-bronze"
@@ -286,7 +286,7 @@ export default function ProductDetailPage({ params }: PageProps) {
             </button>
             <button
               onClick={() => setActiveTab("reviews")}
-              className={`text-sm font-semibold pb-2 border-b-2 transition-all cursor-pointer ${
+              className={`text-sm sm:text-base font-semibold pb-2 border-b-2 transition-all cursor-pointer font-poppins ${
                 activeTab === "reviews"
                   ? "border-primary-gold text-primary-gold"
                   : "border-transparent text-secondary-bronze/60 hover:text-secondary-bronze"
@@ -301,9 +301,9 @@ export default function ProductDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {product.specs &&
                 Object.entries(product.specs).map(([key, val]) => (
-                  <div key={key} className="flex justify-between p-3 border-b border-primary-gold/5 text-sm">
-                    <span className="text-secondary-bronze/60 font-semibold">{key}</span>
-                    <span className="text-dark-surface font-bold">{val}</span>
+                  <div key={key} className="flex justify-between p-3.5 border-b border-primary-gold/5 text-sm sm:text-base font-poppins">
+                    <span className="text-secondary-bronze/70 font-medium">{key}</span>
+                    <span className="text-dark-surface font-semibold">{val}</span>
                   </div>
                 ))}
             </div>
@@ -314,25 +314,25 @@ export default function ProductDetailPage({ params }: PageProps) {
             <div className="space-y-8">
               {/* Add Review Form */}
               <div className="bg-bg-warm/30 border border-primary-gold/10 rounded-2xl p-6 space-y-4">
-                <h4 className="text-sm font-bold text-dark-surface">Write a Devotional Review</h4>
-                <form onSubmit={handleSubmitReview} className="space-y-3">
+                <h4 className="text-base sm:text-lg font-bold text-dark-surface font-poppins">Write a Devotional Review</h4>
+                <form onSubmit={handleSubmitReview} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className={inputs.label}>Your Name</label>
+                      <label className="block text-xs sm:text-sm font-semibold uppercase tracking-wider text-secondary-bronze/80 mb-1.5 font-poppins">Your Name</label>
                       <input
                         type="text"
                         placeholder="e.g. Ramesh Patel"
                         value={reviewerName}
                         onChange={(e) => setReviewerName(e.target.value)}
-                        className={inputs.text}
+                        className={`${inputs.text} text-sm sm:text-base font-poppins`}
                       />
                     </div>
                     <div>
-                      <label className={inputs.label}>Star Rating</label>
+                      <label className="block text-xs sm:text-sm font-semibold uppercase tracking-wider text-secondary-bronze/80 mb-1.5 font-poppins">Star Rating</label>
                       <select
                         value={reviewRating}
                         onChange={(e) => setReviewRating(Number(e.target.value))}
-                        className={inputs.select}
+                        className={`${inputs.select} text-sm sm:text-base font-poppins`}
                       >
                         <option value={5}>⭐⭐⭐⭐⭐ (5 Stars - Divine)</option>
                         <option value={4}>⭐⭐⭐⭐ (4 Stars - Great)</option>
@@ -344,21 +344,21 @@ export default function ProductDetailPage({ params }: PageProps) {
                   </div>
 
                   <div>
-                    <label className={inputs.label}>Your Experience / Feedback</label>
+                    <label className="block text-xs sm:text-sm font-semibold uppercase tracking-wider text-secondary-bronze/80 mb-1.5 font-poppins">Your Experience / Feedback</label>
                     <textarea
                       placeholder="Share your spiritual experience with this blessed item..."
                       value={reviewComment}
                       onChange={(e) => setReviewComment(e.target.value)}
-                      className={`${inputs.text} h-20 resize-none`}
+                      className={`${inputs.text} h-24 resize-none text-sm sm:text-base font-poppins`}
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={isSubmittingReview}
-                    className={`${buttons.primary} px-5 py-2 text-xs flex items-center space-x-1.5 cursor-pointer`}
+                    className={`${buttons.primary} px-6 py-2.5 text-sm sm:text-base font-semibold flex items-center space-x-2 cursor-pointer font-poppins`}
                   >
-                    {isSubmittingReview ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    {isSubmittingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     <span>{isSubmittingReview ? "Submitting..." : "Post Review"}</span>
                   </button>
                 </form>
@@ -367,25 +367,25 @@ export default function ProductDetailPage({ params }: PageProps) {
               {/* Reviews List */}
               <div className="space-y-4">
                 {isLoadingReviews ? (
-                  <div className="py-6 text-center text-xs text-secondary-bronze">Loading reviews...</div>
+                  <div className="py-6 text-center text-sm text-secondary-bronze font-poppins">Loading reviews...</div>
                 ) : dbReviews.length === 0 ? (
-                  <div className="text-center py-6 text-secondary-bronze/60 text-xs">
+                  <div className="text-center py-6 text-secondary-bronze/70 text-sm sm:text-base font-poppins">
                     No reviews submitted yet for this product. Be the first to leave a review!
                   </div>
                 ) : (
                   dbReviews.map((rev) => (
-                    <div key={rev.id} className="p-4 border-b border-primary-gold/5 last:border-none space-y-2">
+                    <div key={rev.id} className="p-4 border-b border-primary-gold/5 last:border-none space-y-2 font-poppins">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-bold text-dark-surface">{rev.customerName}</span>
+                        <div className="flex items-center space-x-2.5">
+                          <span className="text-sm sm:text-base font-bold text-dark-surface">{rev.customerName}</span>
                           {rev.verifiedPurchase && (
-                            <span className="bg-success-green/10 text-success-green border border-success-green/20 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center">
-                              <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                            <span className="bg-success-green/10 text-success-green border border-success-green/20 text-xs sm:text-sm font-bold px-2 py-0.5 rounded-full flex items-center font-poppins">
+                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                               Verified Buyer
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-secondary-bronze/50">
+                        <span className="text-xs sm:text-sm text-secondary-bronze/60">
                           {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : "Recent"}
                         </span>
                       </div>
@@ -393,13 +393,13 @@ export default function ProductDetailPage({ params }: PageProps) {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3.5 h-3.5 ${
+                            className={`w-4 h-4 ${
                               i < rev.rating ? "fill-current" : "text-neutral-gray"
                             }`}
                           />
                         ))}
                       </div>
-                      <p className="text-sm text-secondary-bronze/80 italic leading-relaxed">
+                      <p className="text-sm sm:text-base text-secondary-bronze/85 italic leading-relaxed font-poppins">
                         "{rev.comment}"
                       </p>
                     </div>
@@ -413,7 +413,7 @@ export default function ProductDetailPage({ params }: PageProps) {
         {/* Related Products Recommendations */}
         {relatedProducts.length > 0 && (
           <div>
-            <h3 className={`${typography.h3} text-dark-surface mb-8`}>Recommended Sacred Items</h3>
+            <h3 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-dark-surface mb-8">Recommended Sacred Items</h3>
             <div className={layout.gridCols4}>
               {relatedProducts.map((p) => {
                 const isPWishlisted = wishlist.includes(p.id);
@@ -424,12 +424,12 @@ export default function ProductDetailPage({ params }: PageProps) {
                   >
                     <button
                       onClick={() => toggleWishlist(p.id)}
-                      className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-md shadow-sm text-secondary-bronze hover:text-error-red transition-all cursor-pointer"
+                      className="absolute top-4 right-4 z-10 p-2.5 rounded-full bg-white/80 backdrop-blur-md shadow-sm text-secondary-bronze hover:text-error-red transition-all cursor-pointer"
                     >
                       <Heart className={`w-4 h-4 ${isPWishlisted ? "fill-error-red text-error-red" : ""}`} />
                     </button>
 
-                    <Link href={`/shop/${p.slug}`} className="relative h-40 w-full overflow-hidden rounded-xl bg-primary-gold/5 mb-4 block">
+                    <Link href={`/shop/${p.slug}`} className="relative h-44 w-full overflow-hidden rounded-xl bg-primary-gold/5 mb-4 block">
                       <Image
                         src={p.images?.[0] || DEFAULT_PRODUCT_IMAGE}
                         alt={p.name}
@@ -442,15 +442,15 @@ export default function ProductDetailPage({ params }: PageProps) {
 
                     <div className="flex-grow flex flex-col">
                       <Link href={`/shop/${p.slug}`} className="hover:text-primary-gold transition-colors block">
-                        <h4 className="font-semibold text-dark-surface line-clamp-1 mb-1 text-sm">
+                        <h4 className="font-heading font-semibold text-dark-surface line-clamp-1 mb-1 text-sm sm:text-base">
                           {p.name}
                         </h4>
                       </Link>
-                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-primary-gold/10">
-                        <span className="text-sm font-bold text-dark-surface">
+                      <div className="flex items-center justify-between mt-auto pt-2.5 border-t border-primary-gold/10">
+                        <span className="text-sm sm:text-base font-bold text-dark-surface font-poppins">
                           {formatCurrency(p.price)}
                         </span>
-                        <span className="text-[10px] text-primary-gold font-bold">View Detail →</span>
+                        <span className="text-xs sm:text-sm text-primary-gold font-bold font-poppins">View Detail →</span>
                       </div>
                     </div>
                   </div>

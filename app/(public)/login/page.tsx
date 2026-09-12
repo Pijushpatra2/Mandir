@@ -44,31 +44,31 @@ export default function DevoteeLoginPage() {
   };
 
   return (
-    <div className="py-24 bg-bg-warm min-h-screen flex items-center justify-center font-sans">
+    <div className="py-24 bg-bg-warm min-h-screen flex items-center justify-center font-poppins">
       <div className="max-w-md w-full px-4">
         <div className="text-center mb-8">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary-gold bg-primary-gold/10 px-3 py-1 rounded-full">
+          <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-primary-gold bg-primary-gold/10 px-3.5 py-1 rounded-full font-poppins">
             Devotee Portal
           </span>
-          <h2 className="font-heading text-3xl font-medium text-dark-surface mt-3">
+          <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-medium text-dark-surface mt-3">
             Sign In to Swaminarayan Temple
           </h2>
-          <p className="text-xs text-secondary-bronze/70 mt-2 font-sans font-light">
+          <p className="text-sm sm:text-base text-secondary-bronze/80 mt-2 font-poppins font-normal leading-relaxed">
             Manage your pooja bookings, donations, and digital membership card.
           </p>
         </div>
 
-        <GlassCard className="p-8 bg-surface-white/95 border border-primary-gold/15 shadow-xl rounded-3xl relative overflow-hidden">
+        <GlassCard className="p-6 sm:p-8 bg-surface-white/95 border border-primary-gold/15 shadow-xl rounded-3xl relative overflow-hidden">
           {errorMsg && (
-            <div className="mb-6 p-4 rounded-xl bg-error-red/10 border border-error-red/25 flex items-start gap-2.5 text-error-red text-xs">
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 rounded-xl bg-error-red/10 border border-error-red/25 flex items-start gap-2.5 text-error-red text-sm sm:text-base font-poppins">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
+              <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
                 Email Address or Phone Number
               </label>
               <div className="relative">
@@ -81,13 +81,13 @@ export default function DevoteeLoginPage() {
                   value={emailOrPhone}
                   onChange={(e) => setEmailOrPhone(e.target.value)}
                   placeholder="e.g. harish.mehta@example.com or +91..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
+              <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
                 Password
               </label>
               <div className="relative">
@@ -100,7 +100,7 @@ export default function DevoteeLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
                 />
                 <button
                   type="button"
@@ -112,11 +112,11 @@ export default function DevoteeLoginPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center text-xs">
-              <label className="flex items-center text-secondary-bronze/80 font-light select-none">
+            <div className="flex justify-between items-center text-sm sm:text-base font-poppins">
+              <label className="flex items-center text-secondary-bronze/80 font-normal select-none">
                 <input
                   type="checkbox"
-                  className="mr-1.5 accent-primary-gold border-primary-gold/20 rounded cursor-pointer"
+                  className="mr-2 accent-primary-gold border-primary-gold/20 rounded cursor-pointer"
                 />
                 Remember Me
               </label>
@@ -128,14 +128,14 @@ export default function DevoteeLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-sm sm:text-base tracking-wide cursor-pointer disabled:opacity-50 font-poppins"
             >
               {isLoading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-primary-gold/10 text-center">
-            <p className="text-xs text-secondary-bronze/70 font-light font-sans">
+            <p className="text-sm sm:text-base text-secondary-bronze/80 font-normal font-poppins">
               Don't have a devotee profile yet?{" "}
               <Link href="/membership" className="text-primary-gold font-semibold hover:underline">
                 Create Devotee Membership

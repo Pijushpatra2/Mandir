@@ -1,23 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "@/lib/context";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { CheckCircle2, User, Mail, Phone, Lock, AlertTriangle } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Mail, Phone, Lock, AlertTriangle, KeyRound, ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function MembershipPage() {
   const router = useRouter();
-  const { registerDevotee, showToast } = useApp();
+  const { registerDevotee, sendDevoteeOtp, showToast } = useApp();
   
+  // Step 1 Form fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("Kampala");
   
+  // Step 2 OTP fields & states
+  const [step, setStep] = useState<"form" | "otp">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpTimer, setOtpTimer] = useState(600); // 10 minutes countdown
+  const [isOtpTimerActive, setIsOtpTimerActive] = useState(false);
+  const [otpPreviewMsg, setOtpPreviewMsg] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -28,11 +39,88 @@ export default function MembershipPage() {
     { title: "Community Updates", desc: "Receive updates about upcoming festivals, special darshan slots, and volunteer programs." }
   ];
 
-  const handleApplySubmit = async (e: React.FormEvent) => {
+  // OTP Countdown Timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isOtpTimerActive && otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (otpTimer === 0) {
+      setIsOtpTimerActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [isOtpTimerActive, otpTimer]);
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  // Step 1: Send OTP handler
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !email || !phone || !password) {
       setErrorMsg("Please fill in all required fields.");
       showToast("Please fill in all fields", "error");
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg("");
+
+    try {
+      const res = await sendDevoteeOtp({ email, phone });
+      setStep("otp");
+      setOtpTimer(res.data?.expiresInSeconds || 600);
+      setIsOtpTimerActive(true);
+      if (res.data?.otpPreview) {
+        setOtpPreviewMsg(res.data.otpPreview);
+        setOtpCode(res.data.otpPreview); // Auto-filled for convenient registration
+      }
+      showToast("Verification code generated!", "success");
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to send verification code. Please check your details.";
+      setErrorMsg(msg);
+      showToast(msg, "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Resend OTP handler
+  const handleResendOtp = async () => {
+    setIsLoading(true);
+    setErrorMsg("");
+    try {
+      const res = await sendDevoteeOtp({ email, phone });
+      setOtpTimer(res.data?.expiresInSeconds || 600);
+      setIsOtpTimerActive(true);
+      if (res.data?.otpPreview) {
+        setOtpPreviewMsg(res.data.otpPreview);
+        setOtpCode(res.data.otpPreview);
+      }
+      showToast("New verification code sent!", "info");
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to resend code.";
+      setErrorMsg(msg);
+      showToast(msg, "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Step 2: Final Verify & Register submit
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length < 4) {
+      setErrorMsg("Please enter the 6-digit verification code.");
       return;
     }
 
@@ -46,12 +134,16 @@ export default function MembershipPage() {
         email,
         phone,
         password,
-        membership_type: "Annual" // Default level
+        otp_code: otpCode,
+        membership_type: "Annual",
+        address,
+        city,
+        country: "Uganda",
       });
-      // Success: redirect to dashboard
+      showToast("Profile created successfully! Welcome to SKSS Kampala.", "success");
       router.push("/user-dashboard");
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Registration failed. Please check details and try again.";
+      const msg = err.response?.data?.message || "Verification failed. Please check the OTP code and try again.";
       setErrorMsg(msg);
       showToast(msg, "error");
     } finally {
@@ -60,7 +152,7 @@ export default function MembershipPage() {
   };
 
   return (
-    <div className="py-24 bg-bg-warm min-h-screen font-sans">
+    <div className="py-24 bg-bg-warm min-h-screen font-poppins">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <SectionHeader
@@ -72,138 +164,267 @@ export default function MembershipPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start mt-12">
           {/* Left Column: Benefits (Takes 5 columns on desktop) */}
           <div className="lg:col-span-5 space-y-6">
-            <h3 className="font-heading text-2xl font-medium text-dark-surface">
+            <h3 className="font-heading text-2xl sm:text-3xl font-medium text-dark-surface">
               Devotee Benefits & Access
             </h3>
-            <p className="text-xs text-secondary-bronze/70 leading-relaxed font-light">
-              By creating a free profile, you gain access to the temple's online services and booking history.
+            <p className="text-base sm:text-lg text-secondary-bronze/80 leading-relaxed font-normal font-poppins">
+              By creating a free profile, you gain access to the temple's online services, secure donations, and booking history.
             </p>
             
-            <div className="space-y-5 pt-4">
+            <div className="space-y-6 pt-4">
               {benefits.map((benefit, idx) => (
                 <div className="flex items-start space-x-4" key={idx}>
-                  <div className="w-8 h-8 rounded-lg bg-primary-gold/10 flex items-center justify-center text-primary-gold shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-4 h-4" />
+                  <div className="w-10 h-10 rounded-xl bg-primary-gold/10 flex items-center justify-center text-primary-gold shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-heading text-base font-medium text-dark-surface">
+                    <h4 className="font-heading text-lg sm:text-xl font-medium text-dark-surface">
                       {benefit.title}
                     </h4>
-                    <p className="text-xs text-secondary-bronze/75 font-sans font-light mt-1">
+                    <p className="text-sm sm:text-base text-secondary-bronze/85 font-poppins leading-relaxed mt-1">
                       {benefit.desc}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* OTP Security Notice */}
+            <div className="p-5 rounded-2xl bg-white border border-primary-gold/20 flex items-start gap-3 shadow-xs">
+              <ShieldCheck className="w-6 h-6 text-primary-gold shrink-0 mt-0.5" />
+              <div>
+                <h5 className="font-bold text-dark-surface text-sm sm:text-base">Secure OTP Verification</h5>
+                <p className="text-xs sm:text-sm text-secondary-bronze/75 font-normal leading-relaxed mt-0.5">
+                  Your identity is verified with a one-time passcode to ensure maximum profile protection and authenticated temple gate passes.
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Right Column: Registration Form (Takes 7 columns on desktop) */}
+          {/* Right Column: Registration Form & OTP Step (Takes 7 columns on desktop) */}
           <div className="lg:col-span-7">
-            <GlassCard className="p-8 md:p-10 bg-surface-white/95 border border-primary-gold/15 shadow-xl rounded-3xl">
-              <div className="mb-6">
-                <h3 className="font-heading text-2xl font-medium text-dark-surface">
-                  Devotee Registration Form
-                </h3>
-                <p className="text-xs text-secondary-bronze/60 mt-1 font-sans font-light">
-                  Please fill in your details. All fields are required.
-                </p>
+            <GlassCard className="p-6 sm:p-10 bg-surface-white/95 border border-primary-gold/15 shadow-xl rounded-3xl">
+              
+              {/* Progress Stepper */}
+              <div className="flex items-center justify-between pb-6 mb-6 border-b border-primary-gold/10 font-poppins">
+                <div className="flex items-center space-x-2.5">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
+                    step === "form" ? "bg-primary-gold text-white" : "bg-success-green text-white"
+                  }`}>
+                    {step === "form" ? "1" : "✓"}
+                  </span>
+                  <span className={`text-sm sm:text-base font-semibold ${step === "form" ? "text-dark-surface" : "text-secondary-bronze/70"}`}>
+                    Devotee Details
+                  </span>
+                </div>
+                <span className="text-secondary-bronze/30">➔</span>
+                <div className="flex items-center space-x-2.5">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
+                    step === "otp" ? "bg-primary-gold text-white" : "bg-primary-gold/15 text-primary-gold"
+                  }`}>
+                    2
+                  </span>
+                  <span className={`text-sm sm:text-base font-semibold ${step === "otp" ? "text-dark-surface" : "text-secondary-bronze/70"}`}>
+                    OTP Verification
+                  </span>
+                </div>
               </div>
 
               {errorMsg && (
-                <div className="mb-6 p-4 rounded-xl bg-error-red/10 border border-error-red/25 flex items-start gap-2.5 text-error-red text-xs">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="mb-6 p-4 rounded-xl bg-error-red/10 border border-error-red/25 flex items-start gap-2.5 text-error-red text-sm sm:text-base font-poppins">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
-              <form onSubmit={handleApplySubmit} className="space-y-5 text-left">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="e.g. Harish"
-                      className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
-                    />
+              {/* STEP 1: REGISTRATION DETAILS FORM */}
+              {step === "form" && (
+                <form onSubmit={handleRequestOtp} className="space-y-5 text-left font-poppins">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="e.g. Harish"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="e.g. Mehta"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
-                      Last Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="e.g. Mehta"
-                      className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
-                    />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="harish.mehta@example.com"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="e.g. +256 700 123456"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        Residential Address
+                      </label>
+                      <input
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="e.g. Plot 12, Kampala Road"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                        City / Town
+                      </label>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Kampala"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
-                      Email Address
+                    <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
+                      Choose Password *
                     </label>
                     <input
-                      type="email"
+                      type="password"
                       required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="harish.mehta@example.com"
-                      className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min. 6 characters"
+                      className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
-                      Phone Number
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-sm sm:text-base tracking-wide cursor-pointer disabled:opacity-50 font-poppins flex items-center justify-center space-x-2"
+                    >
+                      <KeyRound className="w-5 h-5" />
+                      <span>{isLoading ? "Generating OTP..." : "Continue to OTP Verification"}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* STEP 2: OTP VERIFICATION VIEW */}
+              {step === "otp" && (
+                <form onSubmit={handleVerifyAndRegister} className="space-y-6 text-left font-poppins">
+                  <div className="text-center space-y-2">
+                    <div className="w-14 h-14 rounded-2xl bg-primary-gold/15 text-primary-gold mx-auto flex items-center justify-center">
+                      <KeyRound className="w-7 h-7" />
+                    </div>
+                    <h4 className="font-heading text-xl sm:text-2xl font-bold text-dark-surface">
+                      Enter Verification OTP
+                    </h4>
+                    <p className="text-sm sm:text-base text-secondary-bronze/80 max-w-md mx-auto">
+                      A 6-digit one-time code was sent to <span className="font-semibold text-dark-surface">{email}</span> and phone <span className="font-semibold text-dark-surface">{phone}</span>.
+                    </p>
+                  </div>
+
+                  {/* 6-Digit OTP Code Input */}
+                  <div className="space-y-2">
+                    <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-secondary-bronze text-center font-poppins">
+                      6-Digit Security Code
                     </label>
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. +256 700 123456"
-                      className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
-                    />
+                    <div className="flex justify-center">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        required
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                        placeholder="• • • • • •"
+                        className="w-64 text-center tracking-[0.6em] text-2xl sm:text-3xl font-mono font-bold py-3.5 px-4 rounded-2xl border-2 border-primary-gold focus:ring-4 focus:ring-primary-gold/20 outline-none bg-white shadow-inner"
+                      />
+                    </div>
+                    <p className="text-xs text-center text-secondary-bronze/60">
+                      Code valid for: <span className="font-bold text-primary-gold">{formatTimer(otpTimer)}</span>
+                    </p>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
-                    Choose Password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
-                    className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none placeholder:text-secondary-bronze/30 text-dark-surface"
-                  />
-                </div>
+                  <div className="space-y-3 pt-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading || otpCode.length < 4}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-sm sm:text-base tracking-wide cursor-pointer disabled:opacity-50 font-poppins flex items-center justify-center space-x-2"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span>{isLoading ? "Verifying..." : "Verify & Complete Registration"}</span>
+                    </button>
 
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
-                  >
-                    {isLoading ? "Creating Profile..." : "Create Devotee Profile"}
-                  </button>
-                </div>
-              </form>
+                    <div className="flex justify-between items-center pt-2 text-xs sm:text-sm">
+                      <button
+                        type="button"
+                        onClick={() => { setStep("form"); setErrorMsg(""); }}
+                        className="text-secondary-bronze hover:text-primary-gold flex items-center space-x-1 font-semibold cursor-pointer"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Edit Details</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={isLoading || (isOtpTimerActive && otpTimer > 540)}
+                        className="text-primary-gold hover:text-secondary-bronze flex items-center space-x-1 font-semibold disabled:opacity-50 cursor-pointer"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+                        <span>Resend OTP</span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
 
               <div className="mt-6 pt-6 border-t border-primary-gold/10 text-center">
-                <p className="text-xs text-secondary-bronze/70 font-light font-sans">
-                  Already have a profile?{" "}
+                <p className="text-sm sm:text-base text-secondary-bronze/80 font-normal font-poppins">
+                  Already have an account?{" "}
                   <Link href="/login" className="text-primary-gold font-semibold hover:underline">
                     Sign In Here
                   </Link>

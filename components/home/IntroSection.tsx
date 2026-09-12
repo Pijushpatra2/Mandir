@@ -24,7 +24,7 @@ export function IntroSection() {
             
             <div className="space-y-4">
               {/* Gold uppercase tag */}
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#B47F35] block">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] block">
                 ABOUT MANDIR
               </span>
 
@@ -50,7 +50,7 @@ export function IntroSection() {
             </div>
 
             {/* Description Text */}
-            <p className="text-secondary-bronze leading-relaxed font-light text-sm max-w-2xl font-sans">
+            <p className="text-base sm:text-lg md:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-2xl">
               {templeConfig.name} is a complete digital platform dedicated to temples and devotees. We blend ancient traditions with modern technology to make your spiritual journey seamless, transparent and more meaningful.
             </p>
 
@@ -63,12 +63,12 @@ export function IntroSection() {
 
               {/* Item 1: Mission */}
               <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
-                  <Calendar className="w-5 h-5" />
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#2B132C] uppercase tracking-wide">Our Mission</h4>
-                  <p className="text-[11px] sm:text-xs text-secondary-bronze/80 leading-relaxed font-light">
+                  <h4 className="text-sm sm:text-base md:text-lg font-bold text-[#2B132C] uppercase tracking-wide font-poppins">Our Mission</h4>
+                  <p className="text-sm sm:text-base text-secondary-bronze/85 leading-relaxed font-normal font-poppins">
                     To simplify temple services and bring devotees closer to divine experiences.
                   </p>
                 </div>
@@ -76,12 +76,12 @@ export function IntroSection() {
 
               {/* Item 2: Vision */}
               <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
-                  <Heart className="w-5 h-5" />
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
+                  <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#2B132C] uppercase tracking-wide">Our Vision</h4>
-                  <p className="text-[11px] sm:text-xs text-secondary-bronze/80 leading-relaxed font-light">
+                  <h4 className="text-sm sm:text-base md:text-lg font-bold text-[#2B132C] uppercase tracking-wide font-poppins">Our Vision</h4>
+                  <p className="text-sm sm:text-base text-secondary-bronze/85 leading-relaxed font-normal font-poppins">
                     To be the most trusted digital partner for every temple and devotee.
                   </p>
                 </div>
@@ -89,12 +89,12 @@ export function IntroSection() {
 
               {/* Item 3: Promise */}
               <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
-                  <Shield className="w-5 h-5" />
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#2B132C] uppercase tracking-wide">Our Promise</h4>
-                  <p className="text-[11px] sm:text-xs text-secondary-bronze/80 leading-relaxed font-light">
+                  <h4 className="text-sm sm:text-base md:text-lg font-bold text-[#2B132C] uppercase tracking-wide font-poppins">Our Promise</h4>
+                  <p className="text-sm sm:text-base text-secondary-bronze/85 leading-relaxed font-normal font-poppins">
                     Transparency, security and devotion in every service we provide.
                   </p>
                 </div>
@@ -102,12 +102,12 @@ export function IntroSection() {
 
               {/* Item 4: Values */}
               <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
-                  <Users className="w-5 h-5" />
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] shrink-0 shadow-sm">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#2B132C] uppercase tracking-wide">Our Values</h4>
-                  <p className="text-[11px] sm:text-xs text-secondary-bronze/80 leading-relaxed font-light">
+                  <h4 className="text-sm sm:text-base md:text-lg font-bold text-[#2B132C] uppercase tracking-wide font-poppins">Our Values</h4>
+                  <p className="text-sm sm:text-base text-secondary-bronze/85 leading-relaxed font-normal font-poppins">
                     Faith, Integrity, Service and Devotion drive everything we do.
                   </p>
                 </div>
@@ -127,7 +127,7 @@ export function IntroSection() {
             </div>
 
             {/* Pointed Arch Container */}
-            <div className="relative w-full max-w-[320px] aspect-[4/5.5] rounded-t-full z-10">
+            <div className="relative w-full max-w-[340px] aspect-[4/5.5] rounded-t-full z-10">
               
               {/* Arch Image with SVG Clip-Path */}
               <div 
@@ -135,7 +135,7 @@ export function IntroSection() {
                 style={{ clipPath: "url(#templeArchClip)" }}
               >
                 <img 
-                  src="/temple_hero_bg.png" 
+                  src="/images/hero-temple.jpg" 
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 select-none" 
                   alt="Swaminarayan Temple Kampala Archway" 
                 />
@@ -161,13 +161,13 @@ export function IntroSection() {
               </div>
 
               {/* Floating White Quote Card at bottom right */}
-              <div className="absolute -bottom-6 -right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border border-primary-gold/15 max-w-[190px] text-left z-20">
-                <span className="text-[#B47F35] text-lg font-serif leading-none block">“</span>
-                <h4 className="text-[11px] font-bold text-dark-surface leading-tight mt-0.5">
+              <div className="absolute -bottom-6 -right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-2xl border border-primary-gold/15 max-w-[220px] text-left z-20">
+                <span className="text-[#B47F35] text-xl font-serif leading-none block">“</span>
+                <h4 className="text-xs sm:text-sm font-bold text-dark-surface leading-tight mt-0.5 font-poppins">
                   Connecting Devotees with Divine Grace
                 </h4>
                 <div className="h-[1px] bg-[#B47F35]/25 my-2 w-8" />
-                <p className="text-[9px] text-secondary-bronze/85 font-light leading-normal">
+                <p className="text-xs sm:text-sm text-secondary-bronze/85 font-normal leading-normal font-poppins">
                   Every click, every booking, every donation – a step closer to divinity.
                 </p>
               </div>

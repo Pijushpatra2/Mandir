@@ -71,7 +71,7 @@ export default function EventsPage() {
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-5 py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+              className={`px-5 py-2.5 text-sm sm:text-base font-semibold rounded-xl border transition-all cursor-pointer font-poppins ${
                 filter === cat
                   ? "bg-primary-gold text-white border-primary-gold shadow-sm"
                   : "border-primary-gold/20 text-secondary-bronze bg-white hover:bg-primary-gold/5"
@@ -86,40 +86,40 @@ export default function EventsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredEvents.map((evt) => (
             <GlassCard hoverEffect className="overflow-hidden p-0 flex flex-col h-full" key={evt.id}>
-              <div className="relative h-52 w-full">
+              <div className="relative h-56 w-full">
                 <img
                   src={evt.bannerImage}
                   alt={evt.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-4 left-4 px-3 py-1 bg-white/95 backdrop-blur-md rounded-full text-[10px] font-semibold uppercase tracking-wider text-secondary-bronze">
+                <div className="absolute top-4 left-4 px-3.5 py-1.5 bg-white/95 backdrop-blur-md rounded-full text-xs sm:text-sm font-semibold uppercase tracking-wider text-secondary-bronze font-poppins">
                   {evt.category}
                 </div>
               </div>
-              <div className="p-8 flex flex-col justify-between flex-grow">
+              <div className="p-6 sm:p-8 flex flex-col justify-between flex-grow">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-semibold text-secondary-bronze/60 uppercase">
+                  <span className="text-xs sm:text-sm font-semibold text-secondary-bronze/70 uppercase font-poppins">
                     Status: {evt.status}
                   </span>
-                  <h3 className="text-xl font-heading font-medium text-dark-surface leading-snug">
+                  <h3 className="text-xl sm:text-2xl font-heading font-medium text-dark-surface leading-snug">
                     {evt.title}
                   </h3>
-                  <p className="text-xs text-secondary-bronze/80 font-light leading-relaxed font-sans line-clamp-3">
+                  <p className="text-sm sm:text-base text-secondary-bronze/85 leading-relaxed font-poppins line-clamp-3">
                     {evt.description}
                   </p>
                   
                   {/* Event details list */}
-                  <div className="space-y-2 text-xs text-secondary-bronze pt-2 border-t border-primary-gold/10 font-sans">
-                    <p className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-primary-gold" />
+                  <div className="space-y-2.5 text-sm sm:text-base text-secondary-bronze pt-3 border-t border-primary-gold/10 font-poppins">
+                    <p className="flex items-center gap-2.5">
+                      <Calendar className="w-4 h-4 text-primary-gold shrink-0" />
                       <span>{evt.date}</span>
                     </p>
-                    <p className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-primary-gold" />
+                    <p className="flex items-center gap-2.5">
+                      <Clock className="w-4 h-4 text-primary-gold shrink-0" />
                       <span>{evt.time}</span>
                     </p>
-                    <p className="flex items-center gap-2">
-                      <Users className="w-3.5 h-3.5 text-primary-gold" />
+                    <p className="flex items-center gap-2.5">
+                      <Users className="w-4 h-4 text-primary-gold shrink-0" />
                       <span>
                         Registered: {evt.registeredCount} / {evt.capacityLimit}
                       </span>
@@ -128,16 +128,16 @@ export default function EventsPage() {
                 </div>
 
                 <div className="pt-6 border-t border-primary-gold/15 mt-6 flex items-center justify-between">
-                  <span className="text-[10px] text-secondary-bronze/55">Free Entry</span>
+                  <span className="text-xs sm:text-sm font-medium text-secondary-bronze/70 font-poppins">Free Entry</span>
                   {evt.status === "Upcoming" ? (
                     <button
                       onClick={() => handleOpenRegister(evt)}
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs font-semibold shadow-md hover:brightness-105 transition-all cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-sm sm:text-base font-semibold shadow-md hover:brightness-105 transition-all cursor-pointer font-poppins"
                     >
                       Register Now
                     </button>
                   ) : (
-                    <span className="text-xs font-bold text-secondary-bronze/50">Registration Closed</span>
+                    <span className="text-sm sm:text-base font-bold text-secondary-bronze/50 font-poppins">Registration Closed</span>
                   )}
                 </div>
               </div>
@@ -148,7 +148,7 @@ export default function EventsPage() {
         {/* Registration Modal Dialog */}
         {selectedEvent && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-lg border border-primary-gold/20 shadow-2xl p-8 relative overflow-hidden max-h-[95vh] overflow-y-auto">
+            <div className="bg-white rounded-3xl w-full max-w-lg border border-primary-gold/20 shadow-2xl p-6 sm:p-8 relative overflow-hidden max-h-[95vh] overflow-y-auto">
               
               {/* Close Button */}
               <button
@@ -161,17 +161,17 @@ export default function EventsPage() {
               {step === 1 && (
                 <div className="space-y-6">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary-gold">
+                    <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-gold font-poppins">
                       Event Entrance Registration
                     </span>
-                    <h3 className="font-heading text-2xl font-medium text-dark-surface mt-1">
+                    <h3 className="font-heading text-2xl sm:text-3xl font-medium text-dark-surface mt-1">
                       Register for {selectedEvent.title}
                     </h3>
                   </div>
 
                   <form onSubmit={handleRegisterSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
                         Devotee Full Name *
                       </label>
                       <input
@@ -180,12 +180,12 @@ export default function EventsPage() {
                         value={devoteeName}
                         onChange={(e) => setDevoteeName(e.target.value)}
                         placeholder="e.g. Anand Patel"
-                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
                         Email Address *
                       </label>
                       <input
@@ -194,18 +194,18 @@ export default function EventsPage() {
                         value={devoteeEmail}
                         onChange={(e) => setDevoteeEmail(e.target.value)}
                         placeholder="anand.patel@example.com"
-                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-secondary-bronze mb-1.5">
+                      <label className="block text-sm sm:text-base font-medium text-secondary-bronze mb-1.5 font-poppins">
                         Number of Passes / Entry slots *
                       </label>
                       <select
                         value={tickets}
                         onChange={(e) => setTickets(Number(e.target.value))}
-                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm focus:outline-none"
+                        className="w-full px-4 py-3 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-transparent text-sm sm:text-base font-poppins focus:outline-none"
                       >
                         <option value={1}>1 Person</option>
                         <option value={2}>2 Persons</option>
@@ -216,7 +216,7 @@ export default function EventsPage() {
 
                     <button
                       type="submit"
-                      className="w-full py-4.5 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-xs uppercase tracking-wider cursor-pointer"
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-semibold shadow-md hover:brightness-105 transition-all text-sm sm:text-base tracking-wide cursor-pointer font-poppins"
                     >
                       Confirm Free Reservation
                     </button>
@@ -231,33 +231,33 @@ export default function EventsPage() {
                   </div>
 
                   <div>
-                    <h3 className="font-heading text-3xl font-medium text-dark-surface">
+                    <h3 className="font-heading text-2xl sm:text-3xl font-medium text-dark-surface">
                       Registration Confirmed!
                     </h3>
-                    <p className="text-xs text-secondary-bronze font-sans mt-2">
+                    <p className="text-sm sm:text-base text-secondary-bronze font-poppins mt-2">
                       Your entry passes have been simulated successfully.
                     </p>
                   </div>
 
-                  <div className="p-5 border border-primary-gold/15 bg-bg-warm rounded-2xl text-left space-y-2 max-w-xs mx-auto">
-                    <p className="text-xs text-secondary-bronze font-sans">
+                  <div className="p-5 border border-primary-gold/15 bg-bg-warm rounded-2xl text-left space-y-2 max-w-sm mx-auto">
+                    <p className="text-sm sm:text-base text-secondary-bronze font-poppins">
                       Pass ID: <span className="font-mono font-bold text-dark-surface">EVT-PASS-{Math.floor(10000 + Math.random()*90000)}</span>
                     </p>
-                    <p className="text-xs text-secondary-bronze font-sans">
+                    <p className="text-sm sm:text-base text-secondary-bronze font-poppins">
                       Event: <span className="font-bold text-dark-surface">{selectedEvent.title}</span>
                     </p>
-                    <p className="text-xs text-secondary-bronze font-sans">
+                    <p className="text-sm sm:text-base text-secondary-bronze font-poppins">
                       Attendees: <span className="font-bold text-dark-surface">{tickets} Devotees</span>
                     </p>
                   </div>
 
-                  <p className="text-[10px] font-light text-secondary-bronze/70 leading-relaxed max-w-xs mx-auto">
+                  <p className="text-xs sm:text-sm text-secondary-bronze/70 leading-relaxed max-w-sm mx-auto font-poppins">
                     A digital barcode pass has been generated. Use it at the temple gate entrance on the event day.
                   </p>
 
                   <button
                     onClick={() => setSelectedEvent(null)}
-                    className="px-8 py-3 rounded-xl bg-primary-gold hover:bg-secondary-bronze text-white text-xs font-semibold shadow-md transition-colors cursor-pointer"
+                    className="px-8 py-3 rounded-xl bg-primary-gold hover:bg-secondary-bronze text-white text-sm sm:text-base font-semibold shadow-md transition-colors cursor-pointer font-poppins"
                   >
                     Done
                   </button>

@@ -33,7 +33,7 @@ export function LiveDarshanSection() {
   }, []);
 
   return (
-    <section className="py-24 bg-[#1F0E1F] text-white relative overflow-hidden font-jakarta">
+    <section className="py-24 bg-[#1F0E1F] text-white relative overflow-hidden font-poppins">
       
       {/* Background decoration details */}
       <div className="absolute top-10 left-10 text-white/5 text-9xl pointer-events-none select-none">✨</div>
@@ -44,11 +44,11 @@ export function LiveDarshanSection() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-primary-gold text-[8px]">⚜️</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary-gold">
+            <span className="text-primary-gold text-xs">⚜️</span>
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-primary-gold font-poppins">
               SACRED BROADCAST
             </span>
-            <span className="text-primary-gold text-[8px]">⚜️</span>
+            <span className="text-primary-gold text-xs">⚜️</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-white">
@@ -56,12 +56,12 @@ export function LiveDarshanSection() {
           </h2>
 
           <div className="flex items-center justify-center space-x-1.5 py-1">
-            <div className="h-[1.5px] bg-primary-gold/30 w-6" />
-            <span className="text-primary-gold text-[7px]">✦</span>
-            <div className="h-[1.5px] bg-primary-gold/30 w-6" />
+            <div className="h-[1.5px] bg-primary-gold/30 w-8" />
+            <span className="text-primary-gold text-xs">✦</span>
+            <div className="h-[1.5px] bg-primary-gold/30 w-8" />
           </div>
 
-          <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-light font-sans max-w-xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-white/80 leading-relaxed font-normal font-poppins max-w-xl mx-auto">
             Connect online and feel the divine energy. Watch live broadcasts from the main shrine at Kampala.
           </p>
         </div>
@@ -91,31 +91,31 @@ export function LiveDarshanSection() {
             >
               <div className="space-y-4 text-left">
                 <div className="flex items-center space-x-2 text-primary-gold">
-                  <Radio className="w-4 h-4 animate-pulse" />
-                  <h3 className="font-heading text-base font-bold text-white tracking-wide">
+                  <Radio className="w-5 h-5 animate-pulse" />
+                  <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-wide">
                     Live Temple Feed
                   </h3>
                 </div>
-                <p className="text-xs text-white/70 leading-relaxed font-light font-sans">
+                <p className="text-sm sm:text-base text-white/80 leading-relaxed font-normal font-poppins">
                   Join other devotees from around the world in experiencing daily prayers, aartis, and spiritual events online.
                 </p>
               </div>
 
               {/* Devotee Chants Marquee Box */}
               <div className="space-y-3 border-t border-white/10 pt-4 text-left">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-primary-gold">
+                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-gold font-poppins">
                   Devotee Chants
                 </h4>
                 
                 {/* Scrolling Box Container */}
-                <div className="h-[120px] overflow-hidden relative bg-black/25 rounded-2xl border border-white/5 p-3.5 space-y-2">
-                  <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#1F0E1F]/20 to-transparent pointer-events-none" />
-                  <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#1F0E1F]/20 to-transparent pointer-events-none" />
+                <div className="h-[140px] overflow-hidden relative bg-black/30 rounded-2xl border border-white/5 p-4 space-y-3">
+                  <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#1F0E1F]/30 to-transparent pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#1F0E1F]/30 to-transparent pointer-events-none" />
                   
                   {chatFeed.slice(0, 3).map((item, idx) => (
-                    <div className="text-[10px] font-sans flex items-start space-x-1.5 animate-fadeIn" key={idx}>
+                    <div className="text-xs sm:text-sm font-poppins flex items-start space-x-2 animate-fadeIn" key={idx}>
                       <span className="font-bold text-[#C59D5F] shrink-0">{item.name}:</span>
-                      <span className="text-white/80 font-light">{item.text}</span>
+                      <span className="text-white/90 font-normal">{item.text}</span>
                     </div>
                   ))}
                 </div>
@@ -125,10 +125,10 @@ export function LiveDarshanSection() {
               <div>
                 <Link
                   href="/live-darshan"
-                  className="w-full py-3 rounded-xl bg-primary-gold hover:bg-secondary-bronze text-white text-[11px] font-bold shadow flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                  className="w-full py-3.5 rounded-xl bg-primary-gold hover:bg-secondary-bronze text-white text-sm sm:text-base font-bold shadow flex items-center justify-center space-x-2 transition-colors cursor-pointer font-poppins"
                 >
                   <span>Go to Full Shrine Portal</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 

@@ -24,6 +24,13 @@
   font-family: var(--font-poppins), "Poppins", sans-serif !important;
 }
 
+/* Enforce Poppins for public site paragraphs and body text */
+.public-site-root,
+.public-site-root p,
+p {
+  font-family: var(--font-poppins), "Poppins", sans-serif;
+}
+
 @utility glass-card {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(16px) saturate(120%);

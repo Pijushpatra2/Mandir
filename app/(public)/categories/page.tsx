@@ -10,22 +10,22 @@ import { ArrowRight, ShoppingBag } from "lucide-react";
 
 export default function CategoriesPage() {
   return (
-    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding}`}>
+    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding} font-poppins`}>
       <div className={layout.container}>
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
           <div>
-            <span className="text-primary-gold font-semibold tracking-widest text-xs uppercase block mb-2">
+            <span className="text-primary-gold font-semibold tracking-widest text-xs sm:text-sm uppercase block mb-2 font-poppins">
               Browse Collections
             </span>
-            <h1 className={`${typography.h1} text-dark-surface`}>
+            <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-dark-surface font-medium">
               Sacred Categories
             </h1>
-            <p className="text-secondary-bronze/70 mt-2 max-w-xl text-sm">
+            <p className="text-secondary-bronze/80 mt-2 max-w-2xl text-base sm:text-lg font-normal font-poppins">
               Discover authentic deities, pure puja kits, spiritual literature, and sacred items curated for your daily devotion.
             </p>
           </div>
-          <Link href="/shop" className={`${buttons.primary} mt-4 md:mt-0 flex items-center space-x-2 text-xs`}>
-            <ShoppingBag className="w-4 h-4" />
+          <Link href="/shop" className={`${buttons.primary} mt-4 md:mt-0 flex items-center space-x-2 text-sm sm:text-base font-semibold font-poppins`}>
+            <ShoppingBag className="w-5 h-5" />
             <span>View All Products</span>
           </Link>
         </div>
@@ -37,7 +37,7 @@ export default function CategoriesPage() {
               href={`/categories/${category.slug}`}
               className={`${cards.whiteHover} flex flex-col h-full overflow-hidden group`}
             >
-              <div className="relative h-48 w-full overflow-hidden rounded-2xl mb-4 bg-primary-gold/5">
+              <div className="relative h-52 w-full overflow-hidden rounded-2xl mb-4 bg-primary-gold/5">
                 <Image
                   src={category.image}
                   alt={category.name}
@@ -49,18 +49,18 @@ export default function CategoriesPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-surface/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
               <div className="flex-grow flex flex-col">
-                <h3 className={`${typography.h4} text-dark-surface mb-2 flex items-center justify-between`}>
+                <h3 className="text-lg sm:text-xl font-heading font-semibold text-dark-surface mb-2 flex items-center justify-between">
                   <span>{category.name}</span>
-                  <span className="text-xs text-primary-gold bg-primary-gold/10 px-2 py-0.5 rounded-full">
+                  <span className="text-xs sm:text-sm text-primary-gold bg-primary-gold/10 px-2.5 py-0.5 rounded-full font-poppins">
                     {category.count} items
                   </span>
                 </h3>
-                <p className={`${typography.bodySm} text-secondary-bronze/70 flex-grow mb-4`}>
+                <p className="text-sm sm:text-base text-secondary-bronze/80 flex-grow mb-4 font-poppins leading-relaxed">
                   {category.description}
                 </p>
-                <div className="flex items-center text-xs font-semibold text-primary-gold mt-auto group-hover:text-secondary-bronze transition-colors">
+                <div className="flex items-center text-sm sm:text-base font-semibold text-primary-gold mt-auto group-hover:text-secondary-bronze transition-colors font-poppins">
                   <span>Explore Collection</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </div>
             </Link>

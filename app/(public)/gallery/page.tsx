@@ -43,7 +43,7 @@ export default function GalleryPage() {
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-5 py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+              className={`px-5 py-2.5 text-sm sm:text-base font-semibold rounded-xl border transition-all cursor-pointer font-poppins ${
                 filter === cat
                   ? "bg-primary-gold text-white border-primary-gold shadow-sm"
                   : "border-primary-gold/20 text-secondary-bronze bg-white hover:bg-primary-gold/5"
@@ -58,23 +58,23 @@ export default function GalleryPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredItems.map((item) => (
             <GlassCard hoverEffect className="overflow-hidden p-0 flex flex-col group h-full" key={item.id}>
-              <div className="relative h-60 w-full overflow-hidden">
+              <div className="relative h-64 w-full overflow-hidden">
                 <img
                   src={item.imageUrl}
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 left-4 px-2.5 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[9px] font-bold uppercase tracking-wider text-secondary-bronze">
+                <div className="absolute top-4 left-4 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-lg text-xs sm:text-sm font-semibold uppercase tracking-wider text-secondary-bronze font-poppins">
                   {item.category}
                 </div>
               </div>
-              <div className="p-5 flex-grow flex flex-col justify-between">
+              <div className="p-5 sm:p-6 flex-grow flex flex-col justify-between">
                 <div>
-                  <h4 className="font-heading text-lg font-medium text-dark-surface leading-tight mb-2 group-hover:text-primary-gold transition-colors">
+                  <h4 className="font-heading text-lg sm:text-xl font-medium text-dark-surface leading-tight mb-2 group-hover:text-primary-gold transition-colors">
                     {item.title}
                   </h4>
                 </div>
-                <p className="text-[10px] text-secondary-bronze/55 uppercase font-semibold mt-4">
+                <p className="text-xs sm:text-sm text-secondary-bronze/70 uppercase font-medium mt-4 font-poppins">
                   Captured: {item.date}
                 </p>
               </div>

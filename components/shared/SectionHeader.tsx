@@ -29,7 +29,7 @@ export function SectionHeader({
           whileInView={{ opacity: 1, filter: "blur(0px)" }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="inline-block px-4 py-1.5 mb-4 text-xs font-semibold uppercase tracking-widest text-primary-gold bg-secondary-bronze/10 rounded-full"
+          className="inline-block px-4 py-1.5 mb-4 text-xs sm:text-sm font-semibold uppercase tracking-widest text-primary-gold bg-secondary-bronze/10 rounded-full"
         >
           {badge}
         </motion.span>
@@ -39,7 +39,7 @@ export function SectionHeader({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.1 }}
-        className="text-4xl md:text-5xl font-heading font-medium tracking-wide text-dark-surface leading-tight"
+        className="text-3xl sm:text-4xl md:text-5xl font-heading font-medium tracking-wide text-dark-surface leading-tight"
       >
         {title}
       </motion.h2>
@@ -49,7 +49,7 @@ export function SectionHeader({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-4 text-base md:text-lg text-secondary-bronze leading-relaxed font-light font-sans"
+          className="mt-4 text-base md:text-lg lg:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins"
         >
           {subtitle}
         </motion.p>

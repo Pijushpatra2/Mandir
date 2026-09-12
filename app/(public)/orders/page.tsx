@@ -168,16 +168,16 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding}`}>
+    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding} font-poppins`}>
       <div className={layout.container}>
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b border-primary-gold/10">
           <div>
-            <span className="text-primary-gold font-semibold tracking-widest text-xs uppercase block mb-1">
+            <span className="text-primary-gold font-semibold tracking-widest text-xs sm:text-sm uppercase block mb-1 font-poppins">
               Devotee purchases
             </span>
-            <h1 className={`${typography.h1} text-dark-surface`}>Your Order History</h1>
+            <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-dark-surface font-medium">Your Order History</h1>
           </div>
-          <Link href="/shop" className={`${buttons.secondary} mt-4 md:mt-0 flex items-center space-x-2 text-xs border-primary-gold/15`}>
+          <Link href="/shop" className={`${buttons.secondary} mt-4 md:mt-0 flex items-center space-x-2 text-sm font-semibold border-primary-gold/15 font-poppins`}>
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Store Catalog</span>
           </Link>
@@ -185,10 +185,10 @@ export default function OrdersPage() {
 
         {orders.length === 0 ? (
           <div className="text-center py-20 bg-white border border-primary-gold/5 rounded-3xl p-8 shadow-sm">
-            <Package className="w-12 h-12 text-primary-gold/30 mx-auto mb-4" />
-            <h3 className={`${typography.h3} text-dark-surface mb-1`}>No Orders Logged</h3>
-            <p className="text-secondary-bronze/70 text-sm mb-6">You haven't purchased any devotional items yet.</p>
-            <Link href="/shop" className={buttons.primary}>
+            <Package className="w-14 h-14 text-primary-gold/30 mx-auto mb-4" />
+            <h3 className="font-heading text-2xl sm:text-3xl font-medium text-dark-surface mb-1">No Orders Logged</h3>
+            <p className="text-secondary-bronze/80 text-base sm:text-lg mb-6 font-poppins">You haven't purchased any devotional items yet.</p>
+            <Link href="/shop" className={`${buttons.primary} text-sm sm:text-base font-semibold font-poppins`}>
               Browse Altar Offerings
             </Link>
           </div>
@@ -196,7 +196,7 @@ export default function OrdersPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Orders List (lg:col-span-6) */}
             <div className="lg:col-span-6 space-y-4">
-              <h3 className="text-xs font-bold text-secondary-bronze/70 uppercase tracking-widest mb-2">
+              <h3 className="text-xs sm:text-sm font-bold text-secondary-bronze/80 uppercase tracking-widest mb-2 font-poppins">
                 Logged Receipts
               </h3>
               {orders.map((order) => {
@@ -204,17 +204,17 @@ export default function OrdersPage() {
                 return (
                   <div
                     key={order.id}
-                    className={`border rounded-2xl p-5 bg-white transition-all shadow-sm ${
+                    className={`border rounded-2xl p-5 sm:p-6 bg-white transition-all shadow-sm ${
                       isSelected ? "border-primary-gold ring-1 ring-primary-gold/30" : "border-primary-gold/10 hover:border-primary-gold/20"
                     }`}
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <span className="text-xs text-primary-gold font-bold">{order.id}</span>
-                        <span className="text-[10px] text-secondary-bronze/50 block mt-0.5">{order.date}</span>
+                        <span className="text-sm sm:text-base text-primary-gold font-bold font-poppins">{order.id}</span>
+                        <span className="text-xs sm:text-sm text-secondary-bronze/60 block mt-0.5 font-poppins">{order.date}</span>
                       </div>
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        className={`text-xs sm:text-sm font-bold px-2.5 py-1 rounded-full font-poppins ${
                           order.status === "DELIVERED"
                             ? "bg-success-green/10 text-success-green"
                             : order.status === "SHIPPED"
@@ -226,11 +226,11 @@ export default function OrdersPage() {
                       </span>
                     </div>
 
-                    <div className="space-y-1.5 text-xs pb-3 border-b border-primary-gold/5 mb-3">
+                    <div className="space-y-2 text-sm sm:text-base pb-3 border-b border-primary-gold/5 mb-3 font-poppins">
                       {order.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-secondary-bronze/80">
-                          <span className="line-clamp-1 max-w-[80%]">
-                            {item.name} <span className="font-bold text-dark-surface">× {item.quantity}</span>
+                        <div key={idx} className="flex justify-between text-secondary-bronze/85">
+                          <span className="line-clamp-1 max-w-[80%] font-heading font-medium">
+                            {item.name} <span className="font-bold text-dark-surface font-poppins">× {item.quantity}</span>
                           </span>
                           <span className="font-semibold text-dark-surface">
                             {formatCurrency(item.price * item.quantity)}
@@ -239,21 +239,21 @@ export default function OrdersPage() {
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-dark-surface">
+                    <div className="flex items-center justify-between font-poppins">
+                      <span className="text-sm sm:text-base font-bold text-dark-surface">
                         Total Amount: <span className="text-primary-gold">{formatCurrency(order.total)}</span>
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setSelectedOrder(order)}
-                          className={`${buttons.ghost} px-3 py-1.5 text-[11px] font-bold flex items-center space-x-1 hover:bg-primary-gold/10`}
+                          className={`${buttons.ghost} px-3.5 py-1.5 text-xs sm:text-sm font-bold flex items-center space-x-1 hover:bg-primary-gold/10 font-poppins`}
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="w-4 h-4" />
                           <span>Track</span>
                         </button>
                         <button
                           onClick={() => handleDownloadInvoice(order)}
-                          className="p-2 rounded-full text-secondary-bronze hover:text-primary-gold hover:bg-primary-gold/5 transition-all cursor-pointer"
+                          className="p-2.5 rounded-full text-secondary-bronze hover:text-primary-gold hover:bg-primary-gold/5 transition-all cursor-pointer"
                           title="Download Invoice receipt"
                         >
                           <Download className="w-4 h-4" />
@@ -267,37 +267,37 @@ export default function OrdersPage() {
 
             {/* Tracking Panel / Details (lg:col-span-6) */}
             <div className="lg:col-span-6">
-              <h3 className="text-xs font-bold text-secondary-bronze/70 uppercase tracking-widest mb-2">
+              <h3 className="text-xs sm:text-sm font-bold text-secondary-bronze/80 uppercase tracking-widest mb-2 font-poppins">
                 Order Status Tracking
               </h3>
               {selectedOrder ? (
-                <div className="bg-white border border-primary-gold/15 rounded-3xl p-6 shadow-sm space-y-6">
+                <div className="bg-white border border-primary-gold/15 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
                   {/* Summary Block */}
                   <div className="flex justify-between items-start pb-4 border-b border-primary-gold/10">
                     <div>
-                      <h4 className="font-bold text-dark-surface text-sm">Tracking Details ({selectedOrder.id})</h4>
-                      <p className="text-[10px] text-secondary-bronze/50 mt-1">
+                      <h4 className="font-heading font-bold text-dark-surface text-base sm:text-lg">Tracking Details ({selectedOrder.id})</h4>
+                      <p className="text-xs sm:text-sm text-secondary-bronze/70 mt-1 font-poppins">
                         Courier: BlueDart | Tracking ID: <span className="font-bold text-primary-gold">{selectedOrder.trackingNumber}</span>
                       </p>
                     </div>
                     <button
                       onClick={() => handleDownloadInvoice(selectedOrder)}
-                      className={`${buttons.primary} py-2 px-4 text-[10px] flex items-center space-x-1.5`}
+                      className={`${buttons.primary} py-2 px-4 text-xs sm:text-sm font-semibold flex items-center space-x-1.5 font-poppins`}
                     >
-                      <Download className="w-3.5 h-3.5" />
+                      <Download className="w-4 h-4" />
                       <span>Download Receipt</span>
                     </button>
                   </div>
 
                   {/* Shipping Address Summary */}
-                  <div className="text-xs space-y-1.5 bg-bg-warm/30 border border-primary-gold/5 p-4 rounded-2xl">
-                    <div className="flex items-center text-[10px] font-bold text-secondary-bronze/70 uppercase tracking-wider mb-1">
-                      <MapPin className="w-3.5 h-3.5 text-primary-gold mr-1" />
+                  <div className="text-sm sm:text-base space-y-1.5 bg-bg-warm/30 border border-primary-gold/5 p-5 rounded-2xl font-poppins">
+                    <div className="flex items-center text-xs sm:text-sm font-bold text-secondary-bronze/80 uppercase tracking-wider mb-1">
+                      <MapPin className="w-4 h-4 text-primary-gold mr-1" />
                       <span>Delivery Address</span>
                     </div>
                     <p className="font-bold text-dark-surface">{selectedOrder.shippingAddress.name}</p>
-                    <p className="text-secondary-bronze/80">{selectedOrder.shippingAddress.line1}</p>
-                    <p className="text-secondary-bronze/80">
+                    <p className="text-secondary-bronze/85">{selectedOrder.shippingAddress.line1}</p>
+                    <p className="text-secondary-bronze/85">
                       {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} - {selectedOrder.shippingAddress.postalCode}
                     </p>
                   </div>
@@ -308,7 +308,7 @@ export default function OrdersPage() {
                       <div key={idx} className="relative">
                         {/* Timeline Node Point */}
                         <div
-                          className={`absolute -left-[22px] top-0.5 w-3.5 h-3.5 rounded-full border-2 bg-white flex items-center justify-center ${
+                          className={`absolute -left-[23px] top-0.5 w-4 h-4 rounded-full border-2 bg-white flex items-center justify-center ${
                             step.status === "DELIVERED"
                               ? "border-success-green bg-success-green"
                               : step.status === "SHIPPED"
@@ -317,14 +317,14 @@ export default function OrdersPage() {
                           }`}
                         />
                         <div className="space-y-1">
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold text-dark-surface">{step.title}</span>
-                            <span className="text-[10px] text-secondary-bronze/55 flex items-center">
-                              <Clock className="w-3 h-3 mr-0.5" />
+                          <div className="flex justify-between items-center font-poppins">
+                            <span className="text-sm sm:text-base font-bold text-dark-surface font-heading">{step.title}</span>
+                            <span className="text-xs sm:text-sm text-secondary-bronze/60 flex items-center">
+                              <Clock className="w-3.5 h-3.5 mr-1" />
                               {step.timestamp}
                             </span>
                           </div>
-                          <p className="text-[11px] text-secondary-bronze/75 leading-relaxed">
+                          <p className="text-xs sm:text-sm text-secondary-bronze/80 leading-relaxed font-poppins">
                             {step.description}
                           </p>
                         </div>
@@ -333,7 +333,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white/40 border border-primary-gold/5 rounded-3xl p-12 text-center text-secondary-bronze/60 text-xs shadow-sm">
+                <div className="bg-white/40 border border-primary-gold/5 rounded-3xl p-12 text-center text-secondary-bronze/70 text-sm sm:text-base shadow-sm font-poppins">
                   Click the "Track" button on any invoice to view shipping tracking details and dynamic timelines.
                 </div>
               )}

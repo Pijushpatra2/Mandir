@@ -32,6 +32,12 @@ export interface DevoteeProfile {
   joined_date: string;
   valid_until: string;
   qr_code_url: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  postal_code?: string | null;
+  family_members?: string | null;
+  avatar_url?: string | null;
   is_active: number | boolean;
 }
 
@@ -93,12 +99,15 @@ interface AppContextType {
   removeCoupon: () => void;
   placeOrder: (order: ShopOrder) => void;
   
-  // Devotee auth states & functions
+  // Devotee auth & profile methods
   devoteeProfile: DevoteeProfile | null;
   setDevoteeProfile: (profile: DevoteeProfile | null) => void;
   isDevoteeLoggedIn: boolean;
   loginDevotee: (emailOrPhone: string, password: string) => Promise<any>;
   registerDevotee: (data: any) => Promise<any>;
+  sendDevoteeOtp: (data: { email: string; phone: string }) => Promise<any>;
+  updateDevoteeProfile: (updates: Partial<DevoteeProfile>) => Promise<DevoteeProfile>;
+  verifyMemberPass: (membershipNumber: string) => Promise<any>;
   logoutDevotee: () => void;
   showToast: (message: string, type?: "success" | "error" | "info") => void;
 }
@@ -388,6 +397,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     throw new Error("Invalid response format");
   };
 
+  const sendDevoteeOtp = async (data: { email: string; phone: string }) => {
+    const res = await devoteeApiClient.post('/devotees/auth/send-otp', data);
+    return res.data;
+  };
+
+  const updateDevoteeProfile = async (updates: Partial<DevoteeProfile>) => {
+    const res = await devoteeApiClient.put('/devotees/profile', updates);
+    if (res.data?.data?.devotee) {
+      const updated = res.data.data.devotee;
+      setDevoteeProfile(updated);
+      localStorage.setItem("devotee_profile", JSON.stringify(updated));
+      showToast("Profile updated successfully!", "success");
+      return updated;
+    }
+    throw new Error("Invalid update response");
+  };
+
+  const verifyMemberPass = async (membershipNumber: string) => {
+    const res = await devoteeApiClient.get(`/devotees/verify/${encodeURIComponent(membershipNumber)}`);
+    return res.data?.data;
+  };
+
   const logoutDevotee = () => {
     clearDevoteeTokens();
     setDevoteeProfile(null);
@@ -436,12 +467,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         removeCoupon,
         placeOrder,
         
-        // Devotee auth
+        // Devotee auth & profile methods
         devoteeProfile,
         setDevoteeProfile,
         isDevoteeLoggedIn,
         loginDevotee,
         registerDevotee,
+        sendDevoteeOtp,
+        updateDevoteeProfile,
+        verifyMemberPass,
         logoutDevotee,
         showToast
       }}

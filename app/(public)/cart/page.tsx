@@ -80,15 +80,15 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="bg-bg-warm min-h-screen flex flex-col items-center justify-center p-6 text-center">
+      <div className="bg-bg-warm min-h-screen flex flex-col items-center justify-center p-6 text-center font-poppins">
         <div className="p-4 bg-primary-gold/10 rounded-full mb-4">
-          <ShoppingBag className="w-12 h-12 text-primary-gold" />
+          <ShoppingBag className="w-14 h-14 text-primary-gold" />
         </div>
-        <h1 className={`${typography.h2} text-dark-surface mb-2`}>Your Cart is Empty</h1>
-        <p className="text-secondary-bronze/70 mb-6 max-w-sm text-sm">
+        <h1 className="font-heading text-2xl sm:text-3xl font-medium text-dark-surface mb-2">Your Cart is Empty</h1>
+        <p className="text-secondary-bronze/80 mb-6 max-w-md text-base sm:text-lg font-poppins">
           Bring auspicious temple items, incense, and spiritual books to your home temple space.
         </p>
-        <Link href="/shop" className={buttons.primary}>
+        <Link href="/shop" className={`${buttons.primary} text-sm sm:text-base font-semibold font-poppins`}>
           Browse All Products
         </Link>
       </div>
@@ -96,21 +96,21 @@ export default function CartPage() {
   }
 
   return (
-    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding}`}>
+    <div className={`bg-bg-warm min-h-screen ${layout.sectionPadding} font-poppins`}>
       <div className={layout.container}>
-        <h1 className={`${typography.h1} text-dark-surface mb-8`}>Your Shopping Cart</h1>
+        <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-dark-surface mb-8 font-medium">Your Shopping Cart</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Cart Items List (lg:col-span-8) */}
           <div className="lg:col-span-8 space-y-4">
-            <div className="bg-white border border-primary-gold/10 rounded-3xl p-6 shadow-sm">
+            <div className="bg-white border border-primary-gold/10 rounded-3xl p-6 sm:p-8 shadow-sm">
               <div className="flex justify-between items-center pb-4 border-b border-primary-gold/10 mb-6">
-                <span className="text-xs font-bold text-secondary-bronze/70">
+                <span className="text-sm sm:text-base font-bold text-secondary-bronze/80 font-poppins">
                   {cart.length} unique sacred item{cart.length > 1 ? "s" : ""}
                 </span>
                 <button
                   onClick={clearCart}
-                  className="text-xs text-error-red hover:text-red-700 font-bold transition-colors cursor-pointer"
+                  className="text-sm sm:text-base text-error-red hover:text-red-700 font-bold transition-colors cursor-pointer font-poppins"
                 >
                   Clear Entire Cart
                 </button>
@@ -120,24 +120,24 @@ export default function CartPage() {
                 {cart.map((item) => (
                   <div
                     key={item.productId}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-primary-gold/5 rounded-2xl bg-bg-warm/15 hover:bg-bg-warm/30 transition-colors"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 border border-primary-gold/5 rounded-2xl bg-bg-warm/15 hover:bg-bg-warm/30 transition-colors"
                   >
                     <div className="flex items-center space-x-4 mb-4 sm:mb-0">
-                      <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white border border-primary-gold/10 p-1 flex-shrink-0">
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-white border border-primary-gold/10 p-1 flex-shrink-0">
                         <Image
                           src={item.image}
                           alt={item.name}
                           fill
-                          sizes="64px"
+                          sizes="80px"
                           className="object-contain rounded-lg"
                           unoptimized
                         />
                       </div>
                       <div>
-                        <h4 className="font-bold text-dark-surface line-clamp-1 text-sm">
+                        <h4 className="font-heading font-bold text-dark-surface line-clamp-1 text-base sm:text-lg">
                           {item.name}
                         </h4>
-                        <span className="text-xs text-primary-gold font-semibold block mt-0.5">
+                        <span className="text-sm sm:text-base text-primary-gold font-semibold block mt-0.5 font-poppins">
                           {formatCurrency(item.price)} each
                         </span>
                       </div>
@@ -145,35 +145,35 @@ export default function CartPage() {
 
                     <div className="flex items-center justify-between w-full sm:w-auto sm:space-x-8">
                       {/* Quantity Selector */}
-                      <div className="flex items-center border border-primary-gold/15 bg-white rounded-full px-2 py-0.5">
+                      <div className="flex items-center border border-primary-gold/15 bg-white rounded-full px-3 py-1">
                         <button
                           onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
-                          className="px-2 text-secondary-bronze hover:text-primary-gold font-bold"
+                          className="px-2 text-secondary-bronze hover:text-primary-gold font-bold text-base"
                         >
                           -
                         </button>
-                        <span className="w-8 text-center text-xs font-bold text-dark-surface">
+                        <span className="w-8 text-center text-sm sm:text-base font-bold text-dark-surface font-poppins">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
-                          className="px-2 text-secondary-bronze hover:text-primary-gold font-bold"
+                          className="px-2 text-secondary-bronze hover:text-primary-gold font-bold text-base"
                         >
                           +
                         </button>
                       </div>
 
                       {/* Total price for item */}
-                      <span className="text-sm font-bold text-dark-surface min-w-[70px] text-right">
+                      <span className="text-base sm:text-lg font-bold text-dark-surface min-w-[80px] text-right font-poppins">
                         {formatCurrency(item.price * item.quantity)}
                       </span>
 
                       {/* Remove Button */}
                       <button
                         onClick={() => removeFromCart(item.productId)}
-                        className="text-secondary-bronze/40 hover:text-error-red p-1.5 transition-colors cursor-pointer"
+                        className="text-secondary-bronze/40 hover:text-error-red p-2 transition-colors cursor-pointer"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -184,9 +184,9 @@ export default function CartPage() {
             {/* Back to Shop Link */}
             <Link
               href="/shop"
-              className="inline-flex items-center text-xs font-semibold text-secondary-bronze hover:text-primary-gold transition-colors group"
+              className="inline-flex items-center text-sm sm:text-base font-semibold text-secondary-bronze hover:text-primary-gold transition-colors group font-poppins"
             >
-              <ArrowLeft className="w-4 h-4 mr-1.5 transition-transform group-hover:-translate-x-1" />
+              <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
               <span>Continue Shopping</span>
             </Link>
           </div>
@@ -195,8 +195,8 @@ export default function CartPage() {
           <div className="lg:col-span-4 space-y-6">
             {/* Promo Coupon Box */}
             <div className="bg-white border border-primary-gold/10 rounded-3xl p-6 shadow-sm">
-              <h3 className={`${typography.h5} text-dark-surface font-semibold mb-3 flex items-center space-x-1.5`}>
-                <Tag className="w-4 h-4 text-primary-gold" />
+              <h3 className="font-heading text-lg sm:text-xl text-dark-surface font-semibold mb-3 flex items-center space-x-2">
+                <Tag className="w-5 h-5 text-primary-gold" />
                 <span>Apply Coupon</span>
               </h3>
 
@@ -207,13 +207,13 @@ export default function CartPage() {
                       <Percent className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-success-green block">{appliedCoupon.code}</span>
-                      <span className="text-[10px] text-secondary-bronze/70">{appliedCoupon.description}</span>
+                      <span className="text-sm font-bold text-success-green block font-poppins">{appliedCoupon.code}</span>
+                      <span className="text-xs sm:text-sm text-secondary-bronze/70 font-poppins">{appliedCoupon.description}</span>
                     </div>
                   </div>
                   <button
                     onClick={removeCoupon}
-                    className="text-xs text-error-red hover:text-red-700 font-bold ml-4 cursor-pointer"
+                    className="text-xs sm:text-sm text-error-red hover:text-red-700 font-bold ml-4 cursor-pointer font-poppins"
                   >
                     Remove
                   </button>
@@ -225,31 +225,31 @@ export default function CartPage() {
                     placeholder="Enter Code (e.g. WELCOME50)"
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    className={`${inputs.text} py-2 px-3 text-xs`}
+                    className={`${inputs.text} py-2.5 px-3.5 text-sm sm:text-base font-poppins`}
                   />
-                  <button type="submit" className={`${buttons.primary} py-2 px-4 text-xs shrink-0`}>
+                  <button type="submit" className={`${buttons.primary} py-2.5 px-5 text-sm font-semibold shrink-0 font-poppins`}>
                     Apply
                   </button>
                 </form>
               )}
 
-              {couponError && <p className="text-[11px] text-error-red font-semibold mt-2">{couponError}</p>}
+              {couponError && <p className="text-xs sm:text-sm text-error-red font-semibold mt-2 font-poppins">{couponError}</p>}
               {couponSuccess && (
-                <p className="text-[11px] text-success-green font-semibold mt-2">
+                <p className="text-xs sm:text-sm text-success-green font-semibold mt-2 font-poppins">
                   Coupon applied successfully!
                 </p>
               )}
             </div>
 
             {/* Price Calculations */}
-            <div className="bg-white border border-primary-gold/10 rounded-3xl p-6 shadow-sm space-y-4">
-              <h3 className={`${typography.h5} text-dark-surface font-semibold pb-3 border-b border-primary-gold/10`}>
+            <div className="bg-white border border-primary-gold/10 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+              <h3 className="font-heading text-lg sm:text-xl text-dark-surface font-semibold pb-3 border-b border-primary-gold/10">
                 Order Summary
               </h3>
 
-              <div className="space-y-2.5 text-xs">
+              <div className="space-y-3 text-sm sm:text-base font-poppins">
                 <div className="flex justify-between">
-                  <span className="text-secondary-bronze/70">Cart Subtotal</span>
+                  <span className="text-secondary-bronze/75">Cart Subtotal</span>
                   <span className="font-semibold text-dark-surface">{formatCurrency(subtotal)}</span>
                 </div>
 
@@ -261,31 +261,31 @@ export default function CartPage() {
                 )}
 
                 <div className="flex justify-between">
-                  <span className="text-secondary-bronze/70">Gst Tax (5%)</span>
+                  <span className="text-secondary-bronze/75">Gst Tax (5%)</span>
                   <span className="font-semibold text-dark-surface">{formatCurrency(tax)}</span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-secondary-bronze/70">Estimated Shipping</span>
+                  <span className="text-secondary-bronze/75">Estimated Shipping</span>
                   <span className="font-semibold text-dark-surface">
                     {shipping === 0 ? "FREE" : formatCurrency(shipping)}
                   </span>
                 </div>
                 {shipping > 0 && (
-                  <p className="text-[9px] text-primary-gold/80 italic text-right">
+                  <p className="text-xs sm:text-sm text-primary-gold/90 italic text-right font-poppins">
                     Add UGX {999 - (subtotal - discount)} more for FREE shipping
                   </p>
                 )}
               </div>
 
-              <div className="border-t border-primary-gold/10 pt-4 flex justify-between items-end">
-                <span className="text-sm font-bold text-dark-surface">Total Amount</span>
-                <span className="text-xl font-bold text-primary-gold">{formatCurrency(total)}</span>
+              <div className="border-t border-primary-gold/10 pt-4 flex justify-between items-end font-poppins">
+                <span className="text-base sm:text-lg font-bold text-dark-surface">Total Amount</span>
+                <span className="text-2xl sm:text-3xl font-bold text-primary-gold">{formatCurrency(total)}</span>
               </div>
 
               <Link
                 href="/checkout"
-                className={`${buttons.primary} w-full py-3.5 mt-4 text-xs flex items-center justify-center space-x-2`}
+                className={`${buttons.primary} w-full py-4 mt-4 text-sm sm:text-base font-semibold flex items-center justify-center space-x-2 font-poppins`}
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />

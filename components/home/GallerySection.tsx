@@ -43,7 +43,7 @@ export function GallerySection() {
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                <p className="text-white text-sm font-heading font-medium tracking-wide">
+                <p className="text-white text-base sm:text-lg font-heading font-medium tracking-wide font-poppins">
                   {item.title}
                 </p>
               </div>
@@ -54,10 +54,10 @@ export function GallerySection() {
         <div className="mt-12 text-center">
           <Link
             href="/gallery"
-            className="inline-flex items-center space-x-2 text-sm font-semibold text-primary-gold hover:text-secondary-bronze transition-colors"
+            className="inline-flex items-center space-x-2 text-base sm:text-lg font-semibold text-primary-gold hover:text-secondary-bronze transition-colors font-poppins"
           >
             <span>Explore Entire Gallery</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
       </div>

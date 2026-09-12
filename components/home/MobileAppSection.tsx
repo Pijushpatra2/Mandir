@@ -36,7 +36,7 @@ export function MobileAppSection() {
   };
 
   return (
-    <section className="py-20 bg-[#FAF7F2] font-jakarta relative overflow-hidden">
+    <section className="py-20 bg-[#FAF7F2] font-poppins relative overflow-hidden">
       
       {/* Background Soft Mandal/OM Glow */}
       <div className="absolute -left-36 top-1/4 text-[#B47F35]/5 text-[300px] pointer-events-none select-none font-serif leading-none">
@@ -45,7 +45,7 @@ export function MobileAppSection() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Main Banner Card (Removed shadow-2xl for clean flat styling) */}
+        {/* Main Banner Card */}
         <div className="bg-gradient-to-r from-[#FAF6F0] via-[#FAF1E4] to-[#F1E0C9] rounded-[40px] border border-[#B47F35]/20 p-6 sm:p-12 lg:p-16 relative overflow-hidden">
           
           {/* Subtle gold glow behind phone */}
@@ -56,7 +56,7 @@ export function MobileAppSection() {
             <svg className="w-full h-full text-[#B47F35]/10" viewBox="0 0 100 10" preserveAspectRatio="none" fill="currentColor">
               <path d="M 0 10 Q 50 2 100 10 Z" />
             </svg>
-            <span className="text-[#B47F35] text-[10px] -mt-5 z-20">⚜️</span>
+            <span className="text-[#B47F35] text-xs -mt-5 z-20">⚜️</span>
           </div>
 
           <motion.div 
@@ -68,14 +68,14 @@ export function MobileAppSection() {
           >
             
             {/* LEFT COLUMN: TEXT CONTENT & DOWNLOAD BADGES */}
-            <div className="lg:col-span-7 space-y-6 lg:space-y-8 text-left text-dark-surface">
+            <div className="lg:col-span-7 space-y-6 lg:space-y-8 text-left text-dark-surface font-poppins">
               
               {/* Gold Pill Badge */}
               <motion.div 
                 variants={fadeUpVariants}
-                className="inline-flex items-center space-x-2 border border-[#B47F35]/35 bg-[#B47F35]/5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#B47F35] select-none"
+                className="inline-flex items-center space-x-2 border border-[#B47F35]/35 bg-[#B47F35]/5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-[#B47F35] select-none font-poppins"
               >
-                <Smartphone className="w-3.5 h-3.5" />
+                <Smartphone className="w-4 h-4" />
                 <span>Mandir Mobile App</span>
               </motion.div>
 
@@ -89,7 +89,7 @@ export function MobileAppSection() {
                 {/* Lotus Divider */}
                 <div className="flex items-center space-x-2 py-1">
                   <div className="h-[1px] bg-[#B47F35]/25 w-12" />
-                  <span className="text-[#B47F35] text-[9px]">⚜️</span>
+                  <span className="text-[#B47F35] text-xs">⚜️</span>
                   <div className="h-[1px] bg-[#B47F35]/25 w-12" />
                 </div>
               </motion.div>
@@ -97,7 +97,7 @@ export function MobileAppSection() {
               {/* Description */}
               <motion.p 
                 variants={fadeUpVariants}
-                className="text-secondary-bronze leading-relaxed font-light text-xs sm:text-sm max-w-xl font-sans"
+                className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-xl font-poppins"
               >
                 Available for iOS and Android. Receive daily shlokas, custom push notifications for Aarti timings, download donation receipts, and access member details instantly on the go.
               </motion.p>
@@ -105,49 +105,49 @@ export function MobileAppSection() {
               {/* 4 Feature Columns Grid */}
               <motion.div 
                 variants={containerVariants}
-                className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-4 border-t border-[#B47F35]/10 relative"
+                className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-4 border-t border-[#B47F35]/10 relative font-poppins"
               >
                 
                 {/* Feature 1 */}
                 <motion.div variants={featureVariants} className="space-y-2 text-left">
-                  <div className="w-9 h-9 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
-                    <Bell className="w-4.5 h-4.5" />
+                  <div className="w-10 h-10 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
+                    <Bell className="w-5 h-5" />
                   </div>
-                  <h4 className="text-[11px] font-bold text-[#2B132C] uppercase tracking-wide">Aarti Alerts</h4>
-                  <p className="text-[9px] text-secondary-bronze/85 font-sans font-light leading-snug">
+                  <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Aarti Alerts</h4>
+                  <p className="text-xs sm:text-sm text-secondary-bronze/85 font-poppins font-normal leading-snug">
                     Get notified for all Aarti timings
                   </p>
                 </motion.div>
 
                 {/* Feature 2 */}
                 <motion.div variants={featureVariants} className="space-y-2 text-left relative sm:before:content-[''] sm:before:absolute sm:before:left-[-12px] sm:before:top-1 sm:before:bottom-1 sm:before:w-[1px] sm:before:bg-[#B47F35]/15">
-                  <div className="w-9 h-9 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
-                    <FileText className="w-4.5 h-4.5" />
+                  <div className="w-10 h-10 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
+                    <FileText className="w-5 h-5" />
                   </div>
-                  <h4 className="text-[11px] font-bold text-[#2B132C] uppercase tracking-wide">Digital Receipts</h4>
-                  <p className="text-[9px] text-secondary-bronze/85 font-sans font-light leading-snug">
+                  <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Digital Receipts</h4>
+                  <p className="text-xs sm:text-sm text-secondary-bronze/85 font-poppins font-normal leading-snug">
                     Download donation receipts anytime
                   </p>
                 </motion.div>
 
                 {/* Feature 3 */}
                 <motion.div variants={featureVariants} className="space-y-2 text-left relative sm:before:content-[''] sm:before:absolute sm:before:left-[-12px] sm:before:top-1 sm:before:bottom-1 sm:before:w-[1px] sm:before:bg-[#B47F35]/15">
-                  <div className="w-9 h-9 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
-                    <UserCheck className="w-4.5 h-4.5" />
+                  <div className="w-10 h-10 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
+                    <UserCheck className="w-5 h-5" />
                   </div>
-                  <h4 className="text-[11px] font-bold text-[#2B132C] uppercase tracking-wide">Member Access</h4>
-                  <p className="text-[9px] text-secondary-bronze/85 font-sans font-light leading-snug">
+                  <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Member Access</h4>
+                  <p className="text-xs sm:text-sm text-secondary-bronze/85 font-poppins font-normal leading-snug">
                     Access member details instantly
                   </p>
                 </motion.div>
 
                 {/* Feature 4 */}
                 <motion.div variants={featureVariants} className="space-y-2 text-left relative sm:before:content-[''] sm:before:absolute sm:before:left-[-12px] sm:before:top-1 sm:before:bottom-1 sm:before:w-[1px] sm:before:bg-[#B47F35]/15">
-                  <div className="w-9 h-9 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
-                    <BookOpen className="w-4.5 h-4.5" />
+                  <div className="w-10 h-10 rounded-full border border-[#B47F35]/30 flex items-center justify-center text-[#B47F35] bg-[#FAF7F2] shadow-sm">
+                    <BookOpen className="w-5 h-5" />
                   </div>
-                  <h4 className="text-[11px] font-bold text-[#2B132C] uppercase tracking-wide">Daily Shlokas</h4>
-                  <p className="text-[9px] text-secondary-bronze/85 font-sans font-light leading-snug">
+                  <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Daily Shlokas</h4>
+                  <p className="text-xs sm:text-sm text-secondary-bronze/85 font-poppins font-normal leading-snug">
                     Start your day with divine wisdom
                   </p>
                 </motion.div>
@@ -157,44 +157,44 @@ export function MobileAppSection() {
               {/* Action Buttons & QR Code Row */}
               <motion.div 
                 variants={fadeUpVariants}
-                className="flex flex-wrap items-center gap-4 pt-6 border-t border-[#B47F35]/10 mt-6"
+                className="flex flex-wrap items-center gap-4 pt-6 border-t border-[#B47F35]/10 mt-6 font-poppins"
               >
                 
                 {/* Google Play */}
                 <a 
                   href="#" 
-                  className="flex items-center space-x-2.5 px-5 py-2.5 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white transition-colors cursor-pointer shadow-sm select-none"
+                  className="flex items-center space-x-3 px-5 py-3 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white transition-colors cursor-pointer shadow-sm select-none"
                 >
-                  <Smartphone className="w-4 h-4 text-white" />
-                  <div className="text-left">
-                    <p className="text-[8px] text-white/60 font-light uppercase tracking-wider leading-none">
+                  <Smartphone className="w-5 h-5 text-white" />
+                  <div className="text-left font-poppins">
+                    <p className="text-[10px] text-white/70 font-medium uppercase tracking-wider leading-none">
                       GET IT ON
                     </p>
-                    <p className="text-xs font-bold font-sans mt-0.5">Google Play</p>
+                    <p className="text-sm font-bold font-poppins mt-0.5">Google Play</p>
                   </div>
                 </a>
 
                 {/* App Store */}
                 <a 
                   href="#" 
-                  className="flex items-center space-x-2.5 px-5 py-2.5 rounded-xl bg-[#2B132C] hover:bg-black text-white transition-colors cursor-pointer shadow-sm select-none"
+                  className="flex items-center space-x-3 px-5 py-3 rounded-xl bg-[#2B132C] hover:bg-black text-white transition-colors cursor-pointer shadow-sm select-none"
                 >
-                  <Smartphone className="w-4 h-4 text-white" />
-                  <div className="text-left">
-                    <p className="text-[8px] text-white/60 font-light uppercase tracking-wider leading-none">
+                  <Smartphone className="w-5 h-5 text-white" />
+                  <div className="text-left font-poppins">
+                    <p className="text-[10px] text-white/70 font-medium uppercase tracking-wider leading-none">
                       Download on the
                     </p>
-                    <p className="text-xs font-bold font-sans mt-0.5">App Store</p>
+                    <p className="text-sm font-bold font-poppins mt-0.5">App Store</p>
                   </div>
                 </a>
 
                 {/* QR Code and Label */}
-                <div className="flex items-center space-x-2 bg-white/40 border border-[#B47F35]/15 p-1.5 rounded-xl">
+                <div className="flex items-center space-x-2.5 bg-white/50 border border-[#B47F35]/20 p-2 rounded-xl">
                   {/* Mini Vector QR code */}
-                  <svg className="w-9 h-9 text-[#2B132C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M3 3h4v4H3zm14 0h4v4h-4zm0 14h4v4h-4zM3 17h4v4H3zM10 3h4v4h-4zm0 14h4v4h-4zM3 10h4v4H3zm14 0h4v4h-4zm-7 0h4v4h-4z" />
+                  <svg className="w-10 h-10 text-[#2B132C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M3 3h4v4H3zm14 0h4v4h-4zm0 14h4v4h-4zM3 17h4v4H3zM10 3h4v4h-4zm0 14h4v4h-4zM3 10h4v4H3zm14 0h4v4h-4z" />
                   </svg>
-                  <p className="text-[9px] uppercase tracking-wider font-bold text-secondary-bronze/75 leading-tight select-none font-sans">
+                  <p className="text-xs sm:text-sm uppercase tracking-wider font-bold text-secondary-bronze leading-tight select-none font-poppins">
                     Scan to<br />Download App
                   </p>
                 </div>

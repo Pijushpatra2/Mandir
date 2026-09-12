@@ -3,265 +3,257 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Calendar, Heart, Radio, Bell, Gift, ShoppingBag, Sparkles, HeartHandshake, Tv } from "lucide-react";
+import {
+  Flame,
+  Sun,
+  Moon,
+  Heart,
+  Radio,
+  Calendar,
+  FileText,
+  Utensils,
+  ArrowRight
+} from "lucide-react";
 import { templeConfig } from "@/data/temple";
 
 export function HeroSection() {
+  const darshanSchedule = [
+    {
+      name: "Mangala Aarti",
+      time: "6:00 AM",
+      icon: Flame,
+    },
+    {
+      name: "Raj Bhog Aarti",
+      time: "12:30 PM",
+      icon: Sun,
+    },
+    {
+      name: "Sandhya Aarti",
+      time: "6:30 PM",
+      icon: Moon,
+    },
+  ];
+
+  const quickServices = [
+    {
+      label: "Book Pooja",
+      href: "/services",
+      icon: Flame,
+    },
+    {
+      label: "Donate",
+      href: "/donations",
+      icon: Heart,
+    },
+    {
+      label: "Live Darshan",
+      href: "/live-darshan",
+      icon: Radio,
+    },
+    {
+      label: "Events",
+      href: "/events",
+      icon: Calendar,
+    },
+    {
+      label: "E-Receipt",
+      href: "/user-dashboard/donations",
+      icon: FileText,
+    },
+    {
+      label: "Prasad Seva",
+      href: "/shop",
+      icon: Utensils,
+    },
+  ];
+
   return (
-    <section className="relative min-h-[100vh] lg:min-h-[92vh] flex flex-col justify-between pt-28 font-jakarta overflow-hidden">
+    <section className="relative min-h-[100vh] lg:min-h-[94vh] flex flex-col justify-between pt-24 sm:pt-28 font-jakarta overflow-hidden bg-[#FAF7F2]">
       
-      {/* 1. Absolute Background Image with Precise Shifting & Fades */}
-      <div className="absolute inset-0 -z-20 w-full h-full bg-[#FAF7F2]">
-        <div className="absolute right-0 top-0 w-full lg:w-[62%] h-full">
-          <img 
-            src="/images/hero-temple.jpg" 
-            className="w-full h-full object-cover object-center lg:object-right select-none" 
-            alt="Shree Swaminarayan Temple Kampala Sunset Background" 
+      {/* 1. Background Temple Image with Smooth Left Fade */}
+      <div className="absolute inset-0 z-0 w-full h-full overflow-hidden pointer-events-none select-none">
+        <div className="absolute right-0 top-0 w-full lg:w-[62%] xl:w-[58%] h-full">
+          <img
+            src="/images/hero-temple.jpg"
+            className="w-full h-full object-cover object-center lg:object-right select-none"
+            alt="Shree Swaminarayan Temple Kampala Heritage"
           />
-          {/* Smooth Gradient Fades for Text Contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2] via-[#FAF7F2]/90 lg:via-[#FAF7F2]/65 to-transparent hidden lg:block" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/90 to-black/15 lg:hidden" />
+          {/* Smooth Left Gradient Blend on Desktop */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2] via-[#FAF7F2]/30 to-transparent hidden lg:block" />
+          {/* Gentle Top Fade on Mobile to keep text readable while showing temple */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/60 to-[#FAF7F2]/20 lg:hidden" />
         </div>
       </div>
 
-      {/* 2. Main Grid Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow flex items-center mb-6 z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full mt-6 lg:mt-0">
+      {/* 2. Main Hero Grid Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow flex items-center z-10 my-auto py-6 sm:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center w-full">
           
-          {/* LEFT COLUMN: BRANDING & CALLS-TO-ACTION */}
-          <div className="lg:col-span-7 space-y-6 lg:space-y-8 text-left">
+          {/* LEFT COLUMN: HEADLINE, SUBTITLE & CTAs */}
+          <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-left">
             
-            {/* Title / Heading with Gold Gradient & Underline Highlight */}
+            {/* Main Headline */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-3"
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-2"
             >
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold leading-[1.15] text-[#2B132C]">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[66px] font-heading font-bold text-[#2B132C] leading-[1.12] tracking-tight">
                 Your Devotion,<br />
-                Our <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#B47F35] via-[#C59D5F] to-[#8B5E34] font-heading font-normal italic pr-2">
-                  Responsibility
-                  <span className="absolute bottom-1 left-0 w-full h-[3px] bg-gradient-to-r from-[#B47F35]/50 to-transparent rounded-full" />
-                </span>
+                Our <span className="font-heading font-normal italic text-[#C59D5F] inline-block">Responsibility</span>
               </h1>
-
-              {/* Decorative Gold Divider Line */}
-              <div className="flex items-center space-x-3 w-40 py-2">
-                <div className="h-[2px] bg-[#B47F35]/40 flex-grow" />
-                <span className="text-[#B47F35] text-[9px] transform rotate-45 border border-[#B47F35]/60 p-0.5 flex items-center justify-center">✦</span>
-                <div className="h-[2px] bg-[#B47F35]/40 w-10" />
-              </div>
             </motion.div>
 
-            {/* Description */}
+            {/* Subtitle */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-xs sm:text-sm text-secondary-bronze leading-relaxed max-w-lg font-light font-sans"
+              transition={{ duration: 0.7, delay: 0.1 }}
+              className="text-base sm:text-lg md:text-xl text-secondary-bronze/90 leading-relaxed max-w-xl font-poppins font-normal"
             >
-              {templeConfig.name} is a complete temple management platform that connects devotees with divine experiences through technology and tradition.
+              Experience divine blessings, book services, join events, and stay connected with your temple, anytime, anywhere.
             </motion.p>
 
             {/* CTA Action Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex flex-wrap gap-4 items-center"
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="flex flex-wrap gap-4 items-center pt-2"
             >
-              {/* Pooja / Seva solid button */}
+              {/* Primary Solid Button */}
               <Link
                 href="/services"
-                className="px-6 py-3.5 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white font-semibold shadow-md transition-all text-xs flex items-center space-x-2 border border-transparent cursor-pointer"
+                className="px-8 sm:px-9 py-4 rounded-full bg-[#B47F35] hover:bg-[#976426] text-white font-medium text-sm sm:text-base md:text-lg shadow-lg shadow-[#B47F35]/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center cursor-pointer"
               >
-                <Calendar className="w-4 h-4" />
-                <span>Book Pooja / Seva</span>
+                Book a Service
               </Link>
 
-              {/* Donate Now outline button */}
+              {/* Secondary Outline Button */}
               <Link
-                href="/donations"
-                className="px-6 py-3.5 rounded-xl border border-[#B47F35]/50 bg-white/70 hover:bg-white text-[#B47F35] font-semibold transition-all text-xs flex items-center space-x-2 shadow-sm cursor-pointer"
+                href="/darshan"
+                className="px-8 sm:px-9 py-4 rounded-full border-2 border-[#B47F35] text-[#2B132C] bg-white/40 hover:bg-white hover:text-[#B47F35] font-medium text-sm sm:text-base md:text-lg shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center cursor-pointer"
               >
-                <Heart className="w-4 h-4 fill-transparent" />
-                <span>Donate Now</span>
+                Explore More
               </Link>
             </motion.div>
 
-            {/* Devotee circular avatar counter */}
+            {/* Devotee Social Proof Avatars */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="flex items-center space-x-3 pt-3 border-t border-[#B47F35]/10 max-w-sm"
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="flex items-center space-x-3.5 pt-3"
             >
-              {/* Avatars Stack */}
-              <div className="flex -space-x-2">
-                <img 
-                  className="w-7 h-7 rounded-full border border-white object-cover" 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" 
-                  alt="Devotee" 
+              <div className="flex -space-x-2.5">
+                <img
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white object-cover shadow-xs"
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                  alt="Devotee"
                 />
-                <img 
-                  className="w-7 h-7 rounded-full border border-white object-cover" 
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" 
-                  alt="Devotee" 
+                <img
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white object-cover shadow-xs"
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
+                  alt="Devotee"
                 />
-                <img 
-                  className="w-7 h-7 rounded-full border border-white object-cover" 
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" 
-                  alt="Devotee" 
+                <img
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white object-cover shadow-xs"
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
+                  alt="Devotee"
                 />
-                <img 
-                  className="w-7 h-7 rounded-full border border-white object-cover" 
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80" 
-                  alt="Devotee" 
+                <img
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white object-cover shadow-xs"
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80"
+                  alt="Devotee"
                 />
               </div>
-              <p className="text-[10px] text-secondary-bronze/85 font-medium font-sans">
-                Join <span className="font-bold text-dark-surface">50,000+ devotees</span> across <span className="font-bold text-dark-surface">500+ temples</span>
+              <p className="text-sm sm:text-base md:text-lg text-secondary-bronze/90 font-medium font-poppins">
+                Joined by <span className="font-bold text-[#2B132C]">25K+</span> Devotees
               </p>
             </motion.div>
 
           </div>
 
-          {/* RIGHT COLUMN: FLOATING MENU ACTIONS CARD */}
+          {/* RIGHT COLUMN: FLOATING UPCOMING DARSHAN CARD */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="bg-white/90 backdrop-blur-md rounded-[28px] p-6 lg:p-7 shadow-2xl border border-white/50 w-full max-w-[320px] space-y-4"
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="bg-white/95 backdrop-blur-md rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-white/80 w-full max-w-[360px] space-y-6"
             >
-              {/* Row 1: Live Darshan */}
-              <Link 
-                href="/live-darshan" 
-                className="flex items-center space-x-4 p-3 rounded-2xl hover:bg-white/50 transition-colors group cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] group-hover:bg-[#B47F35] group-hover:text-white transition-colors shrink-0">
-                  <Radio className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xs font-bold text-dark-surface tracking-wide">Live Darshan</h4>
-                  <p className="text-[9px] text-[#B47F35] font-bold uppercase tracking-wider mt-0.5">Watch Live</p>
-                </div>
-              </Link>
+              <h3 className="text-lg sm:text-xl font-bold text-[#2B132C] tracking-tight">
+                Upcoming Darshan
+              </h3>
 
-              {/* Divider */}
-              <div className="h-[1px] bg-[#B47F35]/10 mx-2" />
+              <div className="space-y-4">
+                {darshanSchedule.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={index} className="flex items-center space-x-4 group">
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#FAF3E8] border border-[#B47F35]/20 flex items-center justify-center text-[#B47F35] shrink-0 transition-transform group-hover:scale-105">
+                        <Icon className="w-5 h-5 text-[#B47F35]" />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-sm sm:text-base font-bold text-[#2B132C] leading-tight font-poppins">
+                          {item.name}
+                        </h4>
+                        <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5 font-poppins">
+                          {item.time}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-              {/* Row 2: Aarti Timings */}
-              <Link 
-                href="/darshan" 
-                className="flex items-center space-x-4 p-3 rounded-2xl hover:bg-white/50 transition-colors group cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] group-hover:bg-[#B47F35] group-hover:text-white transition-colors shrink-0">
-                  <Bell className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xs font-bold text-dark-surface tracking-wide">Aarti Timings</h4>
-                  <p className="text-[9px] text-[#B47F35] font-bold uppercase tracking-wider mt-0.5">View Today&apos;s Schedule</p>
-                </div>
-              </Link>
-
-              {/* Divider */}
-              <div className="h-[1px] bg-[#B47F35]/10 mx-2" />
-
-              {/* Row 3: Today's Prasad */}
-              <Link 
-                href="/shop" 
-                className="flex items-center space-x-4 p-3 rounded-2xl hover:bg-white/50 transition-colors group cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] group-hover:bg-[#B47F35] group-hover:text-white transition-colors shrink-0">
-                  <Gift className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xs font-bold text-dark-surface tracking-wide">Today&apos;s Prasad</h4>
-                  <p className="text-[9px] text-[#B47F35] font-bold uppercase tracking-wider mt-0.5">Order Now</p>
-                </div>
-              </Link>
+              <div className="pt-3 border-t border-gray-100">
+                <Link
+                  href="/darshan"
+                  className="inline-flex items-center gap-1.5 text-[#B47F35] hover:text-[#8B5E34] text-sm sm:text-base font-semibold transition-colors group cursor-pointer font-poppins"
+                >
+                  <span>View Full Schedule</span>
+                  <span className="transition-transform group-hover:translate-x-1">→</span>
+                </Link>
+              </div>
             </motion.div>
           </div>
 
         </div>
       </div>
 
-      {/* 3. BOTTOM BANNER: QUICK SERVICES LINKS (FLOAT & GLASSMORPHISM) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full z-10 pb-8 mt-12">
-        <div className="bg-white/45 backdrop-blur-md border border-white/35 rounded-3xl lg:rounded-[36px] shadow-2xl p-6 lg:p-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 items-stretch">
-            
-            {/* Quick link 1: Pooja */}
-            <Link href="/services" className="flex flex-col items-center group space-y-2 text-center cursor-pointer">
-              <div className="w-12 h-12 rounded-full border border-[#B47F35]/25 flex items-center justify-center text-[#B47F35] bg-white/60 backdrop-blur-sm group-hover:bg-[#B47F35] group-hover:text-white transition-all shadow-md shrink-0">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-dark-surface leading-tight">Pooja & Seva</p>
-                <p className="text-[9px] text-secondary-bronze/60 mt-0.5">Booking</p>
-              </div>
-            </Link>
-
-            {/* Quick link 2: Donations */}
-            <Link href="/donations" className="flex flex-col items-center group space-y-2 text-center cursor-pointer">
-              <div className="w-12 h-12 rounded-full border border-[#B47F35]/25 flex items-center justify-center text-[#B47F35] bg-white/60 backdrop-blur-sm group-hover:bg-[#B47F35] group-hover:text-white transition-all shadow-md shrink-0">
-                <HeartHandshake className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-dark-surface leading-tight">Online</p>
-                <p className="text-[9px] text-secondary-bronze/60 mt-0.5">Donations</p>
-              </div>
-            </Link>
-
-            {/* Quick link 3: Live Darshan */}
-            <Link href="/live-darshan" className="flex flex-col items-center group space-y-2 text-center cursor-pointer">
-              <div className="w-12 h-12 rounded-full border border-[#B47F35]/25 flex items-center justify-center text-[#B47F35] bg-white/60 backdrop-blur-sm group-hover:bg-[#B47F35] group-hover:text-white transition-all shadow-md shrink-0">
-                <Tv className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-dark-surface leading-tight">Live Darshan &</p>
-                <p className="text-[9px] text-secondary-bronze/60 mt-0.5">Aarti</p>
-              </div>
-            </Link>
-
-            {/* Quick link 4: Prasad */}
-            <Link href="/shop" className="flex flex-col items-center group space-y-2 text-center cursor-pointer">
-              <div className="w-12 h-12 rounded-full border border-[#B47F35]/25 flex items-center justify-center text-[#B47F35] bg-white/60 backdrop-blur-sm group-hover:bg-[#B47F35] group-hover:text-white transition-all shadow-md shrink-0">
-                <Gift className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-dark-surface leading-tight">Prasad</p>
-                <p className="text-[9px] text-secondary-bronze/60 mt-0.5">Delivery</p>
-              </div>
-            </Link>
-
-            {/* Quick link 5: Shopping */}
-            <Link href="/shop" className="flex flex-col items-center group space-y-2 text-center cursor-pointer">
-              <div className="w-12 h-12 rounded-full border border-[#B47F35]/25 flex items-center justify-center text-[#B47F35] bg-white/60 backdrop-blur-sm group-hover:bg-[#B47F35] group-hover:text-white transition-all shadow-md shrink-0">
-                <ShoppingBag className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-dark-surface leading-tight">Temple Store</p>
-                <p className="text-[9px] text-secondary-bronze/60 mt-0.5">Shopping</p>
-              </div>
-            </Link>
-
-            {/* Quick link 6: Events */}
-            <Link href="/events" className="flex flex-col items-center group space-y-2 text-center cursor-pointer">
-              <div className="w-12 h-12 rounded-full border border-[#B47F35]/25 flex items-center justify-center text-[#B47F35] bg-white/60 backdrop-blur-sm group-hover:bg-[#B47F35] group-hover:text-white transition-all shadow-md shrink-0">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-dark-surface leading-tight">Event & Festival</p>
-                <p className="text-[9px] text-secondary-bronze/60 mt-0.5">Updates</p>
-              </div>
-            </Link>
-
+      {/* 3. BOTTOM FLOATING QUICK NAVIGATION DOCK (NO ALL SERVICES BUTTON) */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full z-10 pb-8 mt-6 sm:mt-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.35 }}
+          className="bg-white/85 backdrop-blur-xl border border-white/70 shadow-[0_15px_35px_rgba(0,0,0,0.06)] rounded-3xl sm:rounded-full p-4 sm:p-6 px-4 sm:px-10"
+        >
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 sm:gap-8 items-center justify-items-center">
+            {quickServices.map((service, index) => {
+              const Icon = service.icon;
+              return (
+                <Link
+                  key={index}
+                  href={service.href}
+                  className="flex flex-col items-center group space-y-2 text-center cursor-pointer w-full"
+                >
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:h-12 2xl:w-12 rounded-full bg-[#FAF3E8] border border-[#B47F35]/25 flex items-center justify-center text-[#B47F35] shadow-xs group-hover:bg-[#B47F35] group-hover:text-white transition-all duration-300 group-hover:scale-105 shrink-0">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 2xl:w-5 2xl:h-5 transition-colors" />
+                  </div>
+                  <span className="text-xs sm:text-sm md:text-base font-normal text-[#2B132C] group-hover:text-[#B47F35] transition-colors leading-tight font-poppins">
+                    {service.label}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
-        </div>
+        </motion.div>
       </div>
+
     </section>
   );
 }

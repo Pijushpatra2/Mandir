@@ -22,7 +22,7 @@ export function FestivalsSection() {
   const secondaryFestivals = upcomingFestivals.filter((e) => e.id !== featuredFestival?.id).slice(0, 2);
 
   return (
-    <section className="py-24 bg-bg-warm font-jakarta relative overflow-hidden">
+    <section className="py-24 bg-bg-warm font-poppins relative overflow-hidden">
       
       {/* Background Soft Gradients */}
       <div className="absolute top-1/4 -left-32 w-[350px] h-[350px] rounded-full bg-primary-gold/5 filter blur-3xl -z-10" />
@@ -33,11 +33,11 @@ export function FestivalsSection() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-[#B47F35] text-[8px]">⚜️</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#B47F35]">
+            <span className="text-[#B47F35] text-xs">⚜️</span>
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] font-poppins">
               DIVINE CELEBRATIONS
             </span>
-            <span className="text-[#B47F35] text-[8px]">⚜️</span>
+            <span className="text-[#B47F35] text-xs">⚜️</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#2B132C]">
@@ -45,12 +45,12 @@ export function FestivalsSection() {
           </h2>
 
           <div className="flex items-center justify-center space-x-1.5 py-1">
-            <div className="h-[1.5px] bg-[#B47F35]/30 w-6" />
-            <span className="text-[#B47F35] text-[7px]">✦</span>
-            <div className="h-[1.5px] bg-[#B47F35]/30 w-6" />
+            <div className="h-[1.5px] bg-[#B47F35]/30 w-8" />
+            <span className="text-[#B47F35] text-xs">✦</span>
+            <div className="h-[1.5px] bg-[#B47F35]/30 w-8" />
           </div>
 
-          <p className="text-xs sm:text-sm text-secondary-bronze leading-relaxed font-light font-sans max-w-xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-xl mx-auto">
             Participate in spectacular seasonal gatherings, holy rites, cultural pageantry, and community feasts with SKSS Kampala.
           </p>
         </div>
@@ -73,43 +73,43 @@ export function FestivalsSection() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 select-none" 
                   />
                   {/* Floating Date Badge */}
-                  <div className="absolute top-5 left-5 px-3.5 py-1.5 bg-white/95 backdrop-blur-sm rounded-xl text-[10px] font-bold uppercase tracking-wider text-[#B47F35] border border-[#B47F35]/25 shadow-md flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <div className="absolute top-5 left-5 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider text-[#B47F35] border border-[#B47F35]/25 shadow-md flex items-center gap-2 font-poppins">
+                    <Calendar className="w-4 h-4" />
                     <span>{featuredFestival.date}</span>
                   </div>
                 </div>
 
                 {/* Info Details Side */}
-                <div className="p-8 md:p-10 flex flex-col justify-between flex-grow text-left">
+                <div className="p-8 md:p-10 flex flex-col justify-between flex-grow text-left font-poppins">
                   <div className="space-y-4">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#B47F35] bg-[#B47F35]/10 px-2.5 py-1 rounded-md border border-[#B47F35]/15">
+                    <span className="inline-block text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] bg-[#B47F35]/10 px-3 py-1.5 rounded-lg border border-[#B47F35]/15">
                       Featured Festival
                     </span>
                     
-                    <h3 className="text-2xl font-heading font-bold text-[#2B132C] leading-snug">
+                    <h3 className="text-2xl sm:text-3xl font-heading font-bold text-[#2B132C] leading-snug">
                       {featuredFestival.title}
                     </h3>
                     
-                    <p className="text-xs text-secondary-bronze/85 leading-relaxed font-light">
+                    <p className="text-sm sm:text-base font-normal text-secondary-bronze/90 leading-relaxed font-poppins">
                       {featuredFestival.description}
                     </p>
 
                     {/* Ritual Highlights list */}
-                    <div className="space-y-2 pt-2 border-t border-primary-gold/10">
-                      <p className="text-[10px] font-bold text-[#B47F35] uppercase tracking-wider">
+                    <div className="space-y-3 pt-3 border-t border-primary-gold/10">
+                      <p className="text-xs sm:text-sm font-bold text-[#B47F35] uppercase tracking-wider font-poppins">
                         Ritual Highlights:
                       </p>
-                      <ul className="grid grid-cols-1 gap-2 text-xs font-medium text-dark-surface/85">
-                        <li className="flex items-center space-x-2 text-[11px]">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#B47F35] shrink-0" />
+                      <ul className="grid grid-cols-1 gap-2.5 text-sm sm:text-base font-normal text-dark-surface/90 font-poppins">
+                        <li className="flex items-center space-x-2.5">
+                          <CheckCircle2 className="w-4 h-4 text-[#B47F35] shrink-0" />
                           <span>Maha Abhishek Seva (10:00 PM)</span>
                         </li>
-                        <li className="flex items-center space-x-2 text-[11px]">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#B47F35] shrink-0" />
+                        <li className="flex items-center space-x-2.5">
+                          <CheckCircle2 className="w-4 h-4 text-[#B47F35] shrink-0" />
                           <span>Midnight Janma Aarti (12:00 AM)</span>
                         </li>
-                        <li className="flex items-center space-x-2 text-[11px]">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#B47F35] shrink-0" />
+                        <li className="flex items-center space-x-2.5">
+                          <CheckCircle2 className="w-4 h-4 text-[#B47F35] shrink-0" />
                           <span>Grand Prasadam Feast to all Devotees</span>
                         </li>
                       </ul>
@@ -117,19 +117,19 @@ export function FestivalsSection() {
                   </div>
 
                   {/* Actions Row */}
-                  <div className="flex flex-wrap items-center gap-3 pt-6 border-t border-primary-gold/10 mt-6">
+                  <div className="flex flex-wrap items-center gap-3.5 pt-6 border-t border-primary-gold/10 mt-6 font-poppins">
                     <Link
                       href="/events"
-                      className="px-5 py-2.5 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white text-xs font-semibold shadow-md transition-colors flex items-center space-x-1"
+                      className="px-6 py-3 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white text-sm sm:text-base font-semibold shadow-md transition-colors flex items-center space-x-2 font-poppins"
                     >
-                      <UserCheck className="w-4 h-4" />
+                      <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span>Register Free Pass</span>
                     </Link>
                     <Link
                       href="/services"
-                      className="px-5 py-2.5 rounded-xl border border-[#B47F35]/40 text-[#B47F35] hover:bg-bg-warm/30 text-xs font-semibold transition-colors flex items-center space-x-1"
+                      className="px-6 py-3 rounded-xl border border-[#B47F35]/40 text-[#B47F35] hover:bg-bg-warm/30 text-sm sm:text-base font-semibold transition-colors flex items-center space-x-2 font-poppins"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span>Sponsor Pooja Seva</span>
                     </Link>
                   </div>
@@ -143,38 +143,38 @@ export function FestivalsSection() {
                 <GlassCard 
                   hoverEffect 
                   key={fest.id}
-                  className="bg-white border-primary-gold/10 rounded-2xl p-5 shadow-sm flex flex-col justify-between flex-grow"
+                  className="bg-white border-primary-gold/10 rounded-2xl p-6 shadow-sm flex flex-col justify-between flex-grow font-poppins"
                 >
-                  <div className="space-y-3 text-left">
-                    <div className="flex justify-between items-start">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#B47F35] bg-[#B47F35]/10 px-2 py-0.5 rounded border border-[#B47F35]/15">
+                  <div className="space-y-3.5 text-left">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#B47F35] bg-[#B47F35]/10 px-2.5 py-1 rounded-md border border-[#B47F35]/15 font-poppins">
                         Upcoming
                       </span>
-                      <span className="text-[10px] text-secondary-bronze/75 font-semibold flex items-center">
-                        <Clock className="w-3.5 h-3.5 mr-1 text-[#B47F35]" />
+                      <span className="text-xs sm:text-sm text-secondary-bronze font-semibold flex items-center font-poppins">
+                        <Clock className="w-4 h-4 mr-1.5 text-[#B47F35]" />
                         {fest.date}
                       </span>
                     </div>
 
-                    <h4 className="text-base font-heading font-bold text-[#2B132C] leading-snug">
+                    <h4 className="text-lg sm:text-xl font-heading font-bold text-[#2B132C] leading-snug">
                       {fest.title}
                     </h4>
                     
-                    <p className="text-[11px] text-secondary-bronze/85 font-light leading-relaxed font-sans line-clamp-3">
+                    <p className="text-sm sm:text-base text-secondary-bronze/90 font-normal leading-relaxed font-poppins line-clamp-3">
                       {fest.description}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-primary-gold/10 mt-4 text-[10px]">
-                    <span className="font-medium text-secondary-bronze/60">
+                  <div className="flex items-center justify-between pt-4 border-t border-primary-gold/10 mt-4 text-xs sm:text-sm font-poppins">
+                    <span className="font-medium text-secondary-bronze/75">
                       Time: {fest.time}
                     </span>
                     <Link
                       href="/events"
-                      className="font-bold text-[#B47F35] hover:text-[#8B5E34] transition-colors flex items-center space-x-0.5 cursor-pointer"
+                      className="font-bold text-[#B47F35] hover:text-[#8B5E34] transition-colors flex items-center space-x-1 cursor-pointer font-poppins text-sm"
                     >
                       <span>Register</span>
-                      <ArrowRight className="w-3 h-3" />
+                      <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </GlassCard>

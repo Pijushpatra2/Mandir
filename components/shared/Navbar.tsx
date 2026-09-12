@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp, UserRole } from "@/lib/context";
@@ -11,8 +12,8 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
+  { label: "Bookings", href: "/booking" },
   { label: "Donation", href: "/donations" },
-  { label: "Hall Booking", href: "/hall-booking" },
   { label: "Gallery", href: "/gallery" },
   { label: "Shop", href: "/shop" },
   { label: "Contact", href: "/contact" },
@@ -43,17 +44,19 @@ export function Navbar() {
           
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-gold to-secondary-bronze flex items-center justify-center text-white font-bold shadow-md shadow-secondary-bronze/20">
-              🕉️
-            </span>
-            <div>
-              <h1 className="font-heading text-xl md:text-2xl font-semibold tracking-wide text-dark-surface leading-tight group-hover:text-primary-gold transition-colors">
-                SKSS Kampala
-              </h1>
-              <p className="text-[10px] uppercase tracking-widest text-secondary-bronze font-sans font-medium -mt-0.5">
-                Temple ERP Platform
-              </p>
+            <div className="relative w-11 h-11 sm:w-13 sm:h-13 shrink-0 flex items-center justify-center">
+              <Image
+                src="/temple-logo.png"
+                alt="SKSST Kampala Temple Logo"
+                width={52}
+                height={52}
+                className="w-full h-full object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
+                priority
+              />
             </div>
+            <span className="font-heading text-xl sm:text-xl md:text-lg 2xl:text-xl font-medium tracking-wide text-dark-surface leading-tight group-hover:text-primary-gold transition-colors">
+              SKSST Kampala
+            </span>
           </Link>
    
           {/* Desktop Navigation */}
@@ -66,8 +69,8 @@ export function Navbar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative text-sm font-sans font-medium transition-colors py-2 px-1 hover:text-primary-gold",
-                      isActive ? "text-primary-gold" : "text-dark-surface/75"
+                      "relative text-base font-poppins font-medium transition-colors py-2 px-1 hover:text-primary-gold",
+                      isActive ? "text-primary-gold font-semibold" : "text-dark-surface/80"
                     )}
                   >
                     {item.label}
@@ -98,7 +101,7 @@ export function Navbar() {
                 >
                   <Heart className="w-5 h-5 text-secondary-bronze/85" />
                   {wishlist.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-error-red text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-0.5 -right-0.5 bg-error-red text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                       {wishlist.length}
                     </span>
                   )}
@@ -112,7 +115,7 @@ export function Navbar() {
                 >
                   <ShoppingCart className="w-5 h-5 text-secondary-bronze/85" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-primary-gold text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-0.5 -right-0.5 bg-primary-gold text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                       {cartCount}
                     </span>
                   )}
@@ -125,26 +128,26 @@ export function Navbar() {
               currentMemberNumber ? (
                 <Link
                   href="/user-dashboard"
-                  className="flex items-center space-x-2 px-4 py-2 text-xs font-semibold text-white bg-primary-gold hover:bg-secondary-bronze rounded-xl shadow-md transition-colors"
+                  className="flex items-center space-x-2 px-5 py-2.5 text-sm sm:text-base font-semibold text-white bg-primary-gold hover:bg-secondary-bronze rounded-xl shadow-md transition-colors font-poppins"
                 >
-                  <User className="w-3.5 h-3.5" />
+                  <User className="w-4 h-4" />
                   <span>My Portal</span>
                 </Link>
               ) : (
                 <Link
                   href="/login"
-                  className="flex items-center space-x-2 px-4 py-2 text-xs font-semibold text-white bg-primary-gold hover:bg-secondary-bronze rounded-xl shadow-md transition-colors"
+                  className="flex items-center space-x-2 px-5 py-2.5 text-sm sm:text-base font-semibold text-white bg-primary-gold hover:bg-secondary-bronze rounded-xl shadow-md transition-colors font-poppins"
                 >
-                  <User className="w-3.5 h-3.5" />
+                  <User className="w-4 h-4" />
                   <span>Login / Register</span>
                 </Link>
               )
             ) : (
               <Link
                 href="/dashboard"
-                className="flex items-center space-x-2 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-primary-gold to-secondary-bronze hover:brightness-110 rounded-xl shadow-md transition-all"
+                className="flex items-center space-x-2 px-5 py-2.5 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-primary-gold to-secondary-bronze hover:brightness-110 rounded-xl shadow-md transition-all font-poppins"
               >
-                <Compass className="w-3.5 h-3.5" />
+                <Compass className="w-4 h-4" />
                 <span>Admin Portal</span>
               </Link>
             )}
@@ -248,10 +251,10 @@ export function Navbar() {
       </header>
 
       {/* Floating Simulation Sandbox Role Switcher (Bottom Right) */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50 font-poppins">
         <button
           onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-          className="flex items-center space-x-2 px-3 py-2.5 rounded-full border border-primary-gold/45 bg-white text-xs font-bold text-secondary-bronze shadow-lg hover:border-primary-gold hover:bg-bg-warm transition-all cursor-pointer"
+          className="flex items-center space-x-2 px-3 py-2.5 rounded-full border border-primary-gold/45 bg-white text-xs sm:text-sm font-bold text-secondary-bronze shadow-lg hover:border-primary-gold hover:bg-bg-warm transition-all cursor-pointer font-poppins"
         >
           <Shield className="w-4 h-4 text-primary-gold" />
           <span className="hidden sm:inline">Simulation Role: {userRole}</span>
@@ -267,10 +270,10 @@ export function Navbar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 15 }}
                 transition={{ duration: 0.2 }}
-                className="absolute right-0 bottom-14 w-60 rounded-2xl bg-white border border-primary-gold/20 shadow-2xl z-50 overflow-hidden"
+                className="absolute right-0 bottom-14 w-60 rounded-2xl bg-white border border-primary-gold/20 shadow-2xl z-50 overflow-hidden font-poppins"
               >
                 <div className="p-3 border-b border-primary-gold/10 bg-bg-warm">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-secondary-bronze">
+                  <p className="text-xs sm:text-sm font-bold uppercase tracking-widest text-secondary-bronze font-poppins">
                     Developer Sandbox Role
                   </p>
                 </div>
@@ -283,7 +286,7 @@ export function Navbar() {
                         setShowRoleDropdown(false);
                       }}
                       className={cn(
-                        "w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors hover:bg-primary-gold/10 hover:text-secondary-bronze cursor-pointer",
+                        "w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors hover:bg-primary-gold/10 hover:text-secondary-bronze cursor-pointer font-poppins",
                         userRole === role.value ? "bg-primary-gold/15 text-primary-gold font-bold" : "text-dark-surface/80"
                       )}
                     >

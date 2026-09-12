@@ -36,7 +36,7 @@ export function TestimonialsSection() {
   };
 
   return (
-    <section className="py-24 bg-[#FAF7F2] font-jakarta relative overflow-hidden">
+    <section className="py-24 bg-[#FAF7F2] font-poppins relative overflow-hidden">
       
       {/* Background soft design elements */}
       <div className="absolute -right-36 top-1/4 text-[#B47F35]/5 text-[240px] pointer-events-none select-none font-serif leading-none">
@@ -48,11 +48,11 @@ export function TestimonialsSection() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-[#B47F35] text-[8px]">⚜️</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#B47F35]">
+            <span className="text-[#B47F35] text-xs">⚜️</span>
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] font-poppins">
               DEVOTEE VOICES
             </span>
-            <span className="text-[#B47F35] text-[8px]">⚜️</span>
+            <span className="text-[#B47F35] text-xs">⚜️</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#2B132C]">
@@ -60,12 +60,12 @@ export function TestimonialsSection() {
           </h2>
 
           <div className="flex items-center justify-center space-x-1.5 py-1">
-            <div className="h-[1.5px] bg-[#B47F35]/30 w-6" />
-            <span className="text-[#B47F35] text-[7px]">✦</span>
-            <div className="h-[1.5px] bg-[#B47F35]/30 w-6" />
+            <div className="h-[1.5px] bg-[#B47F35]/30 w-8" />
+            <span className="text-[#B47F35] text-xs">✦</span>
+            <div className="h-[1.5px] bg-[#B47F35]/30 w-8" />
           </div>
 
-          <p className="text-xs sm:text-sm text-secondary-bronze leading-relaxed font-light font-sans max-w-xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-xl mx-auto">
             Read experiences from our global family regarding their interaction with our temple services.
           </p>
         </div>
@@ -82,7 +82,7 @@ export function TestimonialsSection() {
             <motion.div
               key={test.id}
               variants={cardVariants}
-              className="bg-white border border-[#B47F35]/15 rounded-[32px] p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-all group relative overflow-hidden text-left"
+              className="bg-white border border-[#B47F35]/15 rounded-[32px] p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-all group relative overflow-hidden text-left font-poppins"
               whileHover={{ y: -6 }}
             >
               
@@ -93,28 +93,28 @@ export function TestimonialsSection() {
 
               <div className="space-y-4">
                 {/* 5-Star Ratings */}
-                <div className="flex items-center gap-1 text-[#B47F35]">
+                <div className="flex items-center gap-1.5 text-[#B47F35]">
                   {[...Array(test.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#B47F35] stroke-none" />
+                    <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-[#B47F35] stroke-none" />
                   ))}
                 </div>
 
                 {/* Review Text */}
-                <p className="text-xs sm:text-sm text-secondary-bronze leading-relaxed font-light font-sans italic pr-2">
+                <p className="text-sm sm:text-base text-secondary-bronze leading-relaxed font-normal font-poppins italic pr-2">
                   &ldquo;{test.text}&rdquo;
                 </p>
               </div>
 
               {/* Devotee Info row */}
-              <div className="flex items-center space-x-3.5 pt-6 border-t border-[#B47F35]/10 mt-8">
+              <div className="flex items-center space-x-4 pt-6 border-t border-[#B47F35]/10 mt-8">
                 <img
                   src={test.avatarUrl}
                   alt={test.name}
-                  className="w-11 h-11 rounded-full border border-[#B47F35]/25 object-cover shadow-sm shrink-0"
+                  className="w-12 h-12 rounded-full border border-[#B47F35]/25 object-cover shadow-sm shrink-0"
                 />
                 <div>
-                  <h4 className="text-xs font-bold text-[#2B132C]">{test.name}</h4>
-                  <span className="text-[9px] font-bold text-[#B47F35] uppercase tracking-widest block mt-0.5">
+                  <h4 className="text-sm sm:text-base font-bold text-[#2B132C] font-poppins">{test.name}</h4>
+                  <span className="text-xs sm:text-sm font-semibold text-[#B47F35] uppercase tracking-wider block mt-0.5 font-poppins">
                     {test.role}
                   </span>
                 </div>
