@@ -73,8 +73,9 @@ import {
   getKampalaYesterdayString,
 } from "@/lib/dateUtils";
 import * as XLSX from "xlsx";
+import CanteenRequisitionsView from "@/components/canteen/CanteenRequisitionsView";
 
-type AdminCanteenTab = "overview" | "sales" | "orders" | "menu" | "categories" | "customers" | "staff";
+type AdminCanteenTab = "overview" | "sales" | "orders" | "menu" | "categories" | "customers" | "staff" | "requisitions";
 
 export default function CanteenCRMPage() {
   const [activeTab, setActiveTab] = useState<AdminCanteenTab>("overview");
@@ -632,6 +633,7 @@ export default function CanteenCRMPage() {
             { id: "orders", label: "Orders Report", icon: <ClipboardList className="w-3.5 h-3.5" /> },
             { id: "menu", label: "Menu Catalog", icon: <Coffee className="w-3.5 h-3.5" /> },
             { id: "categories", label: "Menu Categories", icon: <Ticket className="w-3.5 h-3.5" /> },
+            { id: "requisitions", label: "Store Requisitions", icon: <ClipboardList className="w-3.5 h-3.5" /> },
             { id: "customers", label: "Customer Users", icon: <Users className="w-3.5 h-3.5" /> },
             { id: "staff", label: "Staff Terminal Roles", icon: <UserCheck className="w-3.5 h-3.5" /> },
           ].map((tab) => (
@@ -713,6 +715,31 @@ export default function CanteenCRMPage() {
             exit={{ opacity: 0, y: 12 }}
             className="space-y-6"
           >
+            {/* Quick Action Banner for Store Requisitions */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-[#B47F35] text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-200">
+                  <ClipboardList className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <span>Canteen Store Requisitions & Inventory Indents</span>
+                    <span className="px-2 py-0.5 bg-amber-100 text-[#8B5E34] text-[10px] font-bold uppercase rounded-full">New System</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Create item lists with required quantities, request Admin approval, and track Shopkeeper fulfillment with live remaining balances.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab("requisitions")}
+                className="px-4 py-2.5 bg-[#B47F35] hover:bg-[#8B5E34] text-white text-xs font-bold uppercase rounded-xl transition-all shadow-sm flex items-center gap-2 shrink-0 cursor-pointer"
+              >
+                <span>Open Requisitions Tab</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Sales Growth Chart */}
               <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4 text-left">
@@ -1868,6 +1895,18 @@ export default function CanteenCRMPage() {
                 </form>
               </GlassCard>
             </div>
+          </motion.div>
+        )}
+
+        {/* TAB 8: STORE REQUISITIONS */}
+        {activeTab === "requisitions" && (
+          <motion.div
+            key="requisitions-tab"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+          >
+            <CanteenRequisitionsView requesterName="Canteen Management" requesterRole="ADMIN" />
           </motion.div>
         )}
       </AnimatePresence>

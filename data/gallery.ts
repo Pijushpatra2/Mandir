@@ -19,14 +19,14 @@ export const mockGalleryItems: GalleryItem[] = [
     id: "gal-2",
     title: "Janmashtami Midnight Abhishek Ceremony",
     category: "Festivals",
-    imageUrl: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1605847444195-223000858807?auto=format&fit=crop&w=800&q=80",
     date: "2025-08-25"
   },
   {
     id: "gal-3",
     title: "Main Temple Dome & Architecture",
     category: "Temple Complex",
-    imageUrl: "https://images.unsplash.com/photo-1583373834249-137a86892a50?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80",
     date: "2026-05-10"
   },
   {

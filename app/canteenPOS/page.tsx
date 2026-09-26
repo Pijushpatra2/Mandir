@@ -63,6 +63,7 @@ import {
 import { useCanteen } from "./context/CanteenContext";
 import { useCategories, useAddMenuItem } from "@/lib/api/canteen";
 import { formatKampalaDate, formatKampalaTime, getLiveTerminalClockString } from "@/lib/dateUtils";
+import CanteenRequisitionsView from "@/components/canteen/CanteenRequisitionsView";
 
 type POSTab =
   | "dashboard"
@@ -72,6 +73,7 @@ type POSTab =
   | "bookings"
   | "menu"
   | "inventory"
+  | "requisitions"
   | "customers"
   | "kitchen"
   | "reports"
@@ -2464,6 +2466,7 @@ export default function CanteenPOSPage() {
                   { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"] },
                   { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"] },
                   { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"] },
+                  { id: "requisitions", label: "Store Requisitions", icon: ClipboardList, roles: ["manager", "cashier", "receptionist"] },
                   { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"] },
                   { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"] },
                   { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"] },
@@ -2636,6 +2639,13 @@ export default function CanteenPOSPage() {
               {activeTab === "bookings" && renderBookings()}
               {activeTab === "menu" && renderMenu()}
               {activeTab === "inventory" && renderInventory()}
+              {activeTab === "requisitions" && (
+                <CanteenRequisitionsView
+                  requesterName={activeStaff.name}
+                  requesterId={String(activeStaff.id)}
+                  requesterRole={activeStaff.assignedRole.toUpperCase()}
+                />
+              )}
               {activeTab === "customers" && renderCustomers()}
               {activeTab === "kitchen" && renderKDS()}
               {activeTab === "reports" && renderReports()}
@@ -3374,6 +3384,7 @@ export default function CanteenPOSPage() {
                       { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"] },
                       { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"] },
                       { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"] },
+                      { id: "requisitions", label: "Store Requisitions", icon: ClipboardList, roles: ["manager", "cashier", "receptionist"] },
                       { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"] },
                       { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"] },
                       { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"] },

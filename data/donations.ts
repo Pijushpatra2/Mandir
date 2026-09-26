@@ -52,7 +52,7 @@ export const donationCampaigns: DonationCampaign[] = [
     goalAmount: 5000000,
     raisedAmount: 3200000,
     donorCount: 450,
-    image: "https://images.unsplash.com/photo-1583373834249-137a86892a50?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80",
     category: "Building"
   },
   {
@@ -62,7 +62,7 @@ export const donationCampaigns: DonationCampaign[] = [
     goalAmount: 1000000,
     raisedAmount: 480000,
     donorCount: 310,
-    image: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1605847444195-223000858807?auto=format&fit=crop&w=800&q=80",
     category: "Festival"
   }
 ];

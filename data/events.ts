@@ -18,7 +18,7 @@ export const templeEvents: TempleEvent[] = [
     description: "Celebrate the divine appearance of Lord Krishna with continuous bhajans, Abhishek, and a midnight Maha Aarti. A grand feast (Prasadam) will be served to all.",
     date: "2026-08-15",
     time: "6:00 PM - 12:30 AM",
-    bannerImage: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=800&q=80",
+    bannerImage: "https://images.unsplash.com/photo-1605847444195-223000858807?auto=format&fit=crop&w=800&q=80",
     capacityLimit: 5000,
     registeredCount: 4200,
     category: "Festival",

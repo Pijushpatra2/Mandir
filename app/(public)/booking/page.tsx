@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/lib/context";
 import { formatCurrency } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -33,7 +34,13 @@ import {
   Lock,
   ArrowRight,
   LogIn,
-  UserPlus
+  UserPlus,
+  Sun,
+  Moon,
+  Compass,
+  Star,
+  Tag,
+  Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -54,10 +61,7 @@ import {
 function BookingScrollPortal() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const {
-    devoteeProfile,
-    showToast
-  } = useApp();
+  const { devoteeProfile, showToast } = useApp();
 
   // Active section tracking for sticky scroll spy
   const [activeSection, setActiveSection] = useState<"hall" | "darshan" | "puja">("hall");
@@ -126,7 +130,7 @@ function BookingScrollPortal() {
     setActiveSection(section);
     const element = document.getElementById(`${section}-section`);
     if (element) {
-      const navOffset = 140; // account for sticky headers
+      const navOffset = 130;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - navOffset;
 
@@ -411,55 +415,220 @@ function BookingScrollPortal() {
   };
 
   return (
-    <div className="bg-bg-warm min-h-screen font-poppins pb-24">
-      {/* 1. Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-dark-surface via-[#1c140d] to-dark-surface text-white py-20 border-b border-primary-gold/25">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary-gold)_0%,_transparent_70%)] opacity-15 pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-gold/20 border border-primary-gold/40 text-primary-gold text-xs font-semibold uppercase tracking-widest">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Divine Reservations & Sevas</span>
+    <div className="bg-[#FAF7F2] min-h-screen font-poppins pb-24 overflow-hidden">
+      
+      {/* =========================================================================
+       * 1. BESPOKE TEMPLE HERO SECTION
+       * ========================================================================= */}
+      <section className="relative pt-28 sm:pt-32 pb-16 overflow-hidden bg-[#FAF7F2]">
+        
+        {/* Background Sacred Geometric Radial & Watermarks */}
+        <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(197,157,95,0.2),transparent)]" />
+          <div className="absolute -left-16 top-20 text-[#B47F35]/5 text-[240px] font-serif leading-none">
+            🕉️
           </div>
-          <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-medium tracking-tight text-white">
-            Online Temple <span className="text-primary-gold italic font-normal">Booking Portal</span>
-          </h1>
-          <p className="text-xs sm:text-base text-white/75 max-w-2xl mx-auto leading-relaxed font-light font-sans">
-            Scroll seamlessly through our sacred facilities — reserve community halls for auspicious celebrations, obtain priority Darshan passes, and sponsor traditional Vedic Pujas with or without Samagri kits.
-          </p>
+          <div className="absolute -right-16 bottom-10 text-[#B47F35]/5 text-[240px] font-serif leading-none">
+            ⚜️
+          </div>
         </div>
-      </div>
 
-      {/* 2. Sticky Horizontal Navigation & Filter / Sort Bar */}
-      <div className="sticky top-20 z-30 bg-white/95 backdrop-blur-md border-b border-primary-gold/25 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+            
+            {/* Left Column: Heading & Service Badges */}
+            <motion.div
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="lg:col-span-7 space-y-6 text-left"
+            >
+              {/* Sacred Badge */}
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#B47F35]/10 border border-[#B47F35]/25 text-[#B47F35] text-xs sm:text-sm font-semibold uppercase tracking-widest font-poppins shadow-xs backdrop-blur-sm">
+                <Sparkles className="w-3.5 h-3.5 text-[#B47F35]" />
+                <span>DIVINE SERVICES & RESERVATIONS</span>
+                <span className="text-[10px]">⚜️</span>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-[#2B132C] leading-[1.12] tracking-tight">
+                Sacred Sevas &<br />
+                Divine <span className="font-heading font-normal italic text-transparent bg-clip-text bg-gradient-to-r from-[#B47F35] via-[#C59D5F] to-[#8B5E34] pr-2">Reservations</span>
+              </h1>
+
+              {/* Lotus Divider */}
+              <div className="flex items-center space-x-2.5 py-0.5">
+                <div className="h-[1.5px] bg-gradient-to-r from-transparent via-[#B47F35]/40 to-[#B47F35]/80 w-12" />
+                <span className="text-[#B47F35] text-xs">⚜️</span>
+                <div className="h-[1.5px] bg-gradient-to-l from-transparent via-[#B47F35]/40 to-[#B47F35]/80 w-24" />
+              </div>
+
+              {/* Description */}
+              <p className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg max-w-xl font-poppins">
+                Experience the sanctity of Shree Swaminarayan Mandir Kampala. Reserve our community halls for auspicious family celebrations, register for priority Darshan passes, or sponsor traditional Vedic Pujas with our resident Shastri priests.
+              </p>
+
+              {/* Quick Feature Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div className="p-3 rounded-2xl bg-white/80 border border-[#B47F35]/20 text-left shadow-2xs">
+                  <span className="text-lg font-bold text-[#2B132C] block font-heading">3 Venues</span>
+                  <span className="text-[11px] text-secondary-bronze/80">Grand Event Halls</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-white/80 border border-[#B47F35]/20 text-left shadow-2xs">
+                  <span className="text-lg font-bold text-[#2B132C] block font-heading">5 Slots</span>
+                  <span className="text-[11px] text-secondary-bronze/80">Daily Aarti Darshan</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-white/80 border border-[#B47F35]/20 text-left shadow-2xs">
+                  <span className="text-lg font-bold text-[#2B132C] block font-heading">12+ Sevas</span>
+                  <span className="text-[11px] text-secondary-bronze/80">Vedic Puja Rites</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-white/80 border border-[#B47F35]/20 text-left shadow-2xs">
+                  <span className="text-lg font-bold text-[#2B132C] block font-heading">100% Instant</span>
+                  <span className="text-[11px] text-secondary-bronze/80">Digital Passes</span>
+                </div>
+              </div>
+
+            </motion.div>
+
+            {/* Right Column: Interactive 3-Card Category Switcher Widget */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="lg:col-span-5"
+            >
+              <div className="bg-white/90 backdrop-blur-md rounded-[28px] p-6 sm:p-7 border border-[#B47F35]/25 shadow-xl space-y-4 text-left">
+                
+                <div className="flex items-center justify-between border-b border-[#B47F35]/15 pb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#B47F35]">
+                      Live Booking Portal 2026
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-secondary-bronze/70 font-medium">Kampala, Uganda</span>
+                </div>
+
+                {/* 3 Quick Jump Pill Cards */}
+                <div className="space-y-2.5">
+                  
+                  {/* Jump Option 1 */}
+                  <div
+                    onClick={() => scrollToSection("hall")}
+                    className={cn(
+                      "p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group",
+                      activeSection === "hall"
+                        ? "bg-[#FAF7F2] border-[#B47F35] shadow-sm"
+                        : "bg-white border-[#B47F35]/15 hover:border-[#B47F35]/40"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#B47F35]/15 text-[#B47F35] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <Building2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-[#2B132C]">Grand Temple Halls</h4>
+                        <p className="text-[11px] text-secondary-bronze/80">Banquet, weddings & katha events</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#B47F35] opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </div>
+
+                  {/* Jump Option 2 */}
+                  <div
+                    onClick={() => scrollToSection("darshan")}
+                    className={cn(
+                      "p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group",
+                      activeSection === "darshan"
+                        ? "bg-[#FAF7F2] border-[#B47F35] shadow-sm"
+                        : "bg-white border-[#B47F35]/15 hover:border-[#B47F35]/40"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#B47F35]/15 text-[#B47F35] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <CalendarCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-[#2B132C]">Daily Aarti & Darshan</h4>
+                        <p className="text-[11px] text-secondary-bronze/80">Complimentary priority entry passes</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#B47F35] opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </div>
+
+                  {/* Jump Option 3 */}
+                  <div
+                    onClick={() => scrollToSection("puja")}
+                    className={cn(
+                      "p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group",
+                      activeSection === "puja"
+                        ? "bg-[#FAF7F2] border-[#B47F35] shadow-sm"
+                        : "bg-white border-[#B47F35]/15 hover:border-[#B47F35]/40"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#B47F35]/15 text-[#B47F35] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <Flame className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-[#2B132C]">Vedic Pujas & Homas</h4>
+                        <p className="text-[11px] text-secondary-bronze/80">Sponsor personal & family rituals</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#B47F35] opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </div>
+
+                </div>
+
+                <div className="pt-2 border-t border-[#B47F35]/15 flex items-center justify-between text-xs text-secondary-bronze/80">
+                  <span className="flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#B47F35]" />
+                    <span>Verified Mandir Booking</span>
+                  </span>
+                  <span className="font-semibold text-[#2B132C]">Instant E-Pass Sync</span>
+                </div>
+
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+       * 2. STICKY LUXURY NAVIGATION & QUICK SEARCH / SORT DOCK
+       * ========================================================================= */}
+      <div className="sticky top-20 z-30 bg-white/90 backdrop-blur-xl border-y border-[#B47F35]/20 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-            {/* Section Jump Tabs (Scroll Spy Anchor Nav) */}
-            <div className="flex items-center gap-1.5 p-1 bg-bg-warm rounded-2xl border border-primary-gold/20 overflow-x-auto">
+            
+            {/* Section Jump Tabs */}
+            <div className="flex items-center gap-1.5 p-1 bg-[#FAF7F2] rounded-2xl border border-[#B47F35]/20 overflow-x-auto">
               <button
                 type="button"
                 onClick={() => scrollToSection("hall")}
                 className={cn(
-                  "px-3.5 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer",
+                  "px-4 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer",
                   activeSection === "hall"
-                    ? "bg-gradient-to-r from-primary-gold to-secondary-bronze text-white shadow-sm"
-                    : "text-secondary-bronze hover:text-dark-surface hover:bg-primary-gold/10"
+                    ? "bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white shadow-sm"
+                    : "text-secondary-bronze hover:text-dark-surface hover:bg-white"
                 )}
               >
-                <Building2 className="w-4 h-4 shrink-0" />
-                <span>01. Hall Booking</span>
+                <Building2 className="w-3.5 h-3.5 shrink-0" />
+                <span>01. Hall Venues</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => scrollToSection("darshan")}
                 className={cn(
-                  "px-3.5 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer",
+                  "px-4 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer",
                   activeSection === "darshan"
-                    ? "bg-gradient-to-r from-primary-gold to-secondary-bronze text-white shadow-sm"
-                    : "text-secondary-bronze hover:text-dark-surface hover:bg-primary-gold/10"
+                    ? "bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white shadow-sm"
+                    : "text-secondary-bronze hover:text-dark-surface hover:bg-white"
                 )}
               >
-                <CalendarCheck className="w-4 h-4 shrink-0" />
+                <CalendarCheck className="w-3.5 h-3.5 shrink-0" />
                 <span>02. Darshan Pass</span>
               </button>
 
@@ -467,13 +636,13 @@ function BookingScrollPortal() {
                 type="button"
                 onClick={() => scrollToSection("puja")}
                 className={cn(
-                  "px-3.5 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer",
+                  "px-4 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer",
                   activeSection === "puja"
-                    ? "bg-gradient-to-r from-primary-gold to-secondary-bronze text-white shadow-sm"
-                    : "text-secondary-bronze hover:text-dark-surface hover:bg-primary-gold/10"
+                    ? "bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white shadow-sm"
+                    : "text-secondary-bronze hover:text-dark-surface hover:bg-white"
                 )}
               >
-                <Flame className="w-4 h-4 shrink-0" />
+                <Flame className="w-3.5 h-3.5 shrink-0" />
                 <span>03. Vedic Pujas</span>
               </button>
             </div>
@@ -481,14 +650,14 @@ function BookingScrollPortal() {
             {/* Quick Search & Sort Controls */}
             <div className="flex items-center gap-2.5 overflow-x-auto pb-1 md:pb-0">
               {/* Search */}
-              <div className="relative flex-grow sm:flex-grow-0 sm:w-56">
+              <div className="relative flex-grow sm:flex-grow-0 sm:w-60">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-bronze/50" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Filter ceremonies..."
-                  className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/50 focus:bg-white focus:outline-none"
+                  placeholder="Search ceremonies & sevas..."
+                  className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-white text-dark-surface focus:outline-none placeholder:text-secondary-bronze/40"
                 />
                 {searchQuery && (
                   <button
@@ -502,11 +671,11 @@ function BookingScrollPortal() {
 
               {/* Sort Selector */}
               <div className="flex items-center gap-1.5 shrink-0">
-                <ArrowUpDown className="w-3.5 h-3.5 text-primary-gold" />
+                <ArrowUpDown className="w-3.5 h-3.5 text-[#B47F35]" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-2.5 py-2 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/50 text-xs font-semibold text-secondary-bronze focus:outline-none cursor-pointer"
+                  className="px-3 py-2 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-white text-xs font-semibold text-secondary-bronze focus:outline-none cursor-pointer"
                 >
                   <option value="popular">Recommended</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -515,32 +684,36 @@ function BookingScrollPortal() {
                 </select>
               </div>
             </div>
+
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24 mt-12">
+        
         {/* =========================================================================
          * SECTION 1: 🏛️ GRAND HALL EVENT BOOKING
          * ========================================================================= */}
-        <section id="hall-section" ref={hallRef} className="scroll-mt-36 space-y-8">
+        <section id="hall-section" ref={hallRef} className="scroll-mt-36 space-y-8 text-left">
+          
           {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary-gold/20 pb-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#B47F35]/20 pb-4">
             <div>
-              <div className="flex items-center gap-2 text-primary-gold font-bold text-xs uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-[#B47F35] font-bold text-xs uppercase tracking-widest">
                 <span>01</span>
                 <span>•</span>
                 <span>Grand Event Venues & Spaces</span>
               </div>
-              <h2 className="font-heading text-3xl sm:text-4xl font-medium text-dark-surface mt-1">
+              <h2 className="font-heading text-3xl sm:text-4xl font-bold text-[#2B132C] mt-1">
                 Temple Halls & Banquet Facilities
               </h2>
-              <p className="text-xs sm:text-sm text-secondary-bronze/80 font-sans mt-0.5">
+              <p className="text-xs sm:text-sm text-secondary-bronze/80 font-poppins mt-0.5">
                 Choose between the Grand Auditorium, Devotional Dining Hall, or Satsang Bhavan. Fully equipped with central AC, pure vegetarian kitchen, and fire permits.
               </p>
             </div>
-            <span className="px-3.5 py-1 text-xs font-bold text-success-green bg-success-green/10 border border-success-green/30 rounded-xl self-start md:self-auto">
-              🟢 Dates Open for 2026
+            <span className="px-3.5 py-1.5 text-xs font-bold text-success-green bg-success-green/10 border border-success-green/30 rounded-xl self-start md:self-auto flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span>Dates Open for 2026</span>
             </span>
           </div>
 
@@ -558,8 +731,8 @@ function BookingScrollPortal() {
                   className={cn(
                     "px-4 py-2.5 rounded-2xl text-xs font-semibold border transition-all flex items-center gap-2.5 shrink-0 cursor-pointer",
                     (selectedHallId === h.id || (!selectedHallId && h === halls[0]))
-                      ? "bg-primary-gold text-white border-primary-gold shadow-md"
-                      : "bg-white text-secondary-bronze border-primary-gold/20 hover:border-primary-gold/50"
+                      ? "bg-[#B47F35] text-white border-[#B47F35] shadow-md"
+                      : "bg-white text-secondary-bronze border-[#B47F35]/20 hover:border-[#B47F35]/50"
                   )}
                 >
                   <Building2 className="w-4 h-4" />
@@ -568,7 +741,7 @@ function BookingScrollPortal() {
                     "px-2 py-0.5 rounded-full text-[10px]",
                     (selectedHallId === h.id || (!selectedHallId && h === halls[0]))
                       ? "bg-white/20 text-white font-mono"
-                      : "bg-primary-gold/10 text-primary-gold font-mono"
+                      : "bg-[#B47F35]/10 text-[#B47F35] font-mono"
                   )}>
                     {h.capacity} Cap
                   </span>
@@ -579,24 +752,24 @@ function BookingScrollPortal() {
 
           {/* Active Hall Showcase Banner & Amenities */}
           {activeHall && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white rounded-3xl p-6 sm:p-8 border border-primary-gold/20 shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white rounded-3xl p-6 sm:p-8 border border-[#B47F35]/25 shadow-sm">
               <div className="lg:col-span-6 relative aspect-video sm:h-[320px] rounded-2xl overflow-hidden shadow-md">
                 <img
-                  src={activeHall.image_url || "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1000&q=80"}
+                  src={activeHall.image_url || "/images/hero-temple.jpg"}
                   alt={activeHall.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-6">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2B132C]/90 via-[#2B132C]/20 to-transparent flex items-end p-6">
                   <div className="text-white space-y-1">
                     <div className="flex gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-gold px-2 py-0.5 rounded text-white">
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-[#B47F35] px-2.5 py-0.5 rounded text-white">
                         {activeHall.space_sqft ? `${activeHall.space_sqft.toLocaleString()} Sq. Ft.` : "Spacious Facility"}
                       </span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-black/60 px-2 py-0.5 rounded text-white">
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-black/60 px-2.5 py-0.5 rounded text-white">
                         Max {activeHall.capacity} Devotees
                       </span>
                     </div>
-                    <h3 className="font-heading text-xl sm:text-2xl font-medium mt-1 text-white">
+                    <h3 className="font-heading text-xl sm:text-2xl font-bold mt-1 text-white">
                       {activeHall.name}
                     </h3>
                   </div>
@@ -605,45 +778,45 @@ function BookingScrollPortal() {
 
               <div className="lg:col-span-6 space-y-4">
                 <div>
-                  <h3 className="font-heading text-2xl font-medium text-dark-surface">
+                  <h3 className="font-heading text-2xl font-bold text-[#2B132C]">
                     {activeHall.name}
                   </h3>
-                  <p className="text-xs sm:text-sm text-secondary-bronze leading-relaxed font-sans mt-1">
+                  <p className="text-xs sm:text-sm text-secondary-bronze leading-relaxed font-poppins mt-1">
                     {activeHall.description || "Spacious temple venue equipped with elevated royal stage, bridal suite, audio sound system, pure vegetarian dining halls, and continuous power generator."}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 text-xs text-secondary-bronze font-medium">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-bg-warm border border-primary-gold/15">
-                    <Users className="w-4 h-4 text-primary-gold shrink-0" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 text-xs text-secondary-bronze font-medium font-poppins">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#B47F35]/15">
+                    <Users className="w-4 h-4 text-[#B47F35] shrink-0" />
                     <span>{activeHall.capacity} Seats</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-bg-warm border border-primary-gold/15">
-                    <Wind className="w-4 h-4 text-primary-gold shrink-0" />
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#B47F35]/15">
+                    <Wind className="w-4 h-4 text-[#B47F35] shrink-0" />
                     <span>Central AC</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-bg-warm border border-primary-gold/15">
-                    <ChefHat className="w-4 h-4 text-primary-gold shrink-0" />
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#B47F35]/15">
+                    <ChefHat className="w-4 h-4 text-[#B47F35] shrink-0" />
                     <span>Veg Kitchen</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-bg-warm border border-primary-gold/15">
-                    <Flame className="w-4 h-4 text-primary-gold shrink-0" />
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#B47F35]/15">
+                    <Flame className="w-4 h-4 text-[#B47F35] shrink-0" />
                     <span>Homa Allowed</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-bg-warm border border-primary-gold/15">
-                    <ShieldCheck className="w-4 h-4 text-primary-gold shrink-0" />
-                    <span>Max {activeHall.max_people_at_a_time || activeHall.capacity} at a time</span>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#B47F35]/15">
+                    <ShieldCheck className="w-4 h-4 text-[#B47F35] shrink-0" />
+                    <span>Max {activeHall.max_people_at_a_time || activeHall.capacity} Flow</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-bg-warm border border-primary-gold/15">
-                    <Sparkles className="w-4 h-4 text-primary-gold shrink-0" />
-                    <span>{activeHall.space_sqft} sqft Space</span>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#B47F35]/15">
+                    <Sparkles className="w-4 h-4 text-[#B47F35] shrink-0" />
+                    <span>{activeHall.space_sqft || 5000} sqft Space</span>
                   </div>
                 </div>
 
                 {/* Amenities pills */}
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {parseAmenities(activeHall.amenities).map((am, i) => (
-                    <span key={i} className="px-2.5 py-1 rounded-lg bg-primary-gold/10 text-secondary-bronze text-[11px] font-semibold border border-primary-gold/15">
+                    <span key={i} className="px-2.5 py-1 rounded-lg bg-[#B47F35]/10 text-secondary-bronze text-[11px] font-semibold border border-[#B47F35]/15">
                       ✓ {am}
                     </span>
                   ))}
@@ -655,17 +828,17 @@ function BookingScrollPortal() {
           {/* Form & Cost Calculator */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-7">
-              <GlassCard className="p-6 sm:p-8 border-primary-gold/20 bg-white space-y-5">
-                <div className="border-b border-primary-gold/15 pb-3">
-                  <h3 className="font-heading text-2xl font-medium text-dark-surface">
+              <GlassCard className="p-6 sm:p-8 border-[#B47F35]/25 bg-white space-y-5 shadow-sm">
+                <div className="border-b border-[#B47F35]/15 pb-3">
+                  <h3 className="font-heading text-2xl font-bold text-[#2B132C]">
                     Hall Reservation Request
                   </h3>
-                  <p className="text-xs text-secondary-bronze/75 font-sans">
+                  <p className="text-xs text-secondary-bronze/75 font-poppins">
                     Submit your booking date, time slots, and guest headcount to reserve the facility.
                   </p>
                 </div>
 
-                <form onSubmit={handleHallSubmit} className="space-y-4 text-xs font-sans">
+                <form onSubmit={handleHallSubmit} className="space-y-4 text-xs font-poppins">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1 sm:col-span-2">
                       <label className="font-semibold text-secondary-bronze">Selected Hall Venue *</label>
@@ -676,7 +849,7 @@ function BookingScrollPortal() {
                           const chosen = halls.find((h) => h.id === e.target.value);
                           if (chosen) setHallGuests(Math.min(hallGuests, chosen.capacity));
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       >
                         {halls.map((h) => (
                           <option key={h.id} value={h.id}>
@@ -691,7 +864,7 @@ function BookingScrollPortal() {
                       <select
                         value={hallEventType}
                         onChange={(e) => setHallEventType(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       >
                         <option>Marriage Ceremony</option>
                         <option>Satsang & Katha</option>
@@ -710,7 +883,7 @@ function BookingScrollPortal() {
                         value={hallDate}
                         min={new Date().toISOString().split("T")[0]}
                         onChange={(e) => setHallDate(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       />
                     </div>
 
@@ -719,7 +892,7 @@ function BookingScrollPortal() {
                       <select
                         value={hallDuration}
                         onChange={(e) => setHallDuration(e.target.value as any)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       >
                         <option value="full">Full Day (10 Hours)</option>
                         <option value="half">Half Day (5 Hours)</option>
@@ -736,7 +909,7 @@ function BookingScrollPortal() {
                           max={14}
                           value={hallDays}
                           onChange={(e) => setHallDays(Number(e.target.value))}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                         />
                       </div>
                     ) : (
@@ -750,7 +923,7 @@ function BookingScrollPortal() {
                           max={activeHall?.capacity || 1200}
                           value={hallGuests}
                           onChange={(e) => setHallGuests(Number(e.target.value))}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                         />
                       </div>
                     )}
@@ -762,7 +935,7 @@ function BookingScrollPortal() {
                         value={hallStartTime}
                         onChange={(e) => setHallStartTime(e.target.value)}
                         placeholder="e.g., 09:00 AM"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       />
                     </div>
 
@@ -773,7 +946,7 @@ function BookingScrollPortal() {
                         value={hallEndTime}
                         onChange={(e) => setHallEndTime(e.target.value)}
                         placeholder="e.g., 06:00 PM"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       />
                     </div>
 
@@ -785,7 +958,7 @@ function BookingScrollPortal() {
                         value={hallDevoteeName}
                         onChange={(e) => setHallDevoteeName(e.target.value)}
                         placeholder="Full Name"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       />
                     </div>
 
@@ -797,7 +970,7 @@ function BookingScrollPortal() {
                         value={hallPhone}
                         onChange={(e) => setHallPhone(e.target.value)}
                         placeholder="+256 700 000000"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       />
                     </div>
 
@@ -808,7 +981,7 @@ function BookingScrollPortal() {
                         value={hallEmail}
                         onChange={(e) => setHallEmail(e.target.value)}
                         placeholder="devotee@example.com"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                       />
                     </div>
 
@@ -819,7 +992,7 @@ function BookingScrollPortal() {
                         value={hallNotes}
                         onChange={(e) => setHallNotes(e.target.value)}
                         placeholder="E.g., sound equipment, mandap setup time, kitchen usage..."
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none resize-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none resize-none"
                       />
                     </div>
                   </div>
@@ -827,7 +1000,7 @@ function BookingScrollPortal() {
                   <button
                     type="submit"
                     disabled={isSubmittingHall}
-                    className="w-full py-3.5 bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3.5 bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <Building2 className="w-4 h-4" />
                     <span>{isSubmittingHall ? "Submitting Reservation..." : "Submit Hall Reservation"}</span>
@@ -837,12 +1010,12 @@ function BookingScrollPortal() {
             </div>
 
             <div className="lg:col-span-5 space-y-4">
-              <GlassCard className="p-6 sm:p-8 border-primary-gold/25 bg-gradient-to-br from-white via-bg-warm/40 to-primary-gold/10 shadow-md">
-                <div className="flex justify-between items-center border-b border-primary-gold/15 pb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-primary-gold">
+              <GlassCard className="p-6 sm:p-8 border-[#B47F35]/25 bg-gradient-to-br from-white via-[#FAF7F2]/40 to-[#B47F35]/10 shadow-sm">
+                <div className="flex justify-between items-center border-b border-[#B47F35]/15 pb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#B47F35]">
                     Estimated Cost Summary
                   </span>
-                  <span className="text-[10px] text-secondary-bronze bg-primary-gold/10 px-2 py-0.5 rounded-md font-semibold">
+                  <span className="text-[10px] text-secondary-bronze bg-[#B47F35]/10 px-2 py-0.5 rounded-md font-semibold">
                     UGX Quote
                   </span>
                 </div>
@@ -850,27 +1023,27 @@ function BookingScrollPortal() {
                 {(() => {
                   const quote = getHallEstimate();
                   return (
-                    <div className="space-y-3 text-xs text-secondary-bronze mt-4">
+                    <div className="space-y-3 text-xs text-secondary-bronze mt-4 font-poppins">
                       <div className="flex justify-between">
                         <span>Venue:</span>
-                        <span className="font-semibold text-dark-surface">{activeHall?.name}</span>
+                        <span className="font-semibold text-[#2B132C]">{activeHall?.name}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Rental ({hallDuration === "multi" ? `${hallDays} Days` : hallDuration}):</span>
-                        <span className="font-bold text-dark-surface">{formatCurrency(quote.base)}</span>
+                        <span className="font-bold text-[#2B132C]">{formatCurrency(quote.base)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Sanitization & Cleaning Fee:</span>
-                        <span className="font-bold text-dark-surface">{formatCurrency(quote.cleaningFee)}</span>
+                        <span className="font-bold text-[#2B132C]">{formatCurrency(quote.cleaningFee)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Refundable Security Deposit (15%):</span>
-                        <span className="font-bold text-dark-surface">{formatCurrency(quote.refundableDeposit)}</span>
+                        <span className="font-bold text-[#2B132C]">{formatCurrency(quote.refundableDeposit)}</span>
                       </div>
 
-                      <div className="border-t border-primary-gold/20 pt-3 flex justify-between items-center text-sm font-bold text-dark-surface">
+                      <div className="border-t border-[#B47F35]/20 pt-3 flex justify-between items-center text-sm font-bold text-[#2B132C]">
                         <span>Total Estimated Quote:</span>
-                        <span className="font-heading text-xl text-primary-gold">
+                        <span className="font-heading text-xl text-[#B47F35]">
                           {formatCurrency(quote.total)}
                         </span>
                       </div>
@@ -878,9 +1051,9 @@ function BookingScrollPortal() {
                   );
                 })()}
 
-                <div className="mt-5 p-3.5 rounded-xl bg-primary-gold/10 border border-primary-gold/20 text-[11px] text-secondary-bronze">
-                  <p className="font-semibold flex items-center gap-1.5 text-dark-surface">
-                    <Info className="w-3.5 h-3.5 text-primary-gold" />
+                <div className="mt-5 p-3.5 rounded-xl bg-[#B47F35]/10 border border-[#B47F35]/20 text-[11px] text-secondary-bronze font-poppins">
+                  <p className="font-semibold flex items-center gap-1.5 text-[#2B132C]">
+                    <Info className="w-3.5 h-3.5 text-[#B47F35]" />
                     Reservation Guarantee
                   </p>
                   <p className="opacity-85 mt-0.5">
@@ -895,22 +1068,22 @@ function BookingScrollPortal() {
         {/* =========================================================================
          * SECTION 2: 🕉️ DARSHAN & AARTI TIMING PASSES
          * ========================================================================= */}
-        <section id="darshan-section" ref={darshanRef} className="scroll-mt-36 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary-gold/20 pb-4">
+        <section id="darshan-section" ref={darshanRef} className="scroll-mt-36 space-y-8 text-left">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#B47F35]/20 pb-4">
             <div>
-              <div className="flex items-center gap-2 text-primary-gold font-bold text-xs uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-[#B47F35] font-bold text-xs uppercase tracking-widest">
                 <span>02</span>
                 <span>•</span>
                 <span>Worship & Darshan Timetable</span>
               </div>
-              <h2 className="font-heading text-3xl sm:text-4xl font-medium text-dark-surface mt-1">
+              <h2 className="font-heading text-3xl sm:text-4xl font-bold text-[#2B132C] mt-1">
                 Daily Aarti & Darshan Schedule
               </h2>
-              <p className="text-xs sm:text-sm text-secondary-bronze/80 font-sans mt-0.5">
+              <p className="text-xs sm:text-sm text-secondary-bronze/80 font-poppins mt-0.5">
                 Join daily prayers in Kampala timezone (EAT - UTC+3) or issue a free priority Darshan gate pass for family members.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-xl bg-primary-gold/10 border border-primary-gold/25 text-xs font-semibold text-secondary-bronze font-mono">
+            <span className="px-3 py-1.5 rounded-xl bg-[#B47F35]/10 border border-[#B47F35]/25 text-xs font-semibold text-secondary-bronze font-mono">
               🌍 Timezone: East Africa Time (EAT)
             </span>
           </div>
@@ -922,22 +1095,22 @@ function BookingScrollPortal() {
                 key={s.id}
                 onClick={() => setSelectedSlotId(s.id)}
                 className={cn(
-                  "p-4 rounded-2xl border transition-all cursor-pointer bg-white text-left space-y-2",
+                  "p-4 rounded-2xl border transition-all cursor-pointer bg-white text-left space-y-2 font-poppins",
                   selectedSlotId === s.id
-                    ? "border-primary-gold ring-2 ring-primary-gold/30 shadow-md bg-gradient-to-br from-white to-primary-gold/10"
-                    : "border-primary-gold/20 hover:border-primary-gold/40 shadow-xs"
+                    ? "border-[#B47F35] ring-2 ring-[#B47F35]/30 shadow-md bg-gradient-to-br from-white to-[#B47F35]/10"
+                    : "border-[#B47F35]/20 hover:border-[#B47F35]/40 shadow-2xs"
                 )}
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-primary-gold bg-primary-gold/10 px-2 py-0.5 rounded">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-[#B47F35] bg-[#B47F35]/10 px-2 py-0.5 rounded">
                     {s.badge || "Daily Aarti"}
                   </span>
                   <span className="text-[9px] text-secondary-bronze/60 font-mono">
                     Max {s.max_visitors_limit}
                   </span>
                 </div>
-                <h4 className="font-semibold text-xs text-dark-surface line-clamp-1">{s.slot_name}</h4>
-                <p className="font-mono font-bold text-xs text-primary-gold">
+                <h4 className="font-bold text-xs text-[#2B132C] line-clamp-1">{s.slot_name}</h4>
+                <p className="font-mono font-bold text-xs text-[#B47F35]">
                   {s.start_time} - {s.end_time}
                 </p>
                 <p className="text-[10px] text-secondary-bronze/60 line-clamp-1">
@@ -949,21 +1122,21 @@ function BookingScrollPortal() {
 
           {/* Darshan Pass Booking Box */}
           <div className="max-w-3xl mx-auto">
-            <GlassCard className="p-6 sm:p-8 border-primary-gold/30 bg-white shadow-md space-y-5">
-              <div className="text-center space-y-1 border-b border-primary-gold/15 pb-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-primary-gold">
+            <GlassCard className="p-6 sm:p-8 border-[#B47F35]/30 bg-white shadow-sm space-y-5">
+              <div className="text-center space-y-1 border-b border-[#B47F35]/15 pb-4">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#B47F35]">
                   Complimentary Priority Pass
                 </span>
-                <h3 className="font-heading text-2xl font-medium text-dark-surface">
+                <h3 className="font-heading text-2xl font-bold text-[#2B132C]">
                   Schedule Family Darshan Visit
                 </h3>
               </div>
 
-              <form onSubmit={handleDarshanSubmit} className="space-y-4 text-xs font-sans">
+              <form onSubmit={handleDarshanSubmit} className="space-y-4 text-xs font-poppins">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="font-semibold text-secondary-bronze flex items-center gap-1.5">
-                      <CalendarIcon className="w-3.5 h-3.5 text-primary-gold" />
+                      <CalendarIcon className="w-3.5 h-3.5 text-[#B47F35]" />
                       Visit Date *
                     </label>
                     <input
@@ -972,19 +1145,19 @@ function BookingScrollPortal() {
                       value={darshanDate}
                       min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => setDarshanDate(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                     />
                   </div>
 
                   <div className="space-y-1">
                     <label className="font-semibold text-secondary-bronze flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-primary-gold" />
+                      <Clock className="w-3.5 h-3.5 text-[#B47F35]" />
                       Selected Time Slot *
                     </label>
                     <select
                       value={selectedSlotId}
                       onChange={(e) => setSelectedSlotId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                     >
                       {darshanSlots.map((slot) => (
                         <option key={slot.id} value={slot.id}>
@@ -996,24 +1169,24 @@ function BookingScrollPortal() {
 
                   <div className="space-y-1">
                     <label className="font-semibold text-secondary-bronze flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-primary-gold" />
+                      <Users className="w-3.5 h-3.5 text-[#B47F35]" />
                       Total Devotees / Family Members
                     </label>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setDarshanVisitors((prev) => Math.max(1, prev - 1))}
-                        className="w-9 h-9 rounded-xl border border-primary-gold/25 flex items-center justify-center text-secondary-bronze hover:bg-primary-gold/10 cursor-pointer"
+                        className="w-9 h-9 rounded-xl border border-[#B47F35]/25 flex items-center justify-center text-secondary-bronze hover:bg-[#B47F35]/10 cursor-pointer"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="w-12 text-center font-bold text-sm text-dark-surface font-mono">
+                      <span className="w-12 text-center font-bold text-sm text-[#2B132C] font-mono">
                         {darshanVisitors}
                       </span>
                       <button
                         type="button"
                         onClick={() => setDarshanVisitors((prev) => Math.min(20, prev + 1))}
-                        className="w-9 h-9 rounded-xl border border-primary-gold/25 flex items-center justify-center text-secondary-bronze hover:bg-primary-gold/10 cursor-pointer"
+                        className="w-9 h-9 rounded-xl border border-[#B47F35]/25 flex items-center justify-center text-secondary-bronze hover:bg-[#B47F35]/10 cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -1022,7 +1195,7 @@ function BookingScrollPortal() {
 
                   <div className="space-y-1">
                     <label className="font-semibold text-secondary-bronze flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-primary-gold" />
+                      <Phone className="w-3.5 h-3.5 text-[#B47F35]" />
                       Contact Phone *
                     </label>
                     <input
@@ -1031,13 +1204,13 @@ function BookingScrollPortal() {
                       value={darshanPhone}
                       onChange={(e) => setDarshanPhone(e.target.value)}
                       placeholder="+256 700 000000"
-                      className="w-full px-4 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                     />
                   </div>
 
                   <div className="space-y-1 sm:col-span-2">
                     <label className="font-semibold text-secondary-bronze flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-primary-gold" />
+                      <User className="w-3.5 h-3.5 text-[#B47F35]" />
                       Devotee / Family Name *
                     </label>
                     <input
@@ -1046,7 +1219,7 @@ function BookingScrollPortal() {
                       value={darshanName}
                       onChange={(e) => setDarshanName(e.target.value)}
                       placeholder="Full Name"
-                      className="w-full px-4 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1054,7 +1227,7 @@ function BookingScrollPortal() {
                 <button
                   type="submit"
                   disabled={isSubmittingDarshan}
-                  className="w-full py-3.5 bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <CalendarCheck className="w-4 h-4" />
                   <span>{isSubmittingDarshan ? "Issuing Pass..." : "Issue Priority Darshan Pass"}</span>
@@ -1067,18 +1240,18 @@ function BookingScrollPortal() {
         {/* =========================================================================
          * SECTION 3: 🪔 VEDIC PUJA & SEVA CEREMONIES
          * ========================================================================= */}
-        <section id="puja-section" ref={pujaRef} className="scroll-mt-36 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary-gold/20 pb-4">
+        <section id="puja-section" ref={pujaRef} className="scroll-mt-36 space-y-8 text-left">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#B47F35]/20 pb-4">
             <div>
-              <div className="flex items-center gap-2 text-primary-gold font-bold text-xs uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-[#B47F35] font-bold text-xs uppercase tracking-widest">
                 <span>03</span>
                 <span>•</span>
                 <span>Sacred Ceremonies & Pujas</span>
               </div>
-              <h2 className="font-heading text-3xl sm:text-4xl font-medium text-dark-surface mt-1">
+              <h2 className="font-heading text-3xl sm:text-4xl font-bold text-[#2B132C] mt-1">
                 Vedic Pooja & Seva Offerings
               </h2>
-              <p className="text-xs sm:text-sm text-secondary-bronze/80 font-sans mt-0.5">
+              <p className="text-xs sm:text-sm text-secondary-bronze/80 font-poppins mt-0.5">
                 Conducted by resident Vedic Shastri priests. Choose with complete Mandir Puja Samagri kit or devotee self-arranged samagri.
               </p>
             </div>
@@ -1091,10 +1264,10 @@ function BookingScrollPortal() {
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
                   className={cn(
-                    "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer",
+                    "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer font-poppins",
                     selectedCategory === cat
-                      ? "bg-primary-gold text-white shadow-xs"
-                      : "bg-white text-secondary-bronze border border-primary-gold/20 hover:bg-primary-gold/10"
+                      ? "bg-[#B47F35] text-white shadow-xs"
+                      : "bg-white text-secondary-bronze border border-[#B47F35]/20 hover:bg-[#B47F35]/10"
                   )}
                 >
                   {cat === "All" ? "All Sevas" : cat}
@@ -1109,56 +1282,56 @@ function BookingScrollPortal() {
               <GlassCard
                 hoverEffect
                 key={puja.id}
-                className="p-6 bg-white border-primary-gold/20 flex flex-col justify-between h-full shadow-sm"
+                className="p-6 bg-white border-[#B47F35]/20 flex flex-col justify-between h-full shadow-sm rounded-3xl"
               >
-                <div className="space-y-3.5">
+                <div className="space-y-3.5 text-left">
                   <div className="relative h-44 rounded-2xl overflow-hidden">
                     <img
-                      src={puja.image_url || "https://images.unsplash.com/photo-1609358905581-e5382c473950?auto=format&fit=crop&w=600&q=80"}
+                      src={puja.image_url || "/images/hero-temple.jpg"}
                       alt={puja.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/60 text-primary-gold backdrop-blur-md border border-primary-gold/30">
+                    <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/60 text-[#C59D5F] backdrop-blur-md border border-[#B47F35]/30">
                       {puja.category}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="font-heading text-xl font-medium text-dark-surface">
+                    <h3 className="font-heading text-xl font-bold text-[#2B132C]">
                       {puja.name}
                     </h3>
-                    <p className="text-xs text-secondary-bronze/80 line-clamp-2 mt-1 leading-relaxed font-sans">
+                    <p className="text-xs text-secondary-bronze/80 line-clamp-2 mt-1 leading-relaxed font-poppins">
                       {puja.description}
                     </p>
                   </div>
 
-                  <div className="space-y-1 text-xs text-secondary-bronze font-sans border-t border-primary-gold/10 pt-2.5">
+                  <div className="space-y-1 text-xs text-secondary-bronze font-poppins border-t border-[#B47F35]/10 pt-2.5">
                     <div className="flex justify-between">
                       <span className="opacity-70">Duration:</span>
-                      <span className="font-semibold text-dark-surface">{puja.duration_minutes} Mins</span>
+                      <span className="font-semibold text-[#2B132C]">{puja.duration_minutes} Mins</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="opacity-70">Priest:</span>
-                      <span className="font-semibold text-dark-surface">{puja.priest_role}</span>
+                      <span className="font-semibold text-[#2B132C]">{puja.priest_role}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="opacity-70">Samagri Kit:</span>
-                      <span className="font-semibold text-primary-gold">+{formatCurrency(Number(puja.samagri_price))} (Optional)</span>
+                      <span className="font-semibold text-[#B47F35]">+{formatCurrency(Number(puja.samagri_price))} (Optional)</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-primary-gold/15 pt-4 mt-4">
-                  <div>
-                    <span className="text-[10px] text-secondary-bronze/60 uppercase block">Base Offering</span>
-                    <span className="text-lg font-bold text-primary-gold">
+                <div className="flex items-center justify-between border-t border-[#B47F35]/15 pt-4 mt-4">
+                  <div className="text-left">
+                    <span className="text-[10px] text-secondary-bronze/60 uppercase block font-semibold">Base Offering</span>
+                    <span className="text-lg font-bold text-[#B47F35]">
                       {formatCurrency(Number(puja.base_price))}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleOpenPujaModal(puja)}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs font-semibold shadow hover:brightness-105 transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white text-xs font-semibold shadow-xs hover:brightness-105 transition-all cursor-pointer font-poppins"
                   >
                     Book Seva
                   </button>
@@ -1168,15 +1341,15 @@ function BookingScrollPortal() {
           </div>
 
           {filteredPujas.length === 0 && !loadingInitial && (
-            <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-primary-gold/30 p-6">
-              <Sparkles className="w-8 h-8 text-primary-gold/40 mx-auto mb-2" />
-              <p className="text-xs font-semibold text-dark-surface">No pooja offerings found matching criteria</p>
+            <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-[#B47F35]/30 p-6">
+              <Sparkles className="w-8 h-8 text-[#B47F35]/40 mx-auto mb-2" />
+              <p className="text-xs font-semibold text-[#2B132C]">No pooja offerings found matching criteria</p>
               <button
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedCategory("All");
                 }}
-                className="mt-2 text-xs text-primary-gold underline font-medium"
+                className="mt-2 text-xs text-[#B47F35] underline font-medium cursor-pointer"
               >
                 Clear filters
               </button>
@@ -1190,14 +1363,14 @@ function BookingScrollPortal() {
        * ========================================================================= */}
       {activePujaModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 font-poppins">
-          <div className="bg-white rounded-3xl border border-primary-gold/30 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-primary-gold/15 bg-gradient-to-r from-bg-warm to-surface-white">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary-gold/15 text-primary-gold">
+          <div className="bg-white rounded-3xl border border-[#B47F35]/30 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-[#B47F35]/15 bg-gradient-to-r from-[#FAF7F2] to-white">
+              <div className="flex items-center gap-3 text-left">
+                <div className="p-2.5 rounded-xl bg-[#B47F35]/15 text-[#B47F35]">
                   <Flame className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-xl font-medium text-dark-surface">
+                  <h3 className="font-heading text-xl font-bold text-[#2B132C]">
                     Book {activePujaModal.name}
                   </h3>
                   <p className="text-xs text-secondary-bronze/70">
@@ -1208,13 +1381,13 @@ function BookingScrollPortal() {
               <button
                 type="button"
                 onClick={() => setActivePujaModal(null)}
-                className="p-1.5 text-secondary-bronze hover:text-dark-surface rounded-lg cursor-pointer"
+                className="p-1.5 text-secondary-bronze hover:text-[#2B132C] rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handlePujaSubmit} className="p-6 space-y-4 text-xs font-sans">
+            <form onSubmit={handlePujaSubmit} className="p-6 space-y-4 text-xs font-poppins text-left">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1">
                   <label className="font-semibold text-secondary-bronze">Devotee / Sankalp Name *</label>
@@ -1224,7 +1397,7 @@ function BookingScrollPortal() {
                     value={pujaDevoteeName}
                     onChange={(e) => setPujaDevoteeName(e.target.value)}
                     placeholder="Name for sankalp"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                   />
                 </div>
 
@@ -1236,7 +1409,7 @@ function BookingScrollPortal() {
                     value={pujaDate}
                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setPujaDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                   />
                 </div>
 
@@ -1247,7 +1420,7 @@ function BookingScrollPortal() {
                     value={pujaGotra}
                     onChange={(e) => setPujaGotra(e.target.value)}
                     placeholder="e.g., Kashyap / Garg"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                   />
                 </div>
 
@@ -1258,7 +1431,7 @@ function BookingScrollPortal() {
                     value={pujaNakshatra}
                     onChange={(e) => setPujaNakshatra(e.target.value)}
                     placeholder="e.g., Rohini / Vrishabha"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                   />
                 </div>
 
@@ -1267,7 +1440,7 @@ function BookingScrollPortal() {
                   <select
                     value={pujaTimeSlot}
                     onChange={(e) => setPujaTimeSlot(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 focus:border-primary-gold bg-bg-warm/30 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B47F35]/25 focus:border-[#B47F35] bg-[#FAF7F2]/40 text-dark-surface focus:outline-none"
                   >
                     <option>Morning (08:30 AM - 10:30 AM)</option>
                     <option>Mid-Day (11:00 AM - 01:00 PM)</option>
@@ -1282,8 +1455,8 @@ function BookingScrollPortal() {
                 className={cn(
                   "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer",
                   includeSamagri
-                    ? "border-primary-gold bg-primary-gold/10"
-                    : "border-primary-gold/20 bg-bg-warm/40 hover:bg-bg-warm"
+                    ? "border-[#B47F35] bg-[#B47F35]/10"
+                    : "border-[#B47F35]/20 bg-[#FAF7F2]/40 hover:bg-[#FAF7F2]"
                 )}
               >
                 <div className="flex items-center gap-2.5">
@@ -1291,32 +1464,32 @@ function BookingScrollPortal() {
                     type="checkbox"
                     checked={includeSamagri}
                     onChange={() => {}}
-                    className="rounded text-primary-gold focus:ring-0 cursor-pointer"
+                    className="rounded text-[#B47F35] focus:ring-0 cursor-pointer"
                   />
                   <div>
-                    <p className="font-semibold text-dark-surface">Include Mandir Puja Samagri Kit</p>
+                    <p className="font-semibold text-[#2B132C]">Include Mandir Puja Samagri Kit</p>
                     <p className="text-[10px] text-secondary-bronze/70">
                       Coconuts, sacred threads, pure ghee, kumkum, betel leaves, havan samagri
                     </p>
                   </div>
                 </div>
-                <span className="font-bold text-primary-gold">
+                <span className="font-bold text-[#B47F35]">
                   +{formatCurrency(Number(activePujaModal.samagri_price || 20000))}
                 </span>
               </div>
 
               {/* Price Calculation breakdown */}
-              <div className="space-y-1 pt-2 border-t border-primary-gold/15 text-secondary-bronze">
+              <div className="space-y-1 pt-2 border-t border-[#B47F35]/15 text-secondary-bronze">
                 <div className="flex justify-between">
                   <span>Base Priest & Seva Offering:</span>
-                  <span className="font-semibold text-dark-surface">
+                  <span className="font-semibold text-[#2B132C]">
                     {formatCurrency(Number(activePujaModal.base_price))}
                   </span>
                 </div>
                 {includeSamagri ? (
                   <div className="flex justify-between">
                     <span>Mandir Samagri Kit:</span>
-                    <span className="font-semibold text-dark-surface">
+                    <span className="font-semibold text-[#2B132C]">
                       +{formatCurrency(Number(activePujaModal.samagri_price || 20000))}
                     </span>
                   </div>
@@ -1326,9 +1499,9 @@ function BookingScrollPortal() {
                     <span>Self-Arranged (UGX 0)</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center pt-2 border-t border-primary-gold/15 text-sm font-bold text-dark-surface">
+                <div className="flex justify-between items-center pt-2 border-t border-[#B47F35]/15 text-sm font-bold text-[#2B132C]">
                   <span>Total Contribution:</span>
-                  <span className="text-lg font-bold text-primary-gold font-mono">
+                  <span className="text-lg font-bold text-[#B47F35] font-mono">
                     {formatCurrency(
                       Number(activePujaModal.base_price) + (includeSamagri ? Number(activePujaModal.samagri_price || 20000) : 0)
                     )}
@@ -1339,7 +1512,7 @@ function BookingScrollPortal() {
               <button
                 type="submit"
                 disabled={isSubmittingPuja}
-                className="w-full py-3 bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs font-semibold rounded-xl shadow hover:brightness-105 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white text-xs font-semibold rounded-xl shadow-md hover:brightness-105 transition-all cursor-pointer disabled:opacity-50"
               >
                 {isSubmittingPuja ? "Confirming Booking..." : "Confirm & Book Puja Ceremony"}
               </button>
@@ -1353,19 +1526,19 @@ function BookingScrollPortal() {
        * ========================================================================= */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 font-poppins">
-          <div className="bg-white rounded-3xl border border-primary-gold/30 shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-16 h-16 rounded-full bg-primary-gold/15 text-primary-gold flex items-center justify-center mx-auto">
+          <div className="bg-white rounded-3xl border border-[#B47F35]/30 shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 rounded-full bg-[#B47F35]/15 text-[#B47F35] flex items-center justify-center mx-auto">
               <Lock className="w-8 h-8" />
             </div>
 
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary-gold">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#B47F35]">
                 Authentication Required
               </span>
-              <h3 className="font-heading text-2xl font-medium text-dark-surface mt-1">
+              <h3 className="font-heading text-2xl font-bold text-[#2B132C] mt-1">
                 Please Login or Register
               </h3>
-              <p className="text-xs text-secondary-bronze/80 font-sans mt-2 leading-relaxed">
+              <p className="text-xs text-secondary-bronze/80 font-poppins mt-2 leading-relaxed">
                 To {authActionMessage || "complete your temple booking"}, you need an active Devotee Member account. Your booking draft is saved!
               </p>
             </div>
@@ -1373,7 +1546,7 @@ function BookingScrollPortal() {
             <div className="flex flex-col gap-3">
               <Link
                 href="/login?redirect=/booking"
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs sm:text-sm font-semibold shadow-md hover:brightness-105 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white text-xs sm:text-sm font-semibold shadow-md hover:brightness-105 transition-all flex items-center justify-center gap-2"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Devotee Member Login</span>
@@ -1381,16 +1554,16 @@ function BookingScrollPortal() {
 
               <Link
                 href="/membership?redirect=/booking"
-                className="w-full py-3.5 rounded-xl border border-primary-gold/30 bg-bg-warm/60 text-secondary-bronze text-xs sm:text-sm font-semibold hover:bg-primary-gold/10 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl border border-[#B47F35]/30 bg-[#FAF7F2]/60 text-secondary-bronze text-xs sm:text-sm font-semibold hover:bg-[#B47F35]/10 transition-all flex items-center justify-center gap-2"
               >
-                <UserPlus className="w-4 h-4 text-primary-gold" />
+                <UserPlus className="w-4 h-4 text-[#B47F35]" />
                 <span>Create Free Devotee Account (OTP Verify)</span>
               </Link>
 
               <button
                 type="button"
                 onClick={() => setShowAuthModal(false)}
-                className="py-2 text-xs text-secondary-bronze/60 hover:text-dark-surface cursor-pointer"
+                className="py-2 text-xs text-secondary-bronze/60 hover:text-[#2B132C] cursor-pointer"
               >
                 Cancel and return to browsing
               </button>
@@ -1404,59 +1577,59 @@ function BookingScrollPortal() {
        * ========================================================================= */}
       {(hallSuccessBooking || darshanSuccessPass || pujaSuccessReceipt) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 font-poppins">
-          <div className="bg-white rounded-3xl border border-primary-gold/30 shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#B47F35]/30 shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center animate-in fade-in zoom-in duration-200">
             <div className="w-14 h-14 rounded-full bg-success-green/15 text-success-green flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary-gold">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#B47F35]">
                 Booking Recorded & Synchronized
               </span>
-              <h3 className="font-heading text-2xl font-medium text-dark-surface mt-0.5">
+              <h3 className="font-heading text-2xl font-bold text-[#2B132C] mt-0.5">
                 {hallSuccessBooking
                   ? "Hall Reservation Received"
                   : darshanSuccessPass
                   ? "Priority Darshan Pass Issued"
                   : "Puja Seva Confirmed"}
               </h3>
-              <p className="text-xs text-secondary-bronze/70 font-sans mt-1">
+              <p className="text-xs text-secondary-bronze/70 font-poppins mt-1">
                 Reference ID:{" "}
-                <strong className="font-mono text-dark-surface">
+                <strong className="font-mono text-[#2B132C]">
                   {hallSuccessBooking?.id || darshanSuccessPass?.id || pujaSuccessReceipt?.receipt_number || pujaSuccessReceipt?.id}
                 </strong>
               </p>
             </div>
 
-            <div className="bg-bg-warm/60 rounded-2xl p-4 text-xs font-sans text-secondary-bronze space-y-2 text-left border border-primary-gold/15">
+            <div className="bg-[#FAF7F2]/60 rounded-2xl p-4 text-xs font-poppins text-secondary-bronze space-y-2 text-left border border-[#B47F35]/15">
               <div className="flex justify-between">
                 <span className="opacity-70">Devotee:</span>
-                <span className="font-semibold text-dark-surface">
+                <span className="font-semibold text-[#2B132C]">
                   {hallSuccessBooking?.devotee_name || darshanSuccessPass?.devotee_name || pujaSuccessReceipt?.devotee_name}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="opacity-70">Date:</span>
-                <span className="font-semibold text-dark-surface">
+                <span className="font-semibold text-[#2B132C]">
                   {hallSuccessBooking?.booking_date || darshanSuccessPass?.visit_date || pujaSuccessReceipt?.booking_date}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="opacity-70">Service:</span>
-                <span className="font-semibold text-dark-surface">
+                <span className="font-semibold text-[#2B132C]">
                   {hallSuccessBooking?.hall_name || darshanSuccessPass?.slot_name || pujaSuccessReceipt?.puja_name}
                 </span>
               </div>
               {pujaSuccessReceipt && (
-                <div className="flex justify-between border-t border-primary-gold/15 pt-2 font-bold text-dark-surface">
+                <div className="flex justify-between border-t border-[#B47F35]/15 pt-2 font-bold text-[#2B132C]">
                   <span>Total Offering:</span>
-                  <span className="text-primary-gold">{formatCurrency(Number(pujaSuccessReceipt.total_amount))}</span>
+                  <span className="text-[#B47F35]">{formatCurrency(Number(pujaSuccessReceipt.total_amount))}</span>
                 </div>
               )}
               {hallSuccessBooking && (
-                <div className="flex justify-between border-t border-primary-gold/15 pt-2 font-bold text-dark-surface">
+                <div className="flex justify-between border-t border-[#B47F35]/15 pt-2 font-bold text-[#2B132C]">
                   <span>Estimated Total:</span>
-                  <span className="text-primary-gold">{formatCurrency(Number(hallSuccessBooking.total_price))}</span>
+                  <span className="text-[#B47F35]">{formatCurrency(Number(hallSuccessBooking.total_price))}</span>
                 </div>
               )}
             </div>
@@ -1469,7 +1642,7 @@ function BookingScrollPortal() {
                   setDarshanSuccessPass(null);
                   setPujaSuccessReceipt(null);
                 }}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs font-semibold shadow hover:brightness-105 transition-all text-center"
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#B47F35] to-[#8B5E34] text-white text-xs font-semibold shadow hover:brightness-105 transition-all text-center font-poppins"
               >
                 View in Dashboard
               </Link>
@@ -1480,7 +1653,7 @@ function BookingScrollPortal() {
                   setDarshanSuccessPass(null);
                   setPujaSuccessReceipt(null);
                 }}
-                className="px-4 py-3 rounded-xl border border-secondary-bronze/30 text-secondary-bronze hover:bg-secondary-bronze/10 text-xs font-semibold cursor-pointer"
+                className="px-4 py-3 rounded-xl border border-secondary-bronze/30 text-secondary-bronze hover:bg-secondary-bronze/10 text-xs font-semibold cursor-pointer font-poppins"
               >
                 Done
               </button>
@@ -1496,8 +1669,8 @@ export default function BookingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-bg-warm flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-primary-gold border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-[#B47F35] border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >

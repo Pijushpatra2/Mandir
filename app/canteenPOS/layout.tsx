@@ -51,6 +51,7 @@ const sidebarLinks = [
   { id: "bookings", label: "Table Bookings", icon: Calendar, roles: ["manager", "receptionist"], path: "/canteenPOS/bookings" },
   { id: "menu", label: "Menu Catalog", icon: BookOpen, roles: ["manager"], path: "/canteenPOS/menu" },
   { id: "inventory", label: "Inventory Stock", icon: Archive, roles: ["manager"], path: "/canteenPOS/inventory" },
+  { id: "requisitions", label: "Store Requisitions", icon: ClipboardList, roles: ["manager", "receptionist", "cashier"], path: "/canteenPOS/requisitions" },
   { id: "customers", label: "Customer CRM", icon: Users, roles: ["manager", "receptionist"], path: "/canteenPOS/customers" },
   { id: "kitchen", label: "Kitchen Display", icon: Tv, roles: ["manager", "kitchen"], path: "/canteenPOS/kitchen" },
   { id: "reports", label: "Sales Reports", icon: BarChart3, roles: ["manager"], path: "/canteenPOS/reports" },

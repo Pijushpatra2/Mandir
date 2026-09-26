@@ -93,3 +93,33 @@ export function clearDevoteeTokens(): void {
   localStorage.removeItem('devotee_profile');
 }
 
+// ─── Shopkeeper (Store Dashboard Portal) ────────────────────────────────────
+
+const SHOPKEEPER_ACCESS_KEY  = 'shopkeeper_access_token';
+const SHOPKEEPER_REFRESH_KEY = 'shopkeeper_refresh_token';
+
+export function getShopkeeperAccessToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(SHOPKEEPER_ACCESS_KEY);
+}
+
+export function getShopkeeperRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(SHOPKEEPER_REFRESH_KEY);
+}
+
+export function setShopkeeperTokens(accessToken: string, refreshToken: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(SHOPKEEPER_ACCESS_KEY, accessToken);
+  localStorage.setItem(SHOPKEEPER_REFRESH_KEY, refreshToken);
+}
+
+export function clearShopkeeperTokens(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(SHOPKEEPER_ACCESS_KEY);
+  localStorage.removeItem(SHOPKEEPER_REFRESH_KEY);
+  localStorage.removeItem('shopkeeper_is_logged_in');
+  localStorage.removeItem('shopkeeper_profile');
+}
+
+

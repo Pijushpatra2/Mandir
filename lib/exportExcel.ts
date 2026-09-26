@@ -170,3 +170,129 @@ export function exportTableToExcel(data: any[], sheetName: string, fileName: str
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
   XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
+
+/**
+ * Exports Store Requisitions to Excel (.xlsx) with two detailed sheets:
+ * 1. Requisitions Summary (REQ Number, Requester, Shopkeeper, Status, Progress %, Notes)
+ * 2. Item-Wise Detailed Ledger (Requested Qty, Approved Qty, Issued Qty, Remaining Balance, Remarks)
+ */
+export function exportRequisitionsToExcel(
+  requisitions: any[],
+  fileNamePrefix: string = "Store_Requisitions"
+) {
+  if (!requisitions || requisitions.length === 0) {
+    alert("No requisitions data available to export.");
+    return;
+  }
+
+  // 1. Prepare Sheet 1: Requisitions Summary
+  const summaryRows = requisitions.map((r) => {
+    return {
+      "Requisition No": r.requisition_number || "—",
+      "Date Requested": r.created_at ? new Date(r.created_at).toLocaleDateString() : "—",
+      "Department": r.department || "CANTEEN",
+      "Requested By": r.requested_by_name || "—",
+      "Requester Role": r.requested_by_role || "—",
+      "Priority": r.priority || "NORMAL",
+      "Status": (r.status || "").replace(/_/g, " "),
+      "Target Shopkeeper": r.target_shopkeeper_name || "Not Assigned",
+      "Target Store": r.target_store_name || "Main Temple Store",
+      "Total Items": Number(r.total_items_count || (r.items ? r.items.length : 0)),
+      "Fulfilled Items": Number(r.fulfilled_items_count || 0),
+      "Fulfillment %": `${Number(r.fulfillment_progress_pct || 0)}%`,
+      "Approved By Admin": r.admin_name || (r.approved_at ? "Approved" : "—"),
+      "Date Approved": r.approved_at ? new Date(r.approved_at).toLocaleDateString() : "—",
+      "Requester Notes": r.requester_notes || "—",
+      "Admin Notes": r.admin_notes || "—",
+      "Shopkeeper Remarks": r.shopkeeper_notes || "—",
+    };
+  });
+
+  // 2. Prepare Sheet 2: Item-Wise Detailed Ledger
+  const itemWiseRows: any[] = [];
+  requisitions.forEach((r) => {
+    if (r.items && Array.isArray(r.items) && r.items.length > 0) {
+      r.items.forEach((item: any) => {
+        itemWiseRows.push({
+          "Requisition No": r.requisition_number || "—",
+          "Date": r.created_at ? new Date(r.created_at).toLocaleDateString() : "—",
+          "Department": r.department || "CANTEEN",
+          "Item Name": item.item_name || "—",
+          "Category": item.category || "General Grocery",
+          "Unit": item.unit || "kg",
+          "Requested Qty": Number(item.requested_qty || 0),
+          "Approved Qty": Number(item.approved_qty || 0),
+          "Given / Issued Qty": Number(item.issued_qty || 0),
+          "Remaining Balance": Number(item.remaining_qty || 0),
+          "Item Status": item.item_status || "PENDING",
+          "Assigned Shopkeeper": r.target_shopkeeper_name || "—",
+          "Shopkeeper Remarks / Stock Notes": item.shopkeeper_remarks || "—",
+        });
+      });
+    }
+  });
+
+  // 3. Create Workbook and add sheets
+  const wb = XLSX.utils.book_new();
+
+  const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+  const wsItems = XLSX.utils.json_to_sheet(
+    itemWiseRows.length > 0 ? itemWiseRows : [{ "Info": "No item breakdown records found" }]
+  );
+
+  // Set column widths for summary sheet
+  wsSummary["!cols"] = [
+    { wch: 18 }, // Requisition No
+    { wch: 14 }, // Date
+    { wch: 14 }, // Department
+    { wch: 20 }, // Requested By
+    { wch: 16 }, // Requester Role
+    { wch: 12 }, // Priority
+    { wch: 22 }, // Status
+    { wch: 22 }, // Target Shopkeeper
+    { wch: 20 }, // Target Store
+    { wch: 12 }, // Total Items
+    { wch: 14 }, // Fulfilled Items
+    { wch: 14 }, // Fulfillment %
+    { wch: 18 }, // Approved By
+    { wch: 14 }, // Date Approved
+    { wch: 25 }, // Requester Notes
+    { wch: 25 }, // Admin Notes
+    { wch: 25 }, // Shopkeeper Remarks
+  ];
+
+  // Set column widths for item-wise sheet
+  if (itemWiseRows.length > 0) {
+    wsItems["!cols"] = [
+      { wch: 18 }, // Requisition No
+      { wch: 14 }, // Date
+      { wch: 14 }, // Department
+      { wch: 28 }, // Item Name
+      { wch: 18 }, // Category
+      { wch: 10 }, // Unit
+      { wch: 14 }, // Requested Qty
+      { wch: 14 }, // Approved Qty
+      { wch: 18 }, // Given / Issued Qty
+      { wch: 18 }, // Remaining Balance
+      { wch: 14 }, // Item Status
+      { wch: 20 }, // Assigned Shopkeeper
+      { wch: 30 }, // Shopkeeper Remarks
+    ];
+  }
+
+  XLSX.utils.book_append_sheet(wb, wsSummary, "Requisitions Summary");
+  XLSX.utils.book_append_sheet(wb, wsItems, "Item-Wise Inventory Ledger");
+
+  // 4. Download Excel file
+  const cleanPrefix = fileNamePrefix.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const fileName = `${cleanPrefix}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}
+
+/**
+ * Export a single requisition to Excel
+ */
+export function exportSingleRequisitionToExcel(req: any) {
+  exportRequisitionsToExcel([req], `Requisition_${req.requisition_number || req.id}`);
+}
+

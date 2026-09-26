@@ -31,6 +31,7 @@ import {
   Tag,
   Star,
   Coffee,
+  ClipboardList,
   LogOut
 } from "lucide-react";
 
@@ -88,11 +89,13 @@ export default function DashboardLayout({
     { label: "Donations", href: "/dashboard/donations", icon: Heart, roles: ["SUPER_ADMIN", "TRUSTEE", "ACCOUNTANT"] },
     { label: "Bookings", href: "/dashboard/bookings", icon: Calendar, roles: ["SUPER_ADMIN", "BOOKING_MANAGER"] },
     { label: "Canteen CRM", href: "/dashboard/canteen", icon: Coffee, roles: ["SUPER_ADMIN", "BOOKING_MANAGER"] },
+    { label: "Store Requisitions", href: "/dashboard/requisitions", icon: ClipboardList, roles: ["SUPER_ADMIN", "TRUSTEE", "ACCOUNTANT", "BOOKING_MANAGER", "CONTENT_MANAGER"] },
     
     // E-Commerce Modules
     { label: "Shop Products", href: "/dashboard/products", icon: ShoppingBag, roles: ["SUPER_ADMIN", "BOOKING_MANAGER", "CONTENT_MANAGER"] },
     { label: "Shop Orders", href: "/dashboard/orders", icon: Package, roles: ["SUPER_ADMIN", "ACCOUNTANT", "BOOKING_MANAGER"] },
     { label: "Shop Customers", href: "/dashboard/customers", icon: Users, roles: ["SUPER_ADMIN", "TRUSTEE"] },
+    { label: "Shopkeepers", href: "/dashboard/shopkeepers", icon: UserCheck, roles: ["SUPER_ADMIN", "TRUSTEE"] },
     { label: "Shop Coupons", href: "/dashboard/coupons", icon: Tag, roles: ["SUPER_ADMIN", "ACCOUNTANT"] },
     { label: "Shop Reviews", href: "/dashboard/reviews", icon: Star, roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
     

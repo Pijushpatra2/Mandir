@@ -35,21 +35,46 @@ import {
   getAdminRefreshToken,
   setAdminTokens,
   clearAdminTokens,
+  getShopkeeperAccessToken,
+  clearShopkeeperTokens,
 } from '@/lib/authStorage';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5001/api';
+
+// ─── Shopkeeper API Client ───────────────────────────────────────────────────
+
+export const shopkeeperApiClient: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: 15000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+shopkeeperApiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = getShopkeeperAccessToken() ?? getAdminAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 // ─── Active Client Helper ─────────────────────────────────────────────────────
 
 /**
  * Returns the correct Axios client based on which token is present.
  * Admin dashboard always uses adminApiClient.
+ * Shopkeeper dashboard uses shopkeeperApiClient.
  * CanteenPOS uses staffApiClient (which internally falls back to admin token).
  */
 export function getActiveClient(): AxiosInstance {
-  const hasAdminToken =
-    typeof window !== 'undefined' && !!getAdminAccessToken();
-  return hasAdminToken ? adminApiClient : staffApiClient;
+  if (typeof window !== 'undefined') {
+    if (getAdminAccessToken()) return adminApiClient;
+    if (getShopkeeperAccessToken()) return shopkeeperApiClient;
+    if (getStaffAccessToken()) return staffApiClient;
+  }
+  return adminApiClient;
 }
 
 // ─── Refresh State ────────────────────────────────────────────────────────────

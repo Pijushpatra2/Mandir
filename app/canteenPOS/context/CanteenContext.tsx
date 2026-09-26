@@ -53,6 +53,7 @@ export type POSTab =
   | "bookings"
   | "menu"
   | "inventory"
+  | "requisitions"
   | "customers"
   | "kitchen"
   | "reports"
