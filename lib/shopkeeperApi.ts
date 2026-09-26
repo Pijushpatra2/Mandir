@@ -2,6 +2,7 @@ import axios from "axios";
 import {
   getAdminAccessToken,
   getShopkeeperAccessToken,
+  getStaffAccessToken,
   setShopkeeperTokens,
   clearShopkeeperTokens
 } from "@/lib/authStorage";
@@ -13,22 +14,15 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach Authorization header dynamically (prioritize shopkeeper token for shopkeeper actions, admin token for admin actions)
+// Attach Authorization header dynamically (prioritize shopkeeper token for shopkeeper actions, admin/staff token for admin actions)
 api.interceptors.request.use((config) => {
   const shopkeeperToken = getShopkeeperAccessToken();
   const adminToken = getAdminAccessToken();
+  const staffToken = getStaffAccessToken();
   
-  // If requesting an admin endpoint, use admin token
-  if (config.url?.includes('/admin')) {
-    if (adminToken) {
-      config.headers.Authorization = `Bearer ${adminToken}`;
-    }
-  } else {
-    // Otherwise use shopkeeper token or admin fallback
-    const token = shopkeeperToken || adminToken;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  const token = adminToken || staffToken || shopkeeperToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -134,8 +128,17 @@ export function logoutShopkeeper(): void {
 // ─── Admin Shopkeeper Management APIs ────────────────────────────────────────
 
 export async function adminListShopkeepers(): Promise<ShopkeeperItem[]> {
-  const res = await api.get("/admin/list");
-  return res.data.data.shopkeepers || [];
+  try {
+    const res = await api.get("/list");
+    return res.data?.data?.shopkeepers || [];
+  } catch {
+    try {
+      const res = await api.get("/admin/list");
+      return res.data?.data?.shopkeepers || [];
+    } catch {
+      return [];
+    }
+  }
 }
 
 export async function adminCreateShopkeeper(data: {
