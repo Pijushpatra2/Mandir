@@ -41,8 +41,11 @@ import {
   useAddCategory,
   useCancelOrder,
 } from "@/lib/api/canteen";
-import { staffApiClient, resetStaffSession } from "@/lib/apiClient";
-import { setStaffTokens, clearStaffTokens, getAdminAccessToken } from "@/lib/authStorage";
+import axios from "axios";
+import { staffApiClient, resetStaffSession, resetAdminSession } from "@/lib/apiClient";
+import { setStaffTokens, clearStaffTokens, getAdminAccessToken, setAdminTokens } from "@/lib/authStorage";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
 
 export type POSRole = "manager" | "receptionist" | "cashier" | "kitchen";
 export type POSTab =
@@ -66,6 +69,11 @@ export interface PosSession {
   cashierName: string;
 }
 
+export interface AuthToastNotification {
+  message: string;
+  type: "admin" | "staff" | "info";
+}
+
 interface CanteenContextType {
   currentRole: POSRole | null;
   isLoggedIn: boolean;
@@ -73,6 +81,8 @@ interface CanteenContextType {
   logout: () => void;
   activeTab: POSTab;
   setActiveTab: (tab: POSTab) => void;
+  authToast: AuthToastNotification | null;
+  setAuthToast: React.Dispatch<React.SetStateAction<AuthToastNotification | null>>;
 
   // Core Data
   tables: SeatingTable[];
@@ -208,6 +218,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     return staffLoggedIn || adminLoggedIn;
   });
   const [activeTab, setActiveTab] = useState<POSTab>("dashboard");
+  const [authToast, setAuthToast] = useState<AuthToastNotification | null>(null);
 
   // Core Data States
   const [tables, setTables] = useState<SeatingTable[]>([]);
@@ -473,17 +484,19 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Attempt Canteen Staff login
     try {
-      const response = await staffApiClient.post("/canteen/auth/login", {
-        email: email.trim().toLowerCase(),
+      const response = await axios.post(`${BASE_URL}/canteen/auth/login`, {
+        email: cleanEmail,
         password,
       });
 
       if (response.data && response.data.data) {
         const { accessToken, refreshToken, staff } = response.data.data;
 
-        // Store tokens — then reset the session-invalid flag so the
-        // interceptor does not block future requests from this session.
+        // Store tokens & reset session guards
         setStaffTokens(accessToken, refreshToken);
         resetStaffSession();
 
@@ -496,13 +509,21 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("canteen_role", staff.assignedRole);
         localStorage.setItem("canteen_user_name", staff.name);
         localStorage.setItem("canteen_user_email", staff.email);
-        localStorage.setItem("canteen_active_staff", JSON.stringify({
-          id: `staff-${staff.id}`,
-          name: staff.name,
-          email: staff.email,
-          assignedRole: staff.assignedRole,
-          createdAt: new Date().toISOString().split("T")[0]
-        }));
+        localStorage.setItem(
+          "canteen_active_staff",
+          JSON.stringify({
+            id: `staff-${staff.id}`,
+            name: staff.name,
+            email: staff.email,
+            assignedRole: staff.assignedRole,
+            createdAt: new Date().toISOString().split("T")[0],
+          })
+        );
+
+        setAuthToast({
+          message: `👋 Welcome ${staff.name} (${staff.assignedRole.toUpperCase()}) — Terminal Mode Active`,
+          type: "staff",
+        });
 
         // Auto-set the initial landing route path based on roles
         let targetPath = "/canteenPOS/dashboard";
@@ -518,24 +539,77 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         router.push(targetPath);
         return true;
       }
-      return false;
-    } catch (err) {
-      console.error("[CanteenContext Login Failed]", err);
-      return false;
+    } catch (staffErr) {
+      console.log("[Staff login failed, attempting Admin POS fallback login...]");
     }
+
+    // 2. Fallback: Attempt Administrator login
+    try {
+      const adminResponse = await axios.post(`${BASE_URL}/auth/login`, {
+        email: cleanEmail,
+        password,
+      });
+
+      if (adminResponse.data && adminResponse.data.data) {
+        const { accessToken, refreshToken, admin } = adminResponse.data.data;
+
+        setAdminTokens(accessToken, refreshToken);
+        resetAdminSession();
+        resetStaffSession();
+
+        setIsLoggedIn(true);
+        setCurrentRole("manager");
+
+        const adminName = admin.name || admin.fullName || "Administrator";
+        localStorage.setItem("canteen_is_logged_in", "true");
+        localStorage.setItem("canteen_role", "manager");
+        localStorage.setItem("canteen_user_name", adminName);
+        localStorage.setItem("canteen_user_email", admin.email);
+        localStorage.setItem(
+          "canteen_active_staff",
+          JSON.stringify({
+            id: `admin-${admin.id}`,
+            name: adminName,
+            email: admin.email,
+            assignedRole: "manager",
+            isAdmin: true,
+            createdAt: new Date().toISOString().split("T")[0],
+          })
+        );
+
+        setAuthToast({
+          message: `👑 Logged in as Administrator (${adminName}) — Full Terminal & Requisition Access Active`,
+          type: "admin",
+        });
+
+        setActiveTab("dashboard");
+        router.push("/canteenPOS/dashboard");
+        return true;
+      }
+    } catch (adminErr) {
+      console.error("[Admin fallback login failed]", adminErr);
+    }
+
+    return false;
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     setCurrentRole(null);
     clearStaffTokens();
-    // If the user is a super-admin operating the POS, we do NOT clear their
-    // admin token — just redirect them back to the admin dashboard.
-    if (typeof window !== "undefined" && getAdminAccessToken()) {
-      router.push("/dashboard");
-    } else {
-      router.push("/canteenPOS");
+    resetStaffSession();
+    setAuthToast(null);
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("canteen_pos_session");
+      localStorage.removeItem("canteen_active_staff");
+      localStorage.removeItem("canteen_is_logged_in");
+      localStorage.removeItem("canteen_role");
+      localStorage.removeItem("canteen_user_name");
+      localStorage.removeItem("canteen_user_email");
     }
+
+    router.push("/canteenPOS");
   };
 
   // Switch tabs (routes) manually
@@ -1093,6 +1167,8 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         posCategory,
         setPosCategory,
         posSearch,
+        authToast,
+        setAuthToast,
         setPosSearch,
         cart,
         setCart,

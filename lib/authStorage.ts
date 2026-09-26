@@ -38,6 +38,7 @@ export function clearStaffTokens(): void {
   localStorage.removeItem('canteen_active_staff');
   localStorage.removeItem('canteen_user_name');
   localStorage.removeItem('canteen_user_email');
+  localStorage.removeItem('canteen_pos_session');
 }
 
 // ─── Admin (Global Admin Panel) ──────────────────────────────────────────────
@@ -62,6 +63,8 @@ export function clearAdminTokens(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(ADMIN_ACCESS_KEY);
   localStorage.removeItem(ADMIN_REFRESH_KEY);
+  localStorage.removeItem('admin_user');
+  localStorage.removeItem('admin_profile');
 }
 
 // ─── Devotee (Website / Devotee Portal) ──────────────────────────────────────

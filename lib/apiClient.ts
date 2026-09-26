@@ -60,16 +60,40 @@ shopkeeperApiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+shopkeeperApiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      clearShopkeeperTokens();
+      if (
+        typeof window !== 'undefined' &&
+        window.location.pathname.startsWith('/shopkeeper') &&
+        window.location.pathname !== '/shopkeeper/login'
+      ) {
+        window.location.href = '/shopkeeper/login';
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 // ─── Active Client Helper ─────────────────────────────────────────────────────
 
 /**
- * Returns the correct Axios client based on which token is present.
- * Admin dashboard always uses adminApiClient.
+ * Returns the correct Axios client based on route context and token availability.
  * Shopkeeper dashboard uses shopkeeperApiClient.
  * CanteenPOS uses staffApiClient (which internally falls back to admin token).
+ * Admin dashboard always uses adminApiClient.
  */
 export function getActiveClient(): AxiosInstance {
   if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path.startsWith('/shopkeeper')) {
+      return shopkeeperApiClient;
+    }
+    if (path.startsWith('/canteenPOS')) {
+      return staffApiClient;
+    }
     if (getAdminAccessToken()) return adminApiClient;
     if (getShopkeeperAccessToken()) return shopkeeperApiClient;
     if (getStaffAccessToken()) return staffApiClient;

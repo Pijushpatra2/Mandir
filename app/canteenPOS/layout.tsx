@@ -122,8 +122,19 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
     categories,
     showAddCategoryModal,
     setShowAddCategoryModal,
-    handleCreateCategory
+    handleCreateCategory,
+    authToast,
+    setAuthToast,
   } = useCanteen();
+
+  useEffect(() => {
+    if (authToast) {
+      const timer = setTimeout(() => {
+        setAuthToast(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [authToast, setAuthToast]);
 
   const [newFoodImage, setNewFoodImage] = useState("");
   const [newFoodChannel, setNewFoodChannel] = useState<'canteen' | 'e-com' | 'both'>("canteen");
@@ -457,6 +468,39 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </header>
+
+        {/* Floating Auth Notification Toast */}
+        <AnimatePresence>
+          {authToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.98 }}
+              className="px-6 pt-4 pb-0 z-30 shrink-0"
+            >
+              <div
+                className={cn(
+                  "p-3.5 rounded-2xl shadow-lg border flex items-center justify-between gap-3 text-xs font-semibold backdrop-blur-md transition-all",
+                  authToast.type === "admin"
+                    ? "bg-gradient-to-r from-amber-500/15 via-primary-gold/15 to-blue-600/15 border-amber-400/50 text-amber-950 shadow-amber-500/10"
+                    : "bg-emerald-500/15 border-emerald-400/50 text-emerald-950 shadow-emerald-500/10"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">{authToast.type === "admin" ? "👑" : "✅"}</span>
+                  <span className="leading-snug">{authToast.message}</span>
+                </div>
+                <button
+                  onClick={() => setAuthToast(null)}
+                  className="p-1.5 rounded-xl hover:bg-black/10 text-slate-600 transition-colors cursor-pointer shrink-0"
+                  aria-label="Dismiss Notification"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Outer scrollable viewport */}
         <main className="flex-grow p-6 overflow-y-auto">
