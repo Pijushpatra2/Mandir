@@ -9,6 +9,9 @@ import { adminListShopkeepers, ShopkeeperItem } from "@/lib/shopkeeperApi";
 import { StoreRequisition, StoreRequisitionItem, CreateRequisitionItemDto } from "@/types/requisition.types";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { exportRequisitionsToExcel, exportSingleRequisitionToExcel } from "@/lib/exportExcel";
+import axios from "axios";
+import { setStaffTokens } from "@/lib/authStorage";
+import { resetStaffSession } from "@/lib/apiClient";
 import {
   ClipboardList,
   Plus,
@@ -30,7 +33,11 @@ import {
   Building2,
   ArrowRight,
   FileSpreadsheet,
-  Download
+  Download,
+  Lock,
+  ShieldAlert,
+  KeyRound,
+  UserCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,11 +68,34 @@ export default function CanteenRequisitionsView({
   requesterName = "Canteen Manager",
   requesterId,
   requesterRole = "CANTEEN_MANAGER",
+  isAdminMode = false,
+  onSwitchToManager,
 }: {
   requesterName?: string;
   requesterId?: string;
   requesterRole?: string;
+  isAdminMode?: boolean;
+  onSwitchToManager?: () => void;
 }) {
+  const [localAdminMode, setLocalAdminMode] = useState(isAdminMode);
+  const [currentRequesterName, setCurrentRequesterName] = useState(requesterName);
+
+  // Sync prop changes
+  useEffect(() => {
+    setLocalAdminMode(isAdminMode);
+  }, [isAdminMode]);
+
+  useEffect(() => {
+    setCurrentRequesterName(requesterName);
+  }, [requesterName]);
+
+  // Quick Manager Login Modal State
+  const [showManagerRequiredModal, setShowManagerRequiredModal] = useState(false);
+  const [managerEmail, setManagerEmail] = useState("");
+  const [managerPassword, setManagerPassword] = useState("");
+  const [managerLoginError, setManagerLoginError] = useState("");
+  const [isLoggingInManager, setIsLoggingInManager] = useState(false);
+
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -95,6 +125,73 @@ export default function CanteenRequisitionsView({
   ]);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+
+  const handleManagerLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setManagerLoginError("");
+    if (!managerEmail || !managerPassword) {
+      setManagerLoginError("Please enter manager email and password.");
+      return;
+    }
+
+    try {
+      setIsLoggingInManager(true);
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
+      const response = await axios.post(`${BASE_URL}/canteen/auth/login`, {
+        email: managerEmail.trim().toLowerCase(),
+        password: managerPassword,
+      });
+
+      if (response.data && response.data.data) {
+        const { accessToken, refreshToken, staff } = response.data.data;
+        setStaffTokens(accessToken, refreshToken);
+        resetStaffSession();
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem("canteen_is_logged_in", "true");
+          localStorage.setItem("canteen_role", staff.assignedRole);
+          localStorage.setItem("canteen_user_name", staff.name);
+          localStorage.setItem("canteen_user_email", staff.email);
+          localStorage.setItem(
+            "canteen_active_staff",
+            JSON.stringify({
+              id: `staff-${staff.id}`,
+              name: staff.name,
+              email: staff.email,
+              assignedRole: staff.assignedRole,
+              isAdmin: false,
+              createdAt: new Date().toISOString().split("T")[0],
+            })
+          );
+        }
+
+        setLocalAdminMode(false);
+        setCurrentRequesterName(staff.name);
+        setShowManagerRequiredModal(false);
+        setManagerEmail("");
+        setManagerPassword("");
+        setFeedbackToast(`👨‍💼 Authenticated as ${staff.name} (Canteen Manager). Requisition form unlocked!`);
+        setShowCreateModal(true);
+        if (onSwitchToManager) onSwitchToManager();
+        refetch();
+        setTimeout(() => setFeedbackToast(null), 5000);
+      } else {
+        setManagerLoginError("Invalid Canteen Manager credentials.");
+      }
+    } catch (err: any) {
+      setManagerLoginError(err?.response?.data?.message || "Manager authentication failed.");
+    } finally {
+      setIsLoggingInManager(false);
+    }
+  };
+
+  const handleNewRequestClick = () => {
+    if (localAdminMode) {
+      setShowManagerRequiredModal(true);
+    } else {
+      setShowCreateModal(true);
+    }
+  };
 
   useEffect(() => {
     adminListShopkeepers()
@@ -203,8 +300,13 @@ export default function CanteenRequisitionsView({
 
       setFeedbackToast("Requisition created and submitted to Admin for approval!");
       setShowCreateModal(false);
-      refetch();
+      setItemsList([
+        { item_name: "Basmati Rice (25kg Bag)", category: "Grains & Rice", unit: "bags", requested_qty: 2 },
+        { item_name: "Pure Cow Ghee (5L Tin)", category: "Dairy & Ghee", unit: "tins", requested_qty: 3 },
+      ]);
+      setPriority("NORMAL");
       setRequesterNotes("");
+      refetch();
       setTimeout(() => setFeedbackToast(null), 4000);
     } catch (err: any) {
       alert(err?.response?.data?.message || "Failed to submit requisition");
@@ -250,14 +352,54 @@ export default function CanteenRequisitionsView({
           </button>
 
           <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-xs font-bold shadow-md hover:brightness-105 transition-all flex items-center space-x-1.5 cursor-pointer"
+            onClick={handleNewRequestClick}
+            className={cn(
+              "px-4 py-2 rounded-xl text-white text-xs font-bold shadow-md transition-all flex items-center space-x-1.5 cursor-pointer",
+              localAdminMode
+                ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:brightness-105"
+                : "bg-gradient-to-r from-primary-gold to-secondary-bronze hover:brightness-105"
+            )}
+            title={localAdminMode ? "Requisition creation is restricted to Canteen Managers. Click to log in as Manager." : "Create New Store Requisition"}
           >
-            <Plus className="w-4 h-4" />
-            <span>New Store Request</span>
+            {localAdminMode ? <Lock className="w-3.5 h-3.5" /> : <Plus className="w-4 h-4" />}
+            <span>{localAdminMode ? "New Store Request (Manager Only)" : "New Store Request"}</span>
           </button>
         </div>
       </div>
+
+      {/* Administrator Terminal Mode Alert Banner */}
+      {localAdminMode && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-primary-gold/10 to-blue-500/10 border border-amber-400/30 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-start sm:items-center space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-900 font-bold flex items-center justify-center shrink-0 text-base">
+              👑
+            </div>
+            <div>
+              <p className="font-bold text-amber-950 text-xs sm:text-sm">Administrator Terminal View (Read-Only Requisitions)</p>
+              <p className="text-amber-900/80 text-[11px] mt-0.5 leading-relaxed">
+                Store Requisitions must originate from the <strong>Canteen Manager</strong>. You are currently viewing this desk in Administrator mode. To approve, reject, or assign shopkeepers, use the Admin Approval Portal.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 pt-1 md:pt-0">
+            <a
+              href="/dashboard/requisitions"
+              className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center space-x-1 shadow-xs"
+            >
+              <span>Admin Approval Desk</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+            <button
+              type="button"
+              onClick={() => setShowManagerRequiredModal(true)}
+              className="px-3 py-1.5 rounded-xl bg-white border border-amber-400/60 hover:bg-amber-50 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs flex items-center space-x-1"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-amber-700" />
+              <span>Log in as Canteen Manager</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Floating Feedback Alert */}
       {feedbackToast && (
@@ -830,6 +972,118 @@ export default function CanteenRequisitionsView({
                   type="button"
                   onClick={() => setShowDetailModal(false)}
                   className="px-5 py-2.5 rounded-xl border border-secondary-bronze/25 text-secondary-bronze hover:bg-secondary-bronze/10 font-semibold cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+       * MODAL 3: CANTEEN MANAGER LOGIN & ROLE SWITCH MODAL
+       * ========================================================================= */}
+      {showManagerRequiredModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl border border-amber-400/30 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-primary-gold/15 bg-gradient-to-r from-amber-500/10 via-primary-gold/10 to-transparent">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-900 flex items-center justify-center font-bold text-lg">
+                  🔒
+                </div>
+                <div>
+                  <h3 className="font-heading text-base font-bold text-dark-surface">
+                    Canteen Manager Access Required
+                  </h3>
+                  <p className="text-xs text-secondary-bronze/70">
+                    Store grocery requisitions can only be initiated by the Canteen Manager.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowManagerRequiredModal(false)}
+                className="p-1.5 text-secondary-bronze hover:text-dark-surface rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 text-xs">
+              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-950 text-[11px] leading-relaxed">
+                <p className="font-semibold flex items-center gap-1.5 mb-1">
+                  <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>Separation of Duties Policy</span>
+                </p>
+                <span>
+                  Administrators cannot create store grocery requests directly from the POS. Requests must be created by the Canteen Manager and sent to Admin for approval.
+                </span>
+              </div>
+
+              {managerLoginError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{managerLoginError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleManagerLoginSubmit} className="space-y-4 text-left">
+                <div className="space-y-1">
+                  <label className="font-semibold text-secondary-bronze text-xs">
+                    Canteen Manager Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={managerEmail}
+                    onChange={(e) => setManagerEmail(e.target.value)}
+                    placeholder="manager@swami.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 bg-bg-warm/30 focus:border-primary-gold focus:outline-none text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-semibold text-secondary-bronze text-xs">
+                    Manager Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={managerPassword}
+                    onChange={(e) => setManagerPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-primary-gold/25 bg-bg-warm/30 focus:border-primary-gold focus:outline-none text-xs"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoggingInManager}
+                  className="w-full py-3 bg-gradient-to-r from-primary-gold to-secondary-bronze text-white font-bold rounded-xl text-xs shadow-md hover:brightness-105 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isLoggingInManager ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="w-4 h-4" />
+                  )}
+                  <span>Authenticate as Manager & Create Request</span>
+                </button>
+              </form>
+
+              <div className="pt-3 border-t border-primary-gold/15 flex items-center justify-between">
+                <a
+                  href="/dashboard/requisitions"
+                  className="text-blue-600 hover:underline font-bold text-xs flex items-center gap-1"
+                >
+                  <span>Go to Admin Approval Desk</span>
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowManagerRequiredModal(false)}
+                  className="px-4 py-2 rounded-xl border border-secondary-bronze/25 text-secondary-bronze hover:bg-secondary-bronze/10 font-semibold cursor-pointer text-xs"
                 >
                   Close
                 </button>

@@ -5,7 +5,7 @@ import CanteenRequisitionsView from "@/components/canteen/CanteenRequisitionsVie
 import { useCanteen } from "../context/CanteenContext";
 
 export default function CanteenPOSRequisitionsPage() {
-  const { currentRole } = useCanteen();
+  const { currentRole, isAdminMode } = useCanteen();
 
   // Try to get active staff from storage if available
   let staffName = "Canteen Manager";
@@ -29,7 +29,8 @@ export default function CanteenPOSRequisitionsPage() {
       <CanteenRequisitionsView
         requesterName={staffName}
         requesterId={staffId}
-        requesterRole={currentRole ? currentRole.toUpperCase() : "CANTEEN_MANAGER"}
+        requesterRole={isAdminMode ? "ADMIN" : (currentRole ? currentRole.toUpperCase() : "CANTEEN_MANAGER")}
+        isAdminMode={isAdminMode}
       />
     </div>
   );

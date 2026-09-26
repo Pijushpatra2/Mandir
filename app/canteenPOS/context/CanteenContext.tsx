@@ -83,6 +83,9 @@ interface CanteenContextType {
   setActiveTab: (tab: POSTab) => void;
   authToast: AuthToastNotification | null;
   setAuthToast: React.Dispatch<React.SetStateAction<AuthToastNotification | null>>;
+  authType: "admin" | "staff" | null;
+  isAdminMode: boolean;
+  loginAsManager: (email: string, password: string) => Promise<boolean>;
 
   // Core Data
   tables: SeatingTable[];
@@ -217,6 +220,15 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     const adminLoggedIn = !!localStorage.getItem("admin_access_token");
     return staffLoggedIn || adminLoggedIn;
   });
+  const [authType, setAuthType] = useState<"admin" | "staff" | null>(() => {
+    if (typeof window === "undefined") return null;
+    const staffToken = localStorage.getItem("canteen_staff_access_token");
+    if (staffToken) return "staff";
+    const adminToken = localStorage.getItem("admin_access_token");
+    if (adminToken) return "admin";
+    return null;
+  });
+  const isAdminMode = authType === "admin";
   const [activeTab, setActiveTab] = useState<POSTab>("dashboard");
   const [authToast, setAuthToast] = useState<AuthToastNotification | null>(null);
 
@@ -503,6 +515,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         // Update context states
         setIsLoggedIn(true);
         setCurrentRole(staff.assignedRole);
+        setAuthType("staff");
 
         // Save local storage indicators
         localStorage.setItem("canteen_is_logged_in", "true");
@@ -516,12 +529,13 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
             name: staff.name,
             email: staff.email,
             assignedRole: staff.assignedRole,
+            isAdmin: false,
             createdAt: new Date().toISOString().split("T")[0],
           })
         );
 
         setAuthToast({
-          message: `👋 Welcome ${staff.name} (${staff.assignedRole.toUpperCase()}) — Terminal Mode Active`,
+          message: `👨‍💼 Welcome ${staff.name} (${staff.assignedRole.toUpperCase()}) — Terminal Active`,
           type: "staff",
         });
 
@@ -559,6 +573,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
 
         setIsLoggedIn(true);
         setCurrentRole("manager");
+        setAuthType("admin");
 
         const adminName = admin.name || admin.fullName || "Administrator";
         localStorage.setItem("canteen_is_logged_in", "true");
@@ -578,7 +593,7 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         );
 
         setAuthToast({
-          message: `👑 Logged in as Administrator (${adminName}) — Full Terminal & Requisition Access Active`,
+          message: `👑 Logged in as Administrator (${adminName}) — Admin Terminal Mode Active`,
           type: "admin",
         });
 
@@ -593,9 +608,57 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
+  const loginAsManager = async (email: string, password: string): Promise<boolean> => {
+    const cleanEmail = email.trim().toLowerCase();
+    try {
+      const response = await axios.post(`${BASE_URL}/canteen/auth/login`, {
+        email: cleanEmail,
+        password,
+      });
+
+      if (response.data && response.data.data) {
+        const { accessToken, refreshToken, staff } = response.data.data;
+
+        setStaffTokens(accessToken, refreshToken);
+        resetStaffSession();
+
+        setIsLoggedIn(true);
+        setCurrentRole(staff.assignedRole);
+        setAuthType("staff");
+
+        localStorage.setItem("canteen_is_logged_in", "true");
+        localStorage.setItem("canteen_role", staff.assignedRole);
+        localStorage.setItem("canteen_user_name", staff.name);
+        localStorage.setItem("canteen_user_email", staff.email);
+        localStorage.setItem(
+          "canteen_active_staff",
+          JSON.stringify({
+            id: `staff-${staff.id}`,
+            name: staff.name,
+            email: staff.email,
+            assignedRole: staff.assignedRole,
+            isAdmin: false,
+            createdAt: new Date().toISOString().split("T")[0],
+          })
+        );
+
+        setAuthToast({
+          message: `👨‍💼 Switched to Canteen Manager (${staff.name}) — Full Store Requisitions Unlocked`,
+          type: "staff",
+        });
+
+        return true;
+      }
+    } catch (err) {
+      console.error("[Manager login failed]", err);
+    }
+    return false;
+  };
+
   const logout = () => {
     setIsLoggedIn(false);
     setCurrentRole(null);
+    setAuthType(null);
     clearStaffTokens();
     resetStaffSession();
     setAuthToast(null);
@@ -1169,6 +1232,9 @@ export function CanteenProvider({ children }: { children: React.ReactNode }) {
         posSearch,
         authToast,
         setAuthToast,
+        authType,
+        isAdminMode,
+        loginAsManager,
         setPosSearch,
         cart,
         setCart,

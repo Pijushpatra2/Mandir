@@ -125,7 +125,7 @@ const CartQtyInput: React.FC<CartQtyInputProps> = ({ qty, onChange, className })
 };
 
 export default function CanteenPOSPage() {
-  const { login, logout, authToast, setAuthToast, handleBulkDeleteOrders: contextBulkDelete } = useCanteen();
+  const { login, logout, authToast, setAuthToast, isAdminMode, handleBulkDeleteOrders: contextBulkDelete } = useCanteen();
   const { mutate: apiAddMenuItem } = useAddMenuItem();
   // Session & Auth states
   const [activeStaff, setActiveStaff] = useState<CanteenStaffAccount | null>(null);
@@ -2559,8 +2559,17 @@ export default function CanteenPOSPage() {
           {/* Quick Active Staff details */}
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Terminal User</span>
-              <span className="text-xs font-bold text-slate-800">{activeStaff.name} ({activeStaff.assignedRole.toUpperCase()})</span>
+              {((activeStaff as any)?.isAdmin || isAdminMode) ? (
+                <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 to-primary-gold/15 border border-amber-400/40 px-3 py-1 rounded-xl">
+                  <span className="text-xs">👑</span>
+                  <span className="text-xs font-bold text-amber-950">{activeStaff.name} (ADMINISTRATOR)</span>
+                </div>
+              ) : (
+                <>
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Terminal User</span>
+                  <span className="text-xs font-bold text-slate-800">{activeStaff.name} ({activeStaff.assignedRole.toUpperCase()})</span>
+                </>
+              )}
             </div>
 
             {/* Logout button for KDS / Kitchen which doesn't have sidebar */}
@@ -2622,9 +2631,15 @@ export default function CanteenPOSPage() {
               </div>
             )}
 
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-md">
-              {activeStaff.name.slice(0, 1).toUpperCase()}
-            </div>
+            {((activeStaff as any)?.isAdmin || isAdminMode) ? (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-md">
+                👑
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-md">
+                {activeStaff.name.slice(0, 1).toUpperCase()}
+              </div>
+            )}
 
           </div>
         </header>
@@ -2682,7 +2697,16 @@ export default function CanteenPOSPage() {
                 <CanteenRequisitionsView
                   requesterName={activeStaff.name}
                   requesterId={String(activeStaff.id)}
-                  requesterRole={activeStaff.assignedRole.toUpperCase()}
+                  requesterRole={(activeStaff as any)?.isAdmin ? "ADMIN" : activeStaff.assignedRole.toUpperCase()}
+                  isAdminMode={isAdminMode || Boolean((activeStaff as any)?.isAdmin)}
+                  onSwitchToManager={() => {
+                    const saved = localStorage.getItem("canteen_active_staff");
+                    if (saved) {
+                      try {
+                        setActiveStaff(JSON.parse(saved));
+                      } catch {}
+                    }
+                  }}
                 />
               )}
               {activeTab === "customers" && renderCustomers()}

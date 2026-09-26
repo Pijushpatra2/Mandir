@@ -125,6 +125,8 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
     handleCreateCategory,
     authToast,
     setAuthToast,
+    isAdminMode,
+    authType,
   } = useCanteen();
 
   useEffect(() => {
@@ -387,18 +389,23 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
 
           {/* Right quick role switcher & notifications */}
           <div className="flex items-center gap-4 relative">
-            {/* Static role display of logged in member */}
-            {currentRole && (
+            {/* Role indicator badge */}
+            {isAdminMode ? (
+              <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 to-primary-gold/15 border border-amber-400/40 px-3 py-1.5 rounded-xl shadow-2xs">
+                <span className="text-sm">👑</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-950">Administrator (Terminal View)</span>
+              </div>
+            ) : currentRole ? (
               <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
                 <span className="text-xs font-semibold uppercase text-slate-400">Role:</span>
                 <span className="text-xs font-bold uppercase text-slate-800">
-                  {currentRole === "manager" && "Canteen Manager"}
+                  {currentRole === "manager" && "👨‍💼 Canteen Manager"}
                   {currentRole === "receptionist" && "Receptionist"}
                   {currentRole === "cashier" && "Cashier Desk"}
                   {currentRole === "kitchen" && "Kitchen Staff"}
                 </span>
               </div>
-            )}
+            ) : null}
 
             {/* Notification bell */}
             <div className="relative">
@@ -461,11 +468,15 @@ function CanteenLayoutShell({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Profile avatar representation */}
-            {currentRole && (
+            {isAdminMode ? (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-md">
+                👑
+              </div>
+            ) : currentRole ? (
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-md">
                 {currentRole.slice(0, 1).toUpperCase()}
               </div>
-            )}
+            ) : null}
           </div>
         </header>
 
