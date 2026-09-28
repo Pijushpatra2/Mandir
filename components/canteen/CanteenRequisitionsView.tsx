@@ -9,6 +9,8 @@ import { adminListShopkeepers, ShopkeeperItem } from "@/lib/shopkeeperApi";
 import { StoreRequisition, StoreRequisitionItem, CreateRequisitionItemDto } from "@/types/requisition.types";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { exportRequisitionsToExcel, exportSingleRequisitionToExcel } from "@/lib/exportExcel";
+import { exportRequisitionToBWPDF } from "@/lib/requisitionPdf";
+import RequisitionReceiptModal from "@/components/requisition/RequisitionReceiptModal";
 import axios from "axios";
 import { setStaffTokens } from "@/lib/authStorage";
 import { resetStaffSession } from "@/lib/apiClient";
@@ -37,7 +39,12 @@ import {
   Lock,
   ShieldAlert,
   KeyRound,
-  UserCheck
+  UserCheck,
+  Printer,
+  Receipt,
+  Edit3,
+  FileCheck,
+  Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -112,19 +119,32 @@ export default function CanteenRequisitionsView({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedReq, setSelectedReq] = useState<StoreRequisition | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [receiptReq, setReceiptReq] = useState<StoreRequisition | null>(null);
 
   // Create Form State
   const [priority, setPriority] = useState<"LOW" | "NORMAL" | "HIGH" | "URGENT">("NORMAL");
+  const [targetShopkeeperType, setTargetShopkeeperType] = useState<"MANUAL" | "REGISTERED">("MANUAL");
   const [targetShopkeeperId, setTargetShopkeeperId] = useState("");
   const [targetShopkeeperName, setTargetShopkeeperName] = useState("");
-  const [targetStoreName, setTargetStoreName] = useState("");
+  const [targetShopkeeperEmail, setTargetShopkeeperEmail] = useState("");
+  const [targetShopkeeperPhone, setTargetShopkeeperPhone] = useState("");
+  const [targetStoreName, setTargetStoreName] = useState("Main Temple Provisions & Grocery Store");
   const [requesterNotes, setRequesterNotes] = useState("");
   const [itemsList, setItemsList] = useState<CreateRequisitionItemDto[]>([
-    { item_name: "Basmati Rice (25kg Bag)", category: "Grains & Rice", unit: "bags", requested_qty: 2 },
-    { item_name: "Pure Cow Ghee (5L Tin)", category: "Dairy & Ghee", unit: "tins", requested_qty: 3 },
+    { item_name: "Basmati Rice (25kg Bag)", category: "Grains & Rice", unit: "bags", requested_qty: 2, unit_price: 120000, total_price: 240000 },
+    { item_name: "Pure Cow Ghee (5L Tin)", category: "Dairy & Ghee", unit: "tins", requested_qty: 3, unit_price: 95000, total_price: 285000 },
   ]);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+
+  // Grand Total calculation
+  const grandTotal = itemsList.reduce((acc, item) => {
+    const q = Number(item.requested_qty) || 0;
+    const p = Number(item.unit_price) || 0;
+    const line = item.total_price !== undefined ? Number(item.total_price) : q * p;
+    return acc + line;
+  }, 0);
 
   const handleManagerLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,34 +213,39 @@ export default function CanteenRequisitionsView({
     }
   };
 
+  // Load registered shopkeepers for dropdown
   useEffect(() => {
     adminListShopkeepers()
       .then((data) => {
         const active = data.filter((s) => s.status === "ACTIVE");
         setShopkeepers(active);
-        if (active.length > 0 && !targetShopkeeperId) {
-          setTargetShopkeeperId(active[0].id);
-          setTargetShopkeeperName(active[0].name);
-          setTargetStoreName(active[0].store_name || "Main Temple Store");
-        }
+        // By default, manual storekeeper is selected (do not overwrite with registered storekeeper)
       })
       .catch((err) => console.error("Failed to load shopkeepers", err));
   }, []);
 
   const handleShopkeeperChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const sId = e.target.value;
-    setTargetShopkeeperId(sId);
-    const found = shopkeepers.find((s) => s.id === sId);
-    if (found) {
-      setTargetShopkeeperName(found.name);
-      setTargetStoreName(found.store_name || "Main Temple Store");
+    const val = e.target.value;
+    if (val === "MANUAL") {
+      setTargetShopkeeperType("MANUAL");
+      setTargetShopkeeperId("");
+    } else {
+      setTargetShopkeeperType("REGISTERED");
+      setTargetShopkeeperId(val);
+      const found = shopkeepers.find((s) => s.id === val);
+      if (found) {
+        setTargetShopkeeperName(found.name);
+        setTargetShopkeeperEmail(found.email);
+        setTargetShopkeeperPhone(found.phone || "");
+        setTargetStoreName(found.store_name || "Main Temple Provisions Store");
+      }
     }
   };
 
   const handleAddItemRow = () => {
     setItemsList([
       ...itemsList,
-      { item_name: "", category: "General Grocery", unit: "kg", requested_qty: 1 },
+      { item_name: "", category: "General Grocery", unit: "kg", requested_qty: 1, unit_price: 0, total_price: 0 },
     ]);
   };
 
@@ -230,10 +255,14 @@ export default function CanteenRequisitionsView({
   };
 
   const handleItemChange = (index: number, field: keyof CreateRequisitionItemDto, val: any) => {
-    setItemsList(
-      itemsList.map((item, idx) => {
+    setItemsList((prev) =>
+      prev.map((item, idx) => {
         if (idx === index) {
-          return { ...item, [field]: val };
+          const updated = { ...item, [field]: val };
+          const qty = field === "requested_qty" ? (Number(val) || 0) : (Number(updated.requested_qty) || 0);
+          const price = field === "unit_price" ? (Number(val) || 0) : (Number(updated.unit_price) || 0);
+          updated.total_price = Math.round(qty * price * 100) / 100;
+          return updated;
         }
         return item;
       })
@@ -243,15 +272,19 @@ export default function CanteenRequisitionsView({
   const handleSelectQuickItem = (index: number, commonName: string) => {
     const found = COMMON_CANTEEN_ITEMS.find((c) => c.name === commonName);
     if (found) {
-      setItemsList(
-        itemsList.map((item, idx) => {
+      setItemsList((prev) =>
+        prev.map((item, idx) => {
           if (idx === index) {
-            return {
+            const updated = {
               ...item,
               item_name: found.name,
               category: found.category,
               unit: found.unit,
             };
+            const qty = Number(updated.requested_qty) || 0;
+            const price = Number(updated.unit_price) || 0;
+            updated.total_price = Math.round(qty * price * 100) / 100;
+            return updated;
           }
           return item;
         })
@@ -266,7 +299,23 @@ export default function CanteenRequisitionsView({
       return;
     }
 
-    // Validate item names
+    // Validate manual storekeeper mandatory fields
+    if (targetShopkeeperType === "MANUAL") {
+      if (!targetShopkeeperName.trim()) {
+        alert("Please enter Storekeeper Name (Mandatory for manual storekeeper).");
+        return;
+      }
+      if (!targetShopkeeperEmail.trim()) {
+        alert("Please enter Storekeeper Email (Mandatory for manual storekeeper).");
+        return;
+      }
+      if (!targetShopkeeperPhone.trim()) {
+        alert("Please enter Storekeeper Phone Number (Mandatory for manual storekeeper).");
+        return;
+      }
+    }
+
+    // Validate item names & quantities
     for (const item of itemsList) {
       if (!item.item_name.trim()) {
         alert("Please specify a name for all requested items.");
@@ -286,25 +335,40 @@ export default function CanteenRequisitionsView({
         requested_by_id: requesterId,
         requested_by_role: requesterRole,
         priority,
-        target_shopkeeper_id: targetShopkeeperId || undefined,
-        target_shopkeeper_name: targetShopkeeperName || undefined,
-        target_store_name: targetStoreName || undefined,
+        target_shopkeeper_type: targetShopkeeperType,
+        target_shopkeeper_id: targetShopkeeperType === "REGISTERED" ? targetShopkeeperId : undefined,
+        target_shopkeeper_name: targetShopkeeperName.trim() || undefined,
+        target_shopkeeper_email: targetShopkeeperEmail.trim() || undefined,
+        target_shopkeeper_phone: targetShopkeeperPhone.trim() || undefined,
+        target_store_name: targetStoreName.trim() || undefined,
+        total_amount: grandTotal,
         requester_notes: requesterNotes.trim() || undefined,
-        items: itemsList.map((it) => ({
-          item_name: it.item_name.trim(),
-          category: it.category || "General Grocery",
-          unit: it.unit || "kg",
-          requested_qty: Number(it.requested_qty),
-        })),
+        items: itemsList.map((it) => {
+          const reqQty = Number(it.requested_qty);
+          const uPrice = Number(it.unit_price) || 0;
+          const totPrice = it.total_price !== undefined ? Number(it.total_price) : Math.round(reqQty * uPrice * 100) / 100;
+          return {
+            item_name: it.item_name.trim(),
+            category: it.category || "General Grocery",
+            unit: it.unit || "kg",
+            requested_qty: reqQty,
+            unit_price: uPrice,
+            total_price: totPrice,
+          };
+        }),
       });
 
       setFeedbackToast("Requisition created and submitted to Admin for approval!");
       setShowCreateModal(false);
       setItemsList([
-        { item_name: "Basmati Rice (25kg Bag)", category: "Grains & Rice", unit: "bags", requested_qty: 2 },
-        { item_name: "Pure Cow Ghee (5L Tin)", category: "Dairy & Ghee", unit: "tins", requested_qty: 3 },
+        { item_name: "Basmati Rice (25kg Bag)", category: "Grains & Rice", unit: "bags", requested_qty: 2, unit_price: 120000, total_price: 240000 },
+        { item_name: "Pure Cow Ghee (5L Tin)", category: "Dairy & Ghee", unit: "tins", requested_qty: 3, unit_price: 95000, total_price: 285000 },
       ]);
       setPriority("NORMAL");
+      setTargetShopkeeperType("MANUAL");
+      setTargetShopkeeperName("");
+      setTargetShopkeeperEmail("");
+      setTargetShopkeeperPhone("");
       setRequesterNotes("");
       refetch();
       setTimeout(() => setFeedbackToast(null), 4000);
@@ -609,13 +673,42 @@ export default function CanteenRequisitionsView({
                     </td>
 
                     <td className="py-4 text-right">
-                      <button
-                        onClick={() => handleOpenDetails(req)}
-                        className="px-3.5 py-1.5 rounded-xl border border-primary-gold/25 text-primary-gold hover:bg-primary-gold/10 font-semibold transition-colors text-xs flex items-center space-x-1 cursor-pointer ml-auto"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>View Quantities</span>
-                      </button>
+                      <div className="flex items-center justify-end space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReceiptReq(req);
+                            setShowReceiptModal(true);
+                          }}
+                          className={cn(
+                            "px-2.5 py-1.5 rounded-xl font-semibold text-xs flex items-center space-x-1 cursor-pointer transition-colors shadow-2xs",
+                            req.receipt_url
+                              ? "border border-emerald-600/30 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold"
+                              : "border border-dashed border-primary-gold/40 hover:bg-primary-gold/10 text-secondary-bronze"
+                          )}
+                          title={req.receipt_url ? "View or update attached receipt" : "Upload receipt / bill"}
+                        >
+                          <Receipt className={cn("w-3.5 h-3.5", req.receipt_url ? "text-emerald-600" : "text-primary-gold")} />
+                          <span>{req.receipt_url ? "Receipt" : "+ Receipt"}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => exportRequisitionToBWPDF(req)}
+                          className="px-2.5 py-1.5 rounded-xl border border-black/25 hover:bg-black/5 text-dark-surface font-semibold text-xs flex items-center space-x-1 cursor-pointer transition-colors shadow-2xs"
+                          title="Export & Print Black & White PDF Slip"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-black" />
+                          <span>B&W PDF</span>
+                        </button>
+                        <button
+                          onClick={() => handleOpenDetails(req)}
+                          className="px-3 py-1.5 rounded-xl border border-primary-gold/25 text-primary-gold hover:bg-primary-gold/10 font-semibold transition-colors text-xs flex items-center space-x-1 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Quantities</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -654,47 +747,149 @@ export default function CanteenRequisitionsView({
             </div>
 
             <form onSubmit={handleCreateSubmit} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto text-xs">
-              {/* Target Shopkeeper / Store Selector & Priority */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-semibold text-secondary-bronze">
-                    Target Shopkeeper / Store Counter (Optional)
-                  </label>
-                  <select
-                    value={targetShopkeeperId}
-                    onChange={handleShopkeeperChange}
-                    className="w-full px-3 py-2.5 rounded-xl border border-primary-gold/25 bg-bg-warm/30 text-xs font-semibold focus:outline-none"
-                  >
-                    <option value="">Let Admin Assign</option>
-                    {shopkeepers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.store_name || "Main Store"})
-                      </option>
-                    ))}
-                  </select>
+              {/* Target Shopkeeper Selection & Priority */}
+              <div className="p-4 rounded-2xl bg-bg-warm/40 border border-primary-gold/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-heading text-sm font-bold text-dark-surface flex items-center gap-1.5">
+                    <Store className="w-4 h-4 text-primary-gold" />
+                    <span>Target Storekeeper & Assignment</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary-gold/10 text-primary-gold border border-primary-gold/20">
+                    {targetShopkeeperType === "MANUAL" ? "Manual Storekeeper" : "Registered Staff"}
+                  </span>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-semibold text-secondary-bronze">Requisition Priority</label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as any)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-primary-gold/25 bg-bg-warm/30 text-xs font-semibold focus:outline-none"
-                  >
-                    <option value="NORMAL">Normal Priority</option>
-                    <option value="HIGH">High Priority</option>
-                    <option value="URGENT">URGENT (Immediate Kitchen Need)</option>
-                    <option value="LOW">Low Priority</option>
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="font-semibold text-secondary-bronze">
+                      Select Target Storekeeper *
+                    </label>
+                    <select
+                      value={targetShopkeeperType === "MANUAL" ? "MANUAL" : targetShopkeeperId}
+                      onChange={handleShopkeeperChange}
+                      className="w-full px-3 py-2.5 rounded-xl border border-primary-gold/25 bg-white text-xs font-semibold focus:outline-none"
+                    >
+                      <option value="MANUAL">Manual Storekeeper (Default - No Dashboard Account)</option>
+                      {shopkeepers.length > 0 && (
+                        <optgroup label="Registered System Storekeepers">
+                          {shopkeepers.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.store_name || "Main Store"})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-secondary-bronze">Requisition Priority</label>
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value as any)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-primary-gold/25 bg-white text-xs font-semibold focus:outline-none"
+                    >
+                      <option value="NORMAL">Normal Priority</option>
+                      <option value="HIGH">High Priority</option>
+                      <option value="URGENT">URGENT (Immediate Kitchen Need)</option>
+                      <option value="LOW">Low Priority</option>
+                    </select>
+                  </div>
                 </div>
+
+                {/* If Manual Storekeeper: Mandatory Name, Email, Phone */}
+                {targetShopkeeperType === "MANUAL" ? (
+                  <div className="p-3.5 rounded-xl bg-white border border-primary-gold/25 space-y-3">
+                    <div className="flex items-center gap-1.5 text-secondary-bronze text-[11px]">
+                      <AlertCircle className="w-3.5 h-3.5 text-primary-gold shrink-0" />
+                      <span>
+                        <strong>Manual Storekeeper:</strong> No user dashboard account will be created. The Name, Email, and Phone Number below are mandatory for this requisition.
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-secondary-bronze">
+                          Storekeeper Name <span className="text-error-red">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Ramesh Patel"
+                          value={targetShopkeeperName}
+                          onChange={(e) => setTargetShopkeeperName(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-primary-gold/25 bg-bg-warm/20 text-xs focus:outline-none focus:border-primary-gold"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-secondary-bronze">
+                          Email Address <span className="text-error-red">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          placeholder="ramesh.store@gmail.com"
+                          value={targetShopkeeperEmail}
+                          onChange={(e) => setTargetShopkeeperEmail(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-primary-gold/25 bg-bg-warm/20 text-xs focus:outline-none focus:border-primary-gold"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-secondary-bronze">
+                          Phone Number <span className="text-error-red">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="+256 700 123456"
+                          value={targetShopkeeperPhone}
+                          onChange={(e) => setTargetShopkeeperPhone(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-primary-gold/25 bg-bg-warm/20 text-xs focus:outline-none focus:border-primary-gold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-secondary-bronze">
+                        Target Store Counter / Provisions Location
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Main Temple Provisions & Grocery Store"
+                        value={targetStoreName}
+                        onChange={(e) => setTargetStoreName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-primary-gold/25 bg-bg-warm/20 text-xs focus:outline-none focus:border-primary-gold"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-white border border-success-green/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span className="font-bold text-dark-surface">{targetShopkeeperName}</span>
+                      <p className="text-[11px] text-secondary-bronze/70">
+                        {targetShopkeeperEmail} • {targetShopkeeperPhone || "No phone registered"} • {targetStoreName}
+                      </p>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-success-green/10 text-success-green border border-success-green/20 self-start sm:self-auto">
+                      Registered Staff Account
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Dynamic Item Lines */}
+              {/* Dynamic Item Lines & Pricing */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-heading text-sm font-bold text-dark-surface">
-                    Required Items & Quantities ({itemsList.length})
-                  </h4>
+                  <div>
+                    <h4 className="font-heading text-sm font-bold text-dark-surface">
+                      Required Items, Quantities & Prices ({itemsList.length})
+                    </h4>
+                    <p className="text-[11px] text-secondary-bronze/70">
+                      Enter single item price to auto-calculate line total and grand total.
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={handleAddItemRow}
@@ -727,9 +922,9 @@ export default function CanteenRequisitionsView({
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                        {/* Preset Selector */}
-                        <div className="sm:col-span-6 space-y-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                        {/* Item Name */}
+                        <div className="sm:col-span-4 space-y-1">
                           <label className="text-[11px] font-semibold text-secondary-bronze">
                             Item Name *
                           </label>
@@ -743,8 +938,8 @@ export default function CanteenRequisitionsView({
                           />
                           {/* Quick pick suggestion */}
                           <div className="flex items-center space-x-1 mt-1 overflow-x-auto pb-0.5">
-                            <span className="text-[9px] text-secondary-bronze/60 shrink-0">Suggestions:</span>
-                            {COMMON_CANTEEN_ITEMS.slice(0, 4).map((c) => (
+                            <span className="text-[9px] text-secondary-bronze/60 shrink-0">Quick:</span>
+                            {COMMON_CANTEEN_ITEMS.slice(0, 3).map((c) => (
                               <button
                                 key={c.name}
                                 type="button"
@@ -758,7 +953,7 @@ export default function CanteenRequisitionsView({
                         </div>
 
                         {/* Category */}
-                        <div className="sm:col-span-3 space-y-1">
+                        <div className="sm:col-span-2 space-y-1">
                           <label className="text-[11px] font-semibold text-secondary-bronze">Category</label>
                           <input
                             type="text"
@@ -770,11 +965,11 @@ export default function CanteenRequisitionsView({
                         </div>
 
                         {/* Qty & Unit */}
-                        <div className="sm:col-span-3 space-y-1">
+                        <div className="sm:col-span-2 space-y-1">
                           <label className="text-[11px] font-semibold text-secondary-bronze">
-                            Quantity & Unit *
+                            Qty & Unit *
                           </label>
-                          <div className="flex items-center space-x-1.5">
+                          <div className="flex items-center space-x-1">
                             <input
                               type="number"
                               min="0.1"
@@ -782,20 +977,63 @@ export default function CanteenRequisitionsView({
                               required
                               value={item.requested_qty}
                               onChange={(e) => handleItemChange(idx, "requested_qty", e.target.value)}
-                              className="w-16 px-2 py-2 rounded-xl border border-primary-gold/25 bg-white text-xs font-bold text-right focus:outline-none"
+                              className="w-14 px-2 py-2 rounded-xl border border-primary-gold/25 bg-white text-xs font-bold text-right focus:outline-none"
                             />
                             <input
                               type="text"
-                              placeholder="kg / bags"
+                              placeholder="kg"
                               value={item.unit}
                               onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
-                              className="w-16 px-2 py-2 rounded-xl border border-primary-gold/25 bg-white text-xs focus:outline-none"
+                              className="w-12 px-1.5 py-2 rounded-xl border border-primary-gold/25 bg-white text-xs focus:outline-none text-center"
                             />
+                          </div>
+                        </div>
+
+                        {/* Single Item Price */}
+                        <div className="sm:col-span-2 space-y-1">
+                          <label className="text-[11px] font-semibold text-secondary-bronze">
+                            Item Price (UGX)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="500"
+                            placeholder="0"
+                            value={item.unit_price ?? 0}
+                            onChange={(e) => handleItemChange(idx, "unit_price", e.target.value)}
+                            className="w-full px-2.5 py-2 rounded-xl border border-primary-gold/25 bg-white text-xs font-bold text-right focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Line Total Auto Calculated */}
+                        <div className="sm:col-span-2 space-y-1">
+                          <label className="text-[11px] font-semibold text-secondary-bronze">
+                            Line Total
+                          </label>
+                          <div className="px-2 py-2 rounded-xl bg-bg-warm/70 border border-primary-gold/20 text-xs font-bold font-mono text-dark-surface text-right truncate">
+                            UGX {(Number(item.total_price) || 0).toLocaleString()}
                           </div>
                         </div>
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Auto Calculated Grand Total Banner */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-bg-warm/80 via-primary-gold/10 to-bg-warm/80 border border-primary-gold/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-secondary-bronze/70 block">
+                      Total Items: {itemsList.length}
+                    </span>
+                    <span className="font-heading text-sm font-bold text-dark-surface">
+                      Grand Total Estimated Amount:
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-base sm:text-xl font-bold font-mono text-dark-surface">
+                      UGX {grandTotal.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -874,10 +1112,21 @@ export default function CanteenRequisitionsView({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-3.5 rounded-2xl bg-bg-warm/40 border border-primary-gold/15 space-y-1">
                   <span className="text-[10px] uppercase font-bold text-secondary-bronze/60 block">
-                    Assigned Shopkeeper
+                    Assigned Storekeeper
                   </span>
-                  <p className="font-bold text-dark-surface">{selectedReq.target_shopkeeper_name || "Pending Admin Selection"}</p>
-                  <p className="text-secondary-bronze">{selectedReq.target_store_name || "Main Store"}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-bold text-dark-surface">{selectedReq.target_shopkeeper_name || "Pending Admin Selection"}</p>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-primary-gold/10 text-primary-gold border border-primary-gold/20">
+                      {selectedReq.target_shopkeeper_type === "MANUAL" || !selectedReq.target_shopkeeper_id ? "Manual" : "Registered"}
+                    </span>
+                  </div>
+                  {selectedReq.target_shopkeeper_email && (
+                    <p className="text-[11px] text-secondary-bronze font-mono">{selectedReq.target_shopkeeper_email}</p>
+                  )}
+                  {selectedReq.target_shopkeeper_phone && (
+                    <p className="text-[11px] text-secondary-bronze">{selectedReq.target_shopkeeper_phone}</p>
+                  )}
+                  <p className="text-[11px] text-secondary-bronze/70">{selectedReq.target_store_name || "Main Store"}</p>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-bg-warm/40 border border-primary-gold/15 space-y-1">
@@ -888,62 +1137,84 @@ export default function CanteenRequisitionsView({
                   <p className="text-secondary-bronze">
                     {selectedReq.approved_at ? new Date(selectedReq.approved_at).toLocaleDateString() : "Pending"}
                   </p>
+                  <span className="text-[10px] uppercase font-bold text-primary-gold block mt-1">
+                    Grand Total: UGX {(Number(selectedReq.total_amount) || 0).toLocaleString()}
+                  </span>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-bg-warm/40 border border-primary-gold/15 space-y-1">
                   <span className="text-[10px] uppercase font-bold text-secondary-bronze/60 block">
-                    Dispatch Date
+                    Dispatch Date & Progress
                   </span>
                   <p className="font-bold text-dark-surface">
                     {selectedReq.dispatched_at ? new Date(selectedReq.dispatched_at).toLocaleDateString() : "Pending Dispatch"}
                   </p>
+                  <p className="text-secondary-bronze font-semibold">
+                    {selectedReq.fulfillment_progress_pct}% Completed
+                  </p>
                 </div>
               </div>
 
-              {/* Items Breakdown Table */}
+              {/* Items Breakdown Table with Prices */}
               <div className="space-y-3">
-                <h4 className="font-heading text-sm font-bold text-dark-surface">
-                  Item Quantities (Requested vs Approved vs Given vs Remaining)
-                </h4>
+                <div className="flex justify-between items-center">
+                  <h4 className="font-heading text-sm font-bold text-dark-surface">
+                    Item Quantities & Prices ({selectedReq.items?.length || 0})
+                  </h4>
+                  <span className="text-xs font-mono font-bold text-dark-surface">
+                    Total: UGX {(Number(selectedReq.total_amount) || 0).toLocaleString()}
+                  </span>
+                </div>
 
                 <div className="border border-primary-gold/15 rounded-2xl overflow-hidden divide-y divide-primary-gold/10">
                   <div className="p-3 bg-bg-warm/60 grid grid-cols-12 text-[10px] font-bold uppercase text-secondary-bronze tracking-wider">
-                    <span className="col-span-4">Item Name</span>
+                    <span className="col-span-3">Item Description</span>
                     <span className="col-span-2 text-center">Approved</span>
-                    <span className="col-span-2 text-center text-success-green">Given by Store</span>
-                    <span className="col-span-2 text-center text-error-red">Remaining</span>
-                    <span className="col-span-2 text-right">Store Remarks</span>
+                    <span className="col-span-2 text-center text-success-green">Given</span>
+                    <span className="col-span-1 text-center text-error-red">Rem</span>
+                    <span className="col-span-2 text-right">Unit Price</span>
+                    <span className="col-span-2 text-right">Line Total</span>
                   </div>
 
-                  {selectedReq.items?.map((it, idx) => (
-                    <div key={it.id} className="p-3 grid grid-cols-12 items-center hover:bg-bg-warm/20 transition-colors">
-                      <div className="col-span-4 flex items-center space-x-2">
-                        <span className="w-5 h-5 rounded-md bg-primary-gold/10 text-primary-gold font-bold text-[10px] flex items-center justify-center">
-                          {idx + 1}
-                        </span>
-                        <div>
-                          <p className="font-bold text-dark-surface">{it.item_name}</p>
-                          <span className="text-[10px] text-secondary-bronze/60">{it.category}</span>
+                  {selectedReq.items?.map((it, idx) => {
+                    const appQ = Number(it.approved_qty ?? it.requested_qty) || 0;
+                    const uPrice = Number(it.unit_price) || 0;
+                    const lineTot = Number(it.total_price) || (appQ * uPrice);
+
+                    return (
+                      <div key={it.id} className="p-3 grid grid-cols-12 items-center hover:bg-bg-warm/20 transition-colors">
+                        <div className="col-span-3 flex items-center space-x-2">
+                          <span className="w-5 h-5 rounded-md bg-primary-gold/10 text-primary-gold font-bold text-[10px] flex items-center justify-center">
+                            {idx + 1}
+                          </span>
+                          <div className="truncate">
+                            <p className="font-bold text-dark-surface truncate">{it.item_name}</p>
+                            <span className="text-[10px] text-secondary-bronze/60">{it.category}</span>
+                          </div>
+                        </div>
+
+                        <div className="col-span-2 text-center font-bold text-dark-surface">
+                          {appQ} {it.unit}
+                        </div>
+
+                        <div className="col-span-2 text-center font-bold text-success-green bg-success-green/5 py-1 rounded-lg">
+                          {it.issued_qty} {it.unit}
+                        </div>
+
+                        <div className="col-span-1 text-center font-bold text-error-red bg-error-red/5 py-1 rounded-lg">
+                          {it.remaining_qty}
+                        </div>
+
+                        <div className="col-span-2 text-right font-mono text-secondary-bronze">
+                          UGX {uPrice.toLocaleString()}
+                        </div>
+
+                        <div className="col-span-2 text-right font-mono font-bold text-dark-surface">
+                          UGX {lineTot.toLocaleString()}
                         </div>
                       </div>
-
-                      <div className="col-span-2 text-center font-bold text-dark-surface">
-                        {it.approved_qty} {it.unit}
-                      </div>
-
-                      <div className="col-span-2 text-center font-bold text-success-green bg-success-green/5 py-1 rounded-lg">
-                        {it.issued_qty} {it.unit}
-                      </div>
-
-                      <div className="col-span-2 text-center font-bold text-error-red bg-error-red/5 py-1 rounded-lg">
-                        {it.remaining_qty} {it.unit}
-                      </div>
-
-                      <div className="col-span-2 text-right text-[11px] text-secondary-bronze italic truncate">
-                        {it.shopkeeper_remarks || "—"}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -951,22 +1222,103 @@ export default function CanteenRequisitionsView({
               {selectedReq.shopkeeper_notes && (
                 <div className="p-3.5 rounded-2xl bg-primary-gold/5 border border-primary-gold/25 space-y-1">
                   <span className="text-[10px] uppercase font-bold text-primary-gold block">
-                    Shopkeeper Dispatch Remarks
+                    Storekeeper Dispatch Remarks
                   </span>
                   <p className="text-xs text-dark-surface italic">&ldquo;{selectedReq.shopkeeper_notes}&rdquo;</p>
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-2 border-t border-primary-gold/10">
-                <button
-                  type="button"
-                  onClick={() => exportSingleRequisitionToExcel(selectedReq)}
-                  className="px-4 py-2 rounded-xl border border-emerald-600/30 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold text-emerald-800 flex items-center space-x-1.5 transition-colors cursor-pointer"
-                  title="Export this requisition voucher to Excel"
-                >
-                  <Download className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Export Voucher to Excel</span>
-                </button>
+              {/* Receipt Attachment Section */}
+              <div className="p-4 rounded-2xl bg-bg-warm/40 border border-primary-gold/15 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Receipt className="w-4 h-4 text-primary-gold" />
+                    <span className="font-heading text-sm font-bold text-dark-surface">
+                      Attached Receipt & Vendor Invoice
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReceiptReq(selectedReq);
+                      setShowReceiptModal(true);
+                    }}
+                    className="px-3 py-1 rounded-xl border border-primary-gold/30 bg-white hover:bg-primary-gold/10 text-xs font-semibold text-secondary-bronze flex items-center space-x-1 cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <Edit3 className="w-3 h-3 text-primary-gold" />
+                    <span>{selectedReq.receipt_url ? "View / Edit Receipt" : "Upload Receipt"}</span>
+                  </button>
+                </div>
+
+                {selectedReq.receipt_url ? (
+                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-primary-gold/15">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                        <FileCheck className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-dark-surface text-xs truncate max-w-xs">
+                          {selectedReq.receipt_filename || "Receipt attached"}
+                        </p>
+                        <p className="text-[10px] text-secondary-bronze/70">
+                          {selectedReq.receipt_uploaded_by ? `By ${selectedReq.receipt_uploaded_by} • ` : ""}
+                          {selectedReq.receipt_uploaded_at ? new Date(selectedReq.receipt_uploaded_at).toLocaleDateString() : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReceiptReq(selectedReq);
+                        setShowReceiptModal(true);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-primary-gold text-white font-semibold text-xs flex items-center space-x-1 hover:brightness-105 cursor-pointer shadow-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Receipt</span>
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-secondary-bronze/70 italic">
+                    No receipt uploaded for this requisition yet. You can upload delivery notes, vendor receipts, or invoices anytime.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-primary-gold/10">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReceiptReq(selectedReq);
+                      setShowReceiptModal(true);
+                    }}
+                    className="px-3.5 py-2 rounded-xl border border-primary-gold/30 bg-primary-gold/10 hover:bg-primary-gold/20 text-xs font-bold text-secondary-bronze flex items-center space-x-1.5 transition-colors cursor-pointer"
+                  >
+                    <Receipt className="w-3.5 h-3.5 text-primary-gold" />
+                    <span>{selectedReq.receipt_url ? "View Receipt" : "Upload Receipt"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => exportRequisitionToBWPDF(selectedReq)}
+                    className="px-4 py-2 rounded-xl border border-black/30 bg-black/5 hover:bg-black/10 text-xs font-bold text-dark-surface flex items-center space-x-1.5 transition-colors cursor-pointer shadow-xs"
+                    title="Export and print Black & White PDF"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-black" />
+                    <span>Print / Save B&W PDF</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => exportSingleRequisitionToExcel(selectedReq)}
+                    className="px-4 py-2 rounded-xl border border-emerald-600/30 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold text-emerald-800 flex items-center space-x-1.5 transition-colors cursor-pointer"
+                    title="Export this requisition voucher to Excel"
+                  >
+                    <Download className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Export to Excel</span>
+                  </button>
+                </div>
 
                 <button
                   type="button"
@@ -1091,6 +1443,26 @@ export default function CanteenRequisitionsView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* =========================================================================
+       * MODAL 4: REQUISITION RECEIPT UPLOAD, EDIT & FULL PREVIEW MODAL
+       * ========================================================================= */}
+      {showReceiptModal && receiptReq && (
+        <RequisitionReceiptModal
+          requisition={receiptReq}
+          isOpen={showReceiptModal}
+          onClose={() => setShowReceiptModal(false)}
+          currentUserRole="CANTEEN_MANAGER"
+          currentUserName={currentRequesterName || "Canteen Manager"}
+          onSuccess={() => {
+            refetch();
+            if (selectedReq && selectedReq.id === receiptReq.id) {
+              const found = requisitions.find((r) => r.id === receiptReq.id);
+              if (found) setSelectedReq(found);
+            }
+          }}
+        />
       )}
     </div>
   );

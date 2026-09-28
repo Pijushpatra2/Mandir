@@ -8,6 +8,7 @@ import type {
   StoreRequisitionItem,
   CreateRequisitionDto,
   AdminApproveRequisitionDto,
+  AdminUpdateRequisitionDto,
   ShopkeeperFulfillDto,
   RequisitionStats
 } from '@/types/requisition.types';
@@ -116,6 +117,30 @@ export function useAdminApproveRequisition() {
 }
 
 /**
+ * Admin updates storekeeper details, quantities, and prices
+ */
+export function useAdminUpdateRequisition() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data: payload,
+    }: {
+      id: string;
+      data: AdminUpdateRequisitionDto;
+    }): Promise<StoreRequisition> => {
+      const client = getActiveClient();
+      const { data } = await client.put(`/requisitions/${id}`, payload);
+      return data.data?.requisition;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.details(vars.id) });
+    },
+  });
+}
+
+/**
  * Admin rejects requisition
  */
 export function useAdminRejectRequisition() {
@@ -164,6 +189,64 @@ export function useShopkeeperFulfillRequisition() {
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.details(vars.id) });
+    },
+  });
+}
+
+/**
+ * Admin or Canteen Manager uploads or edits a receipt for a requisition
+ */
+export function useUploadRequisitionReceipt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      formData,
+      jsonData,
+    }: {
+      id: string;
+      formData?: FormData;
+      jsonData?: {
+        receipt_url?: string;
+        receipt_filename?: string;
+        receipt_uploaded_by?: string;
+        receipt_notes?: string;
+      };
+    }): Promise<StoreRequisition> => {
+      const client = getActiveClient();
+      let response;
+      if (formData) {
+        response = await client.post(`/requisitions/${id}/receipt`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        response = await client.post(`/requisitions/${id}/receipt`, jsonData);
+      }
+      return response.data?.data?.requisition;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.details(vars.id) });
+    },
+  });
+}
+
+/**
+ * Admin or Canteen Manager removes a receipt from a requisition
+ */
+export function useDeleteRequisitionReceipt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<StoreRequisition> => {
+      const client = getActiveClient();
+      const { data } = await client.delete(`/requisitions/${id}/receipt`);
+      return data.data?.requisition;
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: REQUISITION_QUERY_KEYS.details(id) });
     },
   });
 }
