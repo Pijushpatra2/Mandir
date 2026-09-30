@@ -341,8 +341,8 @@ export function exportRequisitionToBWPDF(req: StoreRequisition) {
     <!-- Header -->
     <div class="header">
       <div>
-        <div class="brand-title">Shree Swaminarayan Temple</div>
-        <div class="brand-sub">Kampala, Uganda • Mandir Provisions & Store Desk</div>
+        <div class="brand-title">SKSS Temple, Kampala</div>
+        <div class="brand-sub">Shree Swaminarayan Complex, Bukoto, Kampala, Uganda • Mandir Provisions & Store Desk</div>
         <div class="doc-type">Material Store Requisition & Disbursement Slip</div>
       </div>
       <div class="meta-box">

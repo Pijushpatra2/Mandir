@@ -28,11 +28,11 @@ export function Footer() {
                 />
               </div>
               <span className="font-heading text-2xl font-bold tracking-wide text-primary-gold">
-                SKSS Kampala
+                SKSS Temple, Kampala
               </span>
             </div>
             <p className="text-white/70 text-base leading-relaxed mb-6 font-normal font-poppins">
-              Shree Kutch Satsang Swaminarayan Temple, Kampala is a spiritual sanctuary dedicated to spreading peace, devotion, and community wisdom.
+              SKSS Temple, Kampala is a spiritual sanctuary dedicated to spreading peace, devotion, and community wisdom.
             </p>
             <div className="flex space-x-4">
               <a
@@ -46,7 +46,7 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="mailto:connect@radhekrishnamandir.org"
+                href="mailto:info@sksstkampala.com"
                 className="w-11 h-11 rounded-xl border border-white/10 hover:border-primary-gold flex items-center justify-center text-white/70 hover:text-primary-gold transition-colors bg-white/5"
               >
                 <Mail className="w-5 h-5" />
@@ -89,16 +89,18 @@ export function Footer() {
               <li className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-primary-gold shrink-0 mt-1" />
                 <span className="leading-relaxed text-white/80">
-                  Spiritual Boulevard, Sector 5, Divine City, Pin - 400001
+                  Shree Swaminarayan Complex<br />
+                  Nsimbiziwoome, Bukoto<br />
+                  Kampala, Uganda
                 </span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-primary-gold shrink-0" />
-                <span className="text-white/80">+91 22 5555 1008</span>
+                <span className="text-white/80">+256 759031334</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-primary-gold shrink-0" />
-                <span className="text-white/80">connect@radhekrishnamandir.org</span>
+                <span className="text-white/80">info@sksstkampala.com</span>
               </li>
             </ul>
           </div>
@@ -137,7 +139,7 @@ export function Footer() {
 
         {/* Bottom Banner */}
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm sm:text-base font-normal text-white/60 font-poppins">
-          <p>© {currentYear} Shree Kutch Satsang Swaminarayan Temple, Kampala. All rights reserved.</p>
+          <p>© {currentYear} SKSS Temple, Kampala. All rights reserved.</p>
           <p className="flex items-center gap-1.5">
             Designed for digital spiritual connection with <Heart className="w-4 h-4 text-primary-gold fill-primary-gold" />
           </p>

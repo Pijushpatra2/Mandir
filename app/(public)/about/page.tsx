@@ -177,9 +177,9 @@ export default function AboutPage() {
                   <div className="absolute bottom-6 left-6 right-6 text-white text-left z-10">
                     <span className="text-[11px] uppercase tracking-widest text-[#C59D5F] font-bold">Divine Sanctuary</span>
                     <h3 className="text-lg sm:text-xl font-heading font-bold text-white leading-snug mt-0.5">
-                      Shree Swaminarayan Mandir
+                      SKSS Temple, Kampala
                     </h3>
-                    <p className="text-xs text-white/80 font-poppins mt-0.5">Plot 12, Swaminarayan Marg • Kampala, Uganda</p>
+                    <p className="text-xs text-white/80 font-poppins mt-0.5">Shree Swaminarayan Complex, Nsimbiziwoome, Bukoto, Kampala, Uganda</p>
                   </div>
                 </div>
 

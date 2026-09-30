@@ -225,7 +225,7 @@ export default function ShopkeeperLoginPage() {
 
       {/* Footer */}
       <footer className="py-4 text-center text-[11px] text-white/40 border-t border-primary-gold/10 relative z-10">
-        © {new Date().getFullYear()} Shri Swaminarayan Mandir (SKSS Temple Kampala). All Rights Reserved.
+        © {new Date().getFullYear()} SKSS Temple, Kampala. All Rights Reserved.
       </footer>
     </div>
   );

@@ -2320,7 +2320,7 @@ export default function CanteenPOSPage() {
               </div>
               <div className="space-y-1">
                 <label className="text-gray-400 font-semibold block">Store Address Coordinates *</label>
-                <input type="text" required defaultValue="Shree Swaminarayan Complex, Bukoto, Kampala" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
+                <input type="text" required defaultValue="Shree Swaminarayan Complex, Nsimbiziwoome, Bukoto, Kampala, Uganda" className="w-full p-2.5 border border-gray-100 rounded-xl bg-gray-50 outline-none text-gray-700" />
               </div>
             </div>
           </div>

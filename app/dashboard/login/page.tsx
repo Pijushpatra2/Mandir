@@ -221,7 +221,7 @@ export default function AdminLoginPage() {
 
         {/* Footer */}
         <p className="text-center text-[10px] text-[#A89F91]/40 mt-8 font-sans font-light tracking-wide uppercase">
-          Shree Kutch Satsang Swaminarayan Temple Kampala © {new Date().getFullYear()}
+          SKSS Temple, Kampala © {new Date().getFullYear()}
         </p>
       </div>
     </div>

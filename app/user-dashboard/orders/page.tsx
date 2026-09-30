@@ -92,10 +92,10 @@ export default function UserOrdersPage() {
     // Header
     ctx.fillStyle = "#111111";
     ctx.font = "bold 24px serif";
-    ctx.fillText("SHREE KUTCH SATSANG SWAMINARAYAN TEMPLE", 50, 75);
+    ctx.fillText("SKSS TEMPLE, KAMPALA", 50, 75);
     ctx.font = "italic 15px serif";
     ctx.fillStyle = "#8B5E34";
-    ctx.fillText("Temple Devotional Goods & Sacred Store • Kampala, Uganda", 50, 100);
+    ctx.fillText("Temple Devotional Goods & Sacred Store • Shree Swaminarayan Complex, Bukoto, Kampala", 50, 100);
 
     ctx.fillStyle = "#8B5E34";
     ctx.font = "bold 22px sans-serif";
@@ -217,7 +217,7 @@ export default function UserOrdersPage() {
     // Signature & Footnote
     ctx.fillStyle = "#111111";
     ctx.font = "italic 11px serif";
-    ctx.fillText("Thank you for supporting Shree Kutch Satsang Swaminarayan Temple, Kampala. May you receive divine blessings.", 50, 910);
+    ctx.fillText("Thank you for supporting SKSS Temple, Kampala. May you receive divine blessings.", 50, 910);
     ctx.fillText("This is a system generated Cash on Delivery store invoice. Please pay the courier in cash upon receipt.", 50, 930);
 
     // Trigger download

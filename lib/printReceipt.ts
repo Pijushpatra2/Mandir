@@ -207,9 +207,9 @@ export function printThermalReceipt(
 <body>
   <!-- MAIN CANTEEN HEADER -->
   <div class="text-center">
-    <div class="title">SKSST KAMPALA PRASADAM</div>
-    <div class="subtitle">Bukoto Complex, Kampala</div>
-    <div class="subtitle">Swaminarayan Annakoot Seva</div>
+    <div class="title">SKSS TEMPLE, KAMPALA</div>
+    <div class="subtitle">Shree Swaminarayan Complex, Bukoto</div>
+    <div class="subtitle">Tel: +256 759031334 | info@sksstkampala.com</div>
   </div>
 
   <!-- TOKEN NUMBER DISPLAY -->
@@ -514,9 +514,9 @@ export function printA4Invoice(order: CanteenOrder) {
 <body>
   <div class="header">
     <div class="logo-section">
-      <h1>SKSST KAMPALA PRASADAM</h1>
-      <p>Bukoto Complex, Plot 42-44, Kampala, Uganda</p>
-      <p>Email: canteen@pujasoftware.com | Tel: +256 700 000 000</p>
+      <h1>SKSS TEMPLE, KAMPALA</h1>
+      <p>Shree Swaminarayan Complex, Nsimbiziwoome, Bukoto, Kampala, Uganda</p>
+      <p>Email: info@sksstkampala.com | Tel: +256 759031334</p>
     </div>
     <div class="invoice-details">
       <div class="invoice-title">OFFICIAL RECEIPT</div>

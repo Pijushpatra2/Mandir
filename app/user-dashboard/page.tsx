@@ -171,10 +171,10 @@ export default function UserDashboardOverviewPage() {
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 21px serif";
     ctx.textAlign = "center";
-    ctx.fillText("SHREE KUTCH SATSANG SWAMINARAYAN TEMPLE", 325, 50);
+    ctx.fillText("SKSS TEMPLE, KAMPALA", 325, 50);
     ctx.font = "italic 13px sans-serif";
     ctx.fillStyle = "#C59D5F";
-    ctx.fillText("Official Devotee Membership Pass • Kampala, Uganda", 325, 74);
+    ctx.fillText("Official Devotee Membership Pass • Shree Swaminarayan Complex, Bukoto", 325, 74);
 
     // 4. Content Details
     ctx.textAlign = "left";

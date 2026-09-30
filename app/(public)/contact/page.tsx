@@ -168,7 +168,7 @@ export default function ContactPage() {
                 Location Map Simulator
               </h4>
               <p className="text-sm sm:text-base text-secondary-bronze font-poppins leading-relaxed">
-                Spiritual Boulevard, Sector 5, Divine City, Pin - 400001
+                Shree Swaminarayan Complex, Nsimbiziwoome, Bukoto, Kampala, Uganda
               </p>
             </div>
           </div>

@@ -6,7 +6,7 @@ import { Save, Bell, Shield, Tv, Sparkles, KeyRound, Loader2, Lock, AlertTriangl
 import { adminApiClient } from "@/lib/apiClient";
 
 export default function SettingsDashboardPage() {
-  const [templeName, setTempleName] = useState("Shree Kutch Satsang Swaminarayan Temple, Kampala");
+  const [templeName, setTempleName] = useState("SKSS Temple, Kampala");
   const [liveUrl, setLiveUrl] = useState("https://www.youtube.com/embed/dQw4w9WgXcQ");
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [whatsappAlerts, setWhatsappAlerts] = useState(true);

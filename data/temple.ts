@@ -16,14 +16,14 @@ export interface TempleConfig {
 }
 
 export const templeConfig: TempleConfig = {
-  name: "Shree Kutch Satsang Swaminarayan Temple, Kampala",
+  name: "SKSS Temple, Kampala",
   tagline: "Experience Divine Grace and Spiritual Peace",
-  history: "Shree Kutch Satsang Swaminarayan Temple, Kampala has grown from a humble community sanctuary to a spiritual beacon. Built on the tenets of devotion, service, and spiritual education, the temple has served devotees worldwide, fostering a sanctuary for inner peace, traditional rituals, and community welfare.",
+  history: "SKSS Temple, Kampala has grown from a humble community sanctuary to a spiritual beacon. Built on the tenets of devotion, service, and spiritual education, the temple has served devotees worldwide, fostering a sanctuary for inner peace, traditional rituals, and community welfare.",
   mission: "To preserve and promote spiritual heritage, encourage devotional practices (Bhakti), and serve humanity through cultural outreach, charitable initiatives (Annadan), and educational programs.",
   vision: "To create a harmonious global community rooted in divine love, selfless service, and spiritual consciousness, accessible to devotees anytime and anywhere.",
-  address: "Shree Swaminarayan Complex Nsimbiziwoome, Bukoto, Kampala, Uganda",
-  phone: "+256 414 555 108",
-  email: "connect@skssitemplekampala.org",
+  address: "Shree Swaminarayan Complex, Nsimbiziwoome, Bukoto, Kampala, Uganda",
+  phone: "+256 759031334",
+  email: "info@sksstkampala.com",
   darshanTimings: {
     morning: "5:30 AM - 11:00 AM",
     evening: "4:00 PM - 8:30 PM",

@@ -30,7 +30,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Shree Kutch Satsang Swaminarayan Temple, Kampala - Enterprise ERP",
+  title: "SKSS Temple, Kampala - Enterprise ERP",
   description:
     "Experience Divine Grace. Book Pooja services, Donate online, Become a Member, and Watch Live Darshan.",
 };

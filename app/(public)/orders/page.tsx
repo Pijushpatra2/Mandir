@@ -34,10 +34,10 @@ export default function OrdersPage() {
     // 1. Header (Temple Details)
     ctx.fillStyle = "#111111";
     ctx.font = "bold 26px serif";
-    ctx.fillText("SHREE KUTCH SATSANG SWAMINARAYAN TEMPLE", 50, 80);
+    ctx.fillText("SKSS TEMPLE, KAMPALA", 50, 80);
     ctx.font = "italic 16px serif";
     ctx.fillStyle = "#8B5E34";
-    ctx.fillText("Sacred Temple Goods & Devotional Store", 50, 105);
+    ctx.fillText("Sacred Temple Goods & Devotional Store • Bukoto, Kampala", 50, 105);
 
     ctx.fillStyle = "#8B5E34";
     ctx.font = "bold 24px sans-serif";
@@ -156,7 +156,7 @@ export default function OrdersPage() {
     // 6. Signature & Footnote
     ctx.fillStyle = "#111111";
     ctx.font = "italic 11px serif";
-    ctx.fillText("Thank you for supporting Shree Kutch Satsang Swaminarayan Temple, Kampala programs. May you receive divine blessings.", 50, 910);
+    ctx.fillText("Thank you for supporting SKSS Temple, Kampala programs. May you receive divine blessings.", 50, 910);
     ctx.fillText("This is a system generated e-invoice. No signature required.", 50, 930);
 
     // Download action trigger
