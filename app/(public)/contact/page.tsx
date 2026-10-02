@@ -159,18 +159,15 @@ export default function ContactPage() {
 
         {/* Embedded Map Grid Mock */}
         <GlassCard className="p-4 border border-primary-gold/15 overflow-hidden shadow-md">
-          <div className="w-full h-80 rounded-2xl bg-neutral-gray overflow-hidden relative flex items-center justify-center">
-            {/* Visual layout mock instead of loading real google iframe */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-stone-200 to-amber-50 pointer-events-none" />
-            <div className="relative text-center p-8 space-y-2 z-10">
-              <MapPin className="w-10 h-10 text-primary-gold mx-auto animate-bounce" />
-              <h4 className="font-heading text-lg sm:text-xl font-medium text-dark-surface">
-                Location Map Simulator
-              </h4>
-              <p className="text-sm sm:text-base text-secondary-bronze font-poppins leading-relaxed">
-                Shree Swaminarayan Complex, Nsimbiziwoome, Bukoto, Kampala, Uganda
-              </p>
-            </div>
+          <div className="w-full h-80 rounded-2xl overflow-hidden">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4950.81128634984!2d32.59546067585072!3d0.3569588139607482!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177dbb87a8aa3a67%3A0x6927e2b301ade937!2sShree%20Kutch%20Satsang%20Swaminarayan%20Temple%2C%20Kampala!5e1!3m2!1sen!2sin!4v1790923606056!5m2!1sen!2sin"
+              className="w-full h-full border-0"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+              title="Shree Kutch Satsang Swaminarayan Temple, Kampala"
+            />
           </div>
         </GlassCard>
 
