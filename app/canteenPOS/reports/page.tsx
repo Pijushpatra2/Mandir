@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -21,33 +21,35 @@ import {
   AlertTriangle,
   Receipt,
   Download,
+  Search,
 } from "lucide-react";
 import { useCanteen } from "../context/CanteenContext";
 import { useCanteenSalesReport } from "@/lib/api/canteen/useReports";
 import { formatCurrency } from "@/lib/utils";
+import { formatKampalaDate } from "@/lib/dateUtils";
 import * as XLSX from "xlsx";
 
 export default function ReportsPage() {
   const { posSession, closePosSession } = useCanteen();
 
-  // Date Filter Presets
-  const [datePreset, setDatePreset] = useState<"today" | "yesterday" | "week" | "month" | "custom" | "all">("today");
-  const [customStartDate, setCustomStartDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [customEndDate, setCustomEndDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  // Date Filter Presets (Aligned with Uganda / Kampala EAT timezone)
+  const todayStr = formatKampalaDate(new Date());
 
-  // Compute actual date strings passed to API
-  const todayStr = new Date().toISOString().slice(0, 10);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  const yesterdayStr = formatKampalaDate(yesterday);
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
+  const sevenDaysAgoStr = formatKampalaDate(sevenDaysAgo);
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
-  const startOfMonthStr = startOfMonth.toISOString().slice(0, 10);
+  const startOfMonthStr = formatKampalaDate(startOfMonth);
+
+  const [datePreset, setDatePreset] = useState<"today" | "yesterday" | "week" | "month" | "custom" | "all">("today");
+  const [customStartDate, setCustomStartDate] = useState<string>(todayStr);
+  const [customEndDate, setCustomEndDate] = useState<string>(todayStr);
 
   let queryStartDate: string | undefined = todayStr;
   let queryEndDate: string | undefined = todayStr;
@@ -72,12 +74,18 @@ export default function ReportsPage() {
     queryEndDate = undefined;
   }
 
-  // Fetch Live Sales Report from Backend
-  const { data: reportData, isLoading, refetch } = useCanteenSalesReport(queryStartDate, queryEndDate);
+  // Fetch Live Sales Report from Backend (Auto-refetches every 15s to monitor /pos sales live)
+  const { data: reportData, isLoading, isFetching, refetch } = useCanteenSalesReport(queryStartDate, queryEndDate);
 
   // Sorting for Orders Ledger table
   const [orderSortBy, setOrderSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
-  const [itemSortBy, setItemSortBy] = useState<"revenue_desc" | "qty_desc">("revenue_desc");
+
+  // Filter & Sorting controls for Top Selling Dishes (to monitor exact items from /pos)
+  const [itemSearch, setItemSearch] = useState("");
+  const [itemCategoryFilter, setItemCategoryFilter] = useState("All");
+  const [itemSortBy, setItemSortBy] = useState<"qty_desc" | "qty_asc" | "revenue_desc" | "name_asc">("qty_desc");
+  const [itemFilterMode, setItemFilterMode] = useState<"sold_only" | "all">("sold_only");
+  const [showAllItems, setShowAllItems] = useState(false);
 
   // Cash drawer session closing modal
   const [showCloseModal, setShowCloseModal] = useState(false);
@@ -106,11 +114,66 @@ export default function ReportsPage() {
   const itemSales = reportData?.itemSales || [];
   const orders = reportData?.orders || [];
 
-  // Sort item sales
-  const sortedItemSales = [...itemSales].sort((a, b) => {
-    if (itemSortBy === "revenue_desc") return b.revenue - a.revenue;
-    return b.quantity - a.quantity;
-  });
+  // Distinct POS categories from itemSales catalog
+  const itemCategories = useMemo(() => {
+    const cats = new Set<string>();
+    itemSales.forEach((it) => {
+      if (it.category) cats.add(it.category);
+    });
+    return ["All", ...Array.from(cats).sort()];
+  }, [itemSales]);
+
+  // Process item sales: Filter by Sold Only / All POS items, Category, Search & Sort
+  const processedItemSales = useMemo(() => {
+    let list = [...itemSales];
+
+    // Filter mode
+    if (itemFilterMode === "sold_only") {
+      list = list.filter((it) => Number(it.quantity) > 0);
+    }
+
+    // Category filter
+    if (itemCategoryFilter !== "All") {
+      list = list.filter((it) => it.category === itemCategoryFilter);
+    }
+
+    // Search query
+    if (itemSearch.trim()) {
+      const q = itemSearch.toLowerCase().trim();
+      list = list.filter(
+        (it) =>
+          it.name.toLowerCase().includes(q) ||
+          (it.category && it.category.toLowerCase().includes(q))
+      );
+    }
+
+    // Sorting
+    list.sort((a, b) => {
+      if (itemSortBy === "qty_desc") {
+        if (b.quantity !== a.quantity) return b.quantity - a.quantity;
+        return b.revenue - a.revenue;
+      }
+      if (itemSortBy === "qty_asc") {
+        if (a.quantity !== b.quantity) return a.quantity - b.quantity;
+        return a.revenue - b.revenue;
+      }
+      if (itemSortBy === "revenue_desc") {
+        if (b.revenue !== a.revenue) return b.revenue - a.revenue;
+        return b.quantity - a.quantity;
+      }
+      if (itemSortBy === "name_asc") {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+
+    return list;
+  }, [itemSales, itemFilterMode, itemCategoryFilter, itemSearch, itemSortBy]);
+
+  // Total quantity across filtered items
+  const totalFilteredQty = useMemo(() => {
+    return processedItemSales.reduce((acc, it) => acc + Number(it.quantity || 0), 0);
+  }, [processedItemSales]);
 
   // Sort orders ledger
   const sortedOrders = [...orders].sort((a, b) => {
@@ -168,17 +231,18 @@ export default function ReportsPage() {
     wsSummary["!cols"] = [{ wch: 35 }, { wch: 30 }];
     XLSX.utils.book_append_sheet(wb, wsSummary, "Sales Summary");
 
-    // Sheet 2: Item-Wise Sales Breakdown
-    if (sortedItemSales.length > 0) {
-      const itemRows = sortedItemSales.map((it, idx) => ({
+    // Sheet 2: Item-Wise Sales Breakdown (Tracks exact POS dishes)
+    if (processedItemSales.length > 0) {
+      const itemRows = processedItemSales.map((it, idx) => ({
         Rank: idx + 1,
         "Dish / Item Name": it.name,
+        Category: it.category || "General",
         "Quantity Sold": it.quantity,
-        "Average Price (UGX)": Math.round(it.unitPrice),
+        "Unit Price (UGX)": Math.round(it.unitPrice),
         "Total Revenue (UGX)": it.revenue,
       }));
       const wsItems = XLSX.utils.json_to_sheet(itemRows);
-      wsItems["!cols"] = [{ wch: 8 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 22 }];
+      wsItems["!cols"] = [{ wch: 8 }, { wch: 35 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 22 }];
       XLSX.utils.book_append_sheet(wb, wsItems, "Item-Wise Sales");
     }
 
@@ -278,10 +342,11 @@ export default function ReportsPage() {
       t += `\n`;
     }
 
-    t += `4. TOP SELLING DISHES & ITEMS:\n`;
+    t += `4. TOP SELLING DISHES & ITEMS (MONITORED FROM POS):\n`;
     t += `-------------------------------------------------\n`;
-    sortedItemSales.slice(0, 10).forEach((it, idx) => {
-      t += `${(idx + 1).toString().padStart(2, " ")}. ${it.name.padEnd(25, " ")} | ${it.quantity.toString().padStart(4, " ")} sold | ${formatCurrency(it.revenue)}\n`;
+    processedItemSales.slice(0, 25).forEach((it, idx) => {
+      const cat = `[${it.category || 'General'}]`.padEnd(14, ' ');
+      t += `${(idx + 1).toString().padStart(2, " ")}. ${cat} ${it.name.padEnd(25, " ")} | ${it.quantity.toString().padStart(4, " ")} sold | ${formatCurrency(it.revenue)}\n`;
     });
     t += `\n=================================================\n`;
     t += `             END OF AUDIT REPORT                 \n`;
@@ -539,64 +604,220 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        {/* Top Selling Items (8 cols) */}
+        {/* Top Selling Items (8 cols) — Monitors Exact Items from /pos & Counts Quantity Sold */}
         <div className="lg:col-span-8 bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-5">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
             <div>
-              <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                Top Selling Menu Dishes
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">Ranked by revenue contribution</p>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                  Top Selling Menu Dishes
+                </h3>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Live Monitor with /pos
+                </span>
+                {isFetching && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400">
+                    <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
+                    <span>Syncing...</span>
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Exact dishes monitored from the POS menu with live quantity sold counter
+              </p>
             </div>
 
-            {/* Sorting toggle */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setItemSortBy(itemSortBy === "revenue_desc" ? "qty_desc" : "revenue_desc")}
-                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 border-none cursor-pointer"
-              >
-                <ArrowUpDown className="w-3.5 h-3.5" />
-                <span>Sort by: {itemSortBy === "revenue_desc" ? "Revenue ▼" : "Quantity Sold ▼"}</span>
-              </button>
+            {/* Quick KPI count chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600">
+                Dishes: <span className="font-bold font-mono text-slate-900">{processedItemSales.length}</span>
+              </div>
+              <div className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700">
+                Total Sold: <span className="font-bold font-mono text-blue-900">{totalFilteredQty.toLocaleString()} items</span>
+              </div>
             </div>
           </div>
 
+          {/* Search, Filter & View Controls Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/70 p-3 rounded-2xl border border-slate-200/80">
+            {/* Search Input for POS items */}
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search dish name from POS..."
+                value={itemSearch}
+                onChange={(e) => setItemSearch(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 transition-colors"
+              />
+              {itemSearch && (
+                <button
+                  type="button"
+                  onClick={() => setItemSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 border-none bg-transparent cursor-pointer p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Category Dropdown */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <select
+                value={itemCategoryFilter}
+                onChange={(e) => setItemCategoryFilter(e.target.value)}
+                className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer"
+              >
+                {itemCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c === "All" ? "All Categories" : c}
+                  </option>
+                ))}
+              </select>
+
+              {/* View Mode Toggle: Sold Dishes vs All POS Items */}
+              <div className="flex rounded-xl bg-slate-200/70 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setItemFilterMode("sold_only")}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border-none transition-all cursor-pointer ${
+                    itemFilterMode === "sold_only"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 bg-transparent"
+                  }`}
+                  title="Show only dishes that have sales"
+                >
+                  Sold Dishes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setItemFilterMode("all")}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border-none transition-all cursor-pointer ${
+                    itemFilterMode === "all"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 bg-transparent"
+                  }`}
+                  title="Monitor all dishes from POS (including 0 sold)"
+                >
+                  All POS Items
+                </button>
+              </div>
+
+              {/* Sorting Toggle */}
+              <select
+                value={itemSortBy}
+                onChange={(e) => setItemSortBy(e.target.value as any)}
+                className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer"
+              >
+                <option value="qty_desc">Qty Sold (High → Low)</option>
+                <option value="qty_asc">Qty Sold (Low → High)</option>
+                <option value="revenue_desc">Revenue (High → Low)</option>
+                <option value="name_asc">Dish Name (A → Z)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table */}
           <div className="overflow-x-auto">
-            {sortedItemSales.length === 0 ? (
+            {processedItemSales.length === 0 ? (
               <div className="py-12 text-center text-slate-400 text-xs">
-                No item sales recorded for the selected date period.
+                {itemSearch || itemCategoryFilter !== "All"
+                  ? "No matching menu dishes found for the applied filter."
+                  : "No dish sales recorded for the selected date period."}
               </div>
             ) : (
               <table className="w-full text-left border-collapse font-sans">
                 <thead>
                   <tr className="border-b border-slate-100 text-slate-400 uppercase font-bold text-xs tracking-wider pb-3">
                     <th className="pb-3 pl-2"># Rank</th>
-                    <th className="pb-3">Dish / Item Name</th>
+                    <th className="pb-3">Dish / Menu Item</th>
                     <th className="pb-3 text-center">Quantity Sold</th>
-                    <th className="pb-3">Avg Unit Price</th>
+                    <th className="pb-3 text-right">Avg Unit Price</th>
                     <th className="pb-3 text-right pr-2">Total Revenue (UGX)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {sortedItemSales.slice(0, 10).map((it, idx) => (
-                    <tr key={it.name} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3 pl-2 font-mono font-bold text-slate-400 text-sm">{idx + 1}</td>
-                      <td className="py-3 font-bold text-slate-900 text-sm">{it.name}</td>
-                      <td className="py-3 text-center font-bold text-slate-800 font-mono text-sm">
-                        {it.quantity} sold
-                      </td>
-                      <td className="py-3 font-semibold text-slate-600 font-mono text-sm">
-                        UGX {Math.round(it.unitPrice).toLocaleString()}
-                      </td>
-                      <td className="py-3 text-right pr-2 font-bold text-emerald-600 font-mono text-sm">
-                        {formatCurrency(it.revenue)}
-                      </td>
-                    </tr>
-                  ))}
+                  {(showAllItems ? processedItemSales : processedItemSales.slice(0, 15)).map((it, idx) => {
+                    const isTopThree = idx < 3 && itemSortBy === "qty_desc" && it.quantity > 0;
+                    return (
+                      <tr key={it.id || it.name} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3 pl-2 font-mono font-bold text-slate-400 text-sm">
+                          {isTopThree ? (
+                            <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-extrabold font-mono">
+                              {idx + 1}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">{idx + 1}</span>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-3">
+                            {it.image ? (
+                              <img
+                                src={it.image}
+                                alt={it.name}
+                                className="w-9 h-9 rounded-xl object-cover border border-slate-200 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-base shrink-0">
+                                🍛
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-bold text-slate-900 text-sm">{it.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="px-2 py-0.2 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
+                                  {it.category || "General"}
+                                </span>
+                                {it.quantity > 0 && totalFilteredQty > 0 && (
+                                  <span className="text-[10px] text-slate-400 font-medium">
+                                    {((it.quantity / totalFilteredQty) * 100).toFixed(1)}% of volume
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 text-center">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold font-mono ${
+                              it.quantity > 0
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-xs"
+                                : "bg-slate-100 text-slate-400 border border-slate-200"
+                            }`}
+                          >
+                            <span className="font-mono text-sm">{it.quantity}</span> sold
+                          </span>
+                        </td>
+                        <td className="py-3 text-right font-semibold text-slate-600 font-mono text-sm">
+                          UGX {Math.round(it.unitPrice).toLocaleString()}
+                        </td>
+                        <td className="py-3 text-right pr-2 font-bold text-emerald-600 font-mono text-sm">
+                          {formatCurrency(it.revenue)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
           </div>
+
+          {/* Expand / Show More toggle */}
+          {processedItemSales.length > 15 && (
+            <div className="pt-2 text-center border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowAllItems(!showAllItems)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer border-none"
+              >
+                {showAllItems
+                  ? "Show Top 15 Only"
+                  : `Show All ${processedItemSales.length} Dishes from POS (${processedItemSales.length - 15} more)`}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

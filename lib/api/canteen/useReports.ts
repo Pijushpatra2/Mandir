@@ -36,7 +36,12 @@ export interface CanteenSalesReport {
     CARD: { count: number; revenue: number };
   };
   itemSales: Array<{
+    id?: string;
+    menuItemId?: string;
     name: string;
+    category?: string;
+    price?: number;
+    image?: string | null;
     quantity: number;
     revenue: number;
     unitPrice: number;
@@ -81,9 +86,10 @@ export function useCanteenSalesReport(startDate?: string, endDate?: string) {
       );
       return data.data;
     },
-    staleTime: 2 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15 * 1000,
     retry: 1,
   });
 }

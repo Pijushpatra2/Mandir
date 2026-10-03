@@ -105,6 +105,8 @@ export function usePlaceOrder() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.orders() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tables() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.kitchenQueue() });
+      queryClient.invalidateQueries({ queryKey: ['canteen', 'sales-report'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.reportsToday() });
     },
     retry: false, // Never auto-retry order placement (prevent duplicate orders)
   });
@@ -143,6 +145,7 @@ export function useRecordPayment() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.orders() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tables() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.reportsToday() });
+      queryClient.invalidateQueries({ queryKey: ['canteen', 'sales-report'] });
     },
     retry: false,
   });

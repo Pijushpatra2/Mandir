@@ -114,6 +114,8 @@ export function useOfflineOrder(): UseOfflineOrderResult {
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.orders() });
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tables() });
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.kitchenQueue() });
+          queryClient.invalidateQueries({ queryKey: ['canteen', 'sales-report'] });
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.reportsToday() });
 
           return { id: order.id, local: false };
         } catch (err: any) {
