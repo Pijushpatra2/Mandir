@@ -6,8 +6,11 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { cn } from "@/lib/utils";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function GallerySection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   const items = [
     { title: "Sri Radhe Krishna Darshan", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80", span: "md:col-span-2 md:row-span-2" },
     { title: "Janmashtami Abhishek", img: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=600&q=80", span: "" },
@@ -21,9 +24,9 @@ export function GallerySection() {
     <section className="py-24 bg-surface-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          badge="Sacred Moments"
-          title="Temple Media Gallery"
-          subtitle="Glimpses of daily rituals, beautiful festivals, and community welfare events."
+          badge={cms.gallery_highlight?.badge || "Sacred Moments"}
+          title={cms.gallery_highlight?.title || "Temple Media Gallery"}
+          subtitle={cms.gallery_highlight?.subtitle || "Glimpses of daily rituals, beautiful festivals, and community welfare events."}
         />
 
         {/* Masonry image layouts */}

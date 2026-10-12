@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Users, Sparkles, Wind, ChefHat, Calculator, HelpCircle } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 const GALLERY_PHOTOS = {
   hall: {
@@ -19,6 +21,7 @@ const GALLERY_PHOTOS = {
 };
 
 export function HallShowcaseSection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   const [activeTab, setActiveTab] = useState<"hall" | "dining">("hall");
   
   // Calculator States
@@ -58,13 +61,15 @@ export function HallShowcaseSection() {
           <div className="flex items-center justify-center space-x-2">
             <span className="text-[#B47F35] text-xs">⚜️</span>
             <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] font-poppins">
-              INFRASTRUCTURES & AMENITIES
+              {cms.hall_showcase?.badge || "INFRASTRUCTURES & AMENITIES"}
             </span>
             <span className="text-[#B47F35] text-xs">⚜️</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#2B132C]">
-            Shree Swaminarayan <span className="text-[#B47F35] font-normal italic">Hall</span>
+            {cms.hall_showcase?.title || (
+              <>Shree Swaminarayan <span className="text-[#B47F35] font-normal italic">Hall</span></>
+            )}
           </h2>
 
           <div className="flex items-center justify-center space-x-1.5 py-1">
@@ -74,7 +79,7 @@ export function HallShowcaseSection() {
           </div>
 
           <p className="text-base sm:text-lg lg:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-xl mx-auto">
-            Sponsor weddings, thread ceremonies, and devotional seminars in our air-conditioned hall capable of hosting 1200+ guests.
+            {cms.hall_showcase?.subtitle || "Sponsor weddings, thread ceremonies, and devotional seminars in our air-conditioned hall capable of hosting 1200+ guests."}
           </p>
         </div>
 

@@ -10,8 +10,11 @@ import {
   Shield, Star, ArrowRight
 } from "lucide-react";
 import { templeConfig } from "@/data/temple";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_ABOUT_CONTENT } from "@/data/cmsDefaults";
 
 export default function AboutPage() {
+  const { content: cms } = useCmsPage("about", DEFAULT_ABOUT_CONTENT);
   // Framer Motion staggered animations
   const containerVariants: any = {
     hidden: { opacity: 0 },
@@ -63,14 +66,27 @@ export default function AboutPage() {
               {/* Badge */}
               <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#B47F35]/10 border border-[#B47F35]/25 text-[#B47F35] text-xs sm:text-sm font-semibold uppercase tracking-widest font-poppins shadow-xs backdrop-blur-sm">
                 <Sparkles className="w-3.5 h-3.5 text-[#B47F35]" />
-                <span>ABOUT OUR MANDIR</span>
+                <span>{cms.hero?.badge || "ABOUT OUR MANDIR"}</span>
                 <span className="text-[10px]">⚜️</span>
               </div>
 
               {/* Title */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-[#2B132C] leading-[1.12] tracking-tight">
-                Rooted in Tradition,<br />
-                Driven by <span className="font-heading font-normal italic text-transparent bg-clip-text bg-gradient-to-r from-[#B47F35] via-[#C59D5F] to-[#8B5E34] pr-2">Devotion</span>
+                {cms.hero?.title?.includes(",") ? (
+                  <>
+                    {cms.hero.title.split(",")[0]},<br />
+                    <span className="font-heading font-normal italic text-transparent bg-clip-text bg-gradient-to-r from-[#B47F35] via-[#C59D5F] to-[#8B5E34] pr-2">
+                      {cms.hero.title.split(",")[1]}
+                    </span>
+                  </>
+                ) : (
+                  cms.hero?.title || (
+                    <>
+                      Rooted in Tradition,<br />
+                      Driven by <span className="font-heading font-normal italic text-transparent bg-clip-text bg-gradient-to-r from-[#B47F35] via-[#C59D5F] to-[#8B5E34] pr-2">Devotion</span>
+                    </>
+                  )
+                )}
               </h1>
 
               {/* Lotus Divider */}
@@ -81,9 +97,16 @@ export default function AboutPage() {
               </div>
 
               {/* Description */}
-              <p className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-2xl font-poppins">
-                {templeConfig.name} is a modern temple management platform dedicated to preserving our spiritual heritage and making temple services accessible to devotees everywhere.
-              </p>
+              {cms.hero?.description?.startsWith("<") ? (
+                <div
+                  className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-2xl font-poppins prose"
+                  dangerouslySetInnerHTML={{ __html: cms.hero.description }}
+                />
+              ) : (
+                <p className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-2xl font-poppins">
+                  {cms.hero?.description || `${templeConfig.name} is a modern temple management platform dedicated to preserving our spiritual heritage and making temple services accessible to devotees everywhere.`}
+                </p>
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-4 items-center pt-2">
@@ -166,7 +189,7 @@ export default function AboutPage() {
                 {/* Grand Arched Temple Image */}
                 <div className="relative aspect-[4/4.9] rounded-[32px] overflow-hidden border-2 border-[#B47F35]/35 shadow-[0_25px_60px_-15px_rgba(139,94,52,0.28)] bg-white group">
                   <img
-                    src="/images/hero-temple.jpg"
+                    src={cms.hero?.showcaseImage || "/images/hero-temple.jpg"}
                     alt="Shree Swaminarayan Temple Kampala Heritage"
                     className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 select-none"
                   />
@@ -198,7 +221,7 @@ export default function AboutPage() {
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#B47F35]">Sacred Mandir</span>
                     </div>
-                    <p className="text-xs font-bold text-[#2B132C]">Kampala Satsang Portal</p>
+                    <p className="text-xs font-bold text-[#2B132C]">{cms.hero?.badge1Text || "Kampala Satsang Portal"}</p>
                   </div>
                 </motion.div>
 
@@ -235,7 +258,7 @@ export default function AboutPage() {
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3 font-poppins">
             <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] block">
-              OUR PURPOSE
+              {cms.purpose?.sectionTitle || "OUR PURPOSE"}
             </span>
             <div className="flex items-center justify-center space-x-1.5 py-1">
               <div className="h-[1.5px] bg-[#B47F35]/35 w-8" />
@@ -243,7 +266,7 @@ export default function AboutPage() {
               <div className="h-[1.5px] bg-[#B47F35]/35 w-8" />
             </div>
             <p className="text-base sm:text-lg lg:text-xl text-secondary-bronze font-normal max-w-xl mx-auto font-poppins leading-relaxed">
-              Empowering temples and devotees through technology while staying true to our spiritual roots.
+              {cms.purpose?.subtitle || "Empowering temples and devotees through technology while staying true to our spiritual roots."}
             </p>
           </div>
 
@@ -261,9 +284,9 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] border border-[#B47F35]/15 shadow-sm">
                 <Target className="w-6 h-6" />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">Our Mission</h3>
+              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">{cms.purpose?.missionTitle || "Our Mission"}</h3>
               <p className="text-sm sm:text-base text-secondary-bronze leading-relaxed font-normal font-poppins">
-                To simplify temple services and bring devotees closer to divine experiences through technology and devotion.
+                {cms.purpose?.missionDesc || "To simplify temple services and bring devotees closer to divine experiences through technology and devotion."}
               </p>
             </motion.div>
 
@@ -272,9 +295,9 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] border border-[#B47F35]/15 shadow-sm">
                 <Eye className="w-6 h-6" />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">Our Vision</h3>
+              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">{cms.purpose?.visionTitle || "Our Vision"}</h3>
               <p className="text-sm sm:text-base text-secondary-bronze leading-relaxed font-normal font-poppins">
-                To become the most trusted digital platform for temples and devotees worldwide, fostering a stronger spiritual community.
+                {cms.purpose?.visionDesc || "To become the most trusted digital platform for temples and devotees worldwide, fostering a stronger spiritual community."}
               </p>
             </motion.div>
 
@@ -283,24 +306,14 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] border border-[#B47F35]/15 shadow-sm">
                 <HeartHandshake className="w-6 h-6" />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">Our Values</h3>
+              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">{cms.purpose?.valuesTitle || "Our Values"}</h3>
               <ul className="text-sm sm:text-base text-secondary-bronze space-y-2 font-normal font-poppins">
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#B47F35]" />
-                  <span>Faith & Devotion</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#B47F35]" />
-                  <span>Transparency</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#B47F35]" />
-                  <span>Inclusivity</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#B47F35]" />
-                  <span>Service Excellence</span>
-                </li>
+                {(cms.purpose?.valuesList || DEFAULT_ABOUT_CONTENT.purpose.valuesList).map((v, i) => (
+                  <li key={i} className="flex items-center space-x-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B47F35]" />
+                    <span>{v}</span>
+                  </li>
+                ))}
               </ul>
             </motion.div>
 
@@ -309,9 +322,9 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-full bg-[#B47F35]/10 flex items-center justify-center text-[#B47F35] border border-[#B47F35]/15 shadow-sm">
                 <Award className="w-6 h-6" />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">Our Commitment</h3>
+              <h3 className="text-base sm:text-lg font-bold text-[#2B132C] uppercase tracking-wide">{cms.purpose?.commitmentTitle || "Our Commitment"}</h3>
               <p className="text-sm sm:text-base text-secondary-bronze leading-relaxed font-normal font-poppins">
-                We are committed to preserving our traditions while embracing innovation for the betterment of temples and devotees.
+                {cms.purpose?.commitmentDesc || "We are committed to preserving our traditions while embracing innovation for the betterment of temples and devotees."}
               </p>
             </motion.div>
 
@@ -324,31 +337,20 @@ export default function AboutPage() {
       <section className="bg-[#FAF7F2] py-14 border-y border-[#B47F35]/15 font-poppins">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center items-center">
-            
-            <div className="space-y-1.5">
-              <p className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#B47F35]">50,000+</p>
-              <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Happy Devotees</h4>
-              <p className="text-xs sm:text-sm text-secondary-bronze/75 font-poppins">Trust us across the globe</p>
-            </div>
-
-            <div className="space-y-1.5 relative before:content-[''] before:absolute before:left-[-16px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[#B47F35]/15 before:hidden md:before:block">
-              <p className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#B47F35]">500+</p>
-              <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Temples Connected</h4>
-              <p className="text-xs sm:text-sm text-secondary-bronze/75 font-poppins">Empowering spiritual spaces</p>
-            </div>
-
-            <div className="space-y-1.5 relative before:content-[''] before:absolute before:left-[-16px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[#B47F35]/15 before:hidden md:before:block">
-              <p className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#B47F35]">10,000+</p>
-              <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Poojas Booked Daily</h4>
-              <p className="text-xs sm:text-sm text-secondary-bronze/75 font-poppins">Seva made simple</p>
-            </div>
-
-            <div className="space-y-1.5 relative before:content-[''] before:absolute before:left-[-16px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[#B47F35]/15 before:hidden md:before:block">
-              <p className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#B47F35]">2Cr+</p>
-              <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">Donations Processed</h4>
-              <p className="text-xs sm:text-sm text-secondary-bronze/75 font-poppins">With complete transparency</p>
-            </div>
-
+            {(cms.metrics?.stats || DEFAULT_ABOUT_CONTENT.metrics.stats).map((stat, idx) => (
+              <div
+                key={idx}
+                className={`space-y-1.5 ${
+                  idx > 0
+                    ? "relative before:content-[''] before:absolute before:left-[-16px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[#B47F35]/15 before:hidden md:before:block"
+                    : ""
+                }`}
+              >
+                <p className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#B47F35]">{stat.number}</p>
+                <h4 className="text-xs sm:text-sm font-bold text-[#2B132C] uppercase tracking-wide">{stat.title}</h4>
+                <p className="text-xs sm:text-sm text-secondary-bronze/75 font-poppins">{stat.subtitle}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -366,12 +368,16 @@ export default function AboutPage() {
             {/* Left Description Column */}
             <div className="lg:col-span-6 space-y-6 text-left">
               <div className="inline-flex items-center space-x-2 text-[#B47F35] text-xs sm:text-sm font-bold uppercase tracking-widest font-poppins">
-                <span>OUR STORY</span>
+                <span>{cms.story?.badge || "OUR STORY"}</span>
                 <span>⚜️</span>
               </div>
 
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#2B132C] leading-snug">
-                A Journey of Faith<br />and Innovation
+                {cms.story?.title || (
+                  <>
+                    A Journey of Faith<br />and Innovation
+                  </>
+                )}
               </h2>
 
               <div className="flex items-center space-x-2 py-1">
@@ -381,10 +387,10 @@ export default function AboutPage() {
               </div>
 
               <p className="text-base sm:text-lg text-secondary-bronze leading-relaxed font-normal font-poppins">
-                {templeConfig.name} was born out of a simple belief — devotion should be accessible to all. We combine technology with tradition to help temples manage operations efficiently and devotees connect effortlessly.
+                {cms.story?.p1 || `${templeConfig.name} was born out of a simple belief — devotion should be accessible to all. We combine technology with tradition to help temples manage operations efficiently and devotees connect effortlessly.`}
               </p>
               <p className="text-base sm:text-lg text-secondary-bronze leading-relaxed font-normal font-poppins">
-                From online pooja bookings to live darshan and digital donations, we are reshaping the way spirituality meets modern life.
+                {cms.story?.p2 || "From online pooja bookings to live darshan and digital donations, we are reshaping the way spirituality meets modern life."}
               </p>
 
               <div className="pt-4">
@@ -403,54 +409,18 @@ export default function AboutPage() {
               {/* Vertical line connector */}
               <div className="absolute left-6 lg:left-16 top-4 bottom-4 w-[2px] bg-[#B47F35]/20 z-0" />
               
-              {/* Timeline Item 1 */}
-              <div className="flex items-start space-x-4 relative z-10 text-left">
-                <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border-2 border-[#B47F35] flex items-center justify-center text-[#B47F35] shrink-0 shadow-md lg:ml-10">
-                  <Lightbulb className="w-6 h-6" />
+              {(cms.story?.milestones || DEFAULT_ABOUT_CONTENT.story.milestones).map((item, idx) => (
+                <div key={idx} className="flex items-start space-x-4 relative z-10 text-left">
+                  <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border-2 border-[#B47F35] flex items-center justify-center text-[#B47F35] shrink-0 shadow-md lg:ml-10">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-xs sm:text-sm font-bold bg-[#B47F35] text-white px-2.5 py-1 rounded-md uppercase tracking-wider font-poppins">{item.year}</span>
+                    <h4 className="text-base sm:text-lg font-bold text-[#2B132C] mt-2">{item.title}</h4>
+                    <p className="text-sm sm:text-base text-secondary-bronze/90 font-poppins font-normal">{item.desc}</p>
+                  </div>
                 </div>
-                <div className="space-y-1.5 pt-1">
-                  <span className="text-xs sm:text-sm font-bold bg-[#B47F35] text-white px-2.5 py-1 rounded-md uppercase tracking-wider font-poppins">2018</span>
-                  <h4 className="text-base sm:text-lg font-bold text-[#2B132C] mt-2">The Beginning</h4>
-                  <p className="text-sm sm:text-base text-secondary-bronze/90 font-poppins font-normal">Started with a vision to digitize temple services and make devotion easier.</p>
-                </div>
-              </div>
-
-              {/* Timeline Item 2 */}
-              <div className="flex items-start space-x-4 relative z-10 text-left">
-                <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border-2 border-[#B47F35] flex items-center justify-center text-[#B47F35] shrink-0 shadow-md lg:ml-10">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div className="space-y-1.5 pt-1">
-                  <span className="text-xs sm:text-sm font-bold bg-[#B47F35] text-white px-2.5 py-1 rounded-md uppercase tracking-wider font-poppins">2020</span>
-                  <h4 className="text-base sm:text-lg font-bold text-[#2B132C] mt-2">Growing Together</h4>
-                  <p className="text-sm sm:text-base text-secondary-bronze/90 font-poppins font-normal">Onboarded 100+ temples and built a community of thousands of devotees.</p>
-                </div>
-              </div>
-
-              {/* Timeline Item 3 */}
-              <div className="flex items-start space-x-4 relative z-10 text-left">
-                <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border-2 border-[#B47F35] flex items-center justify-center text-[#B47F35] shrink-0 shadow-md lg:ml-10">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-                <div className="space-y-1.5 pt-1">
-                  <span className="text-xs sm:text-sm font-bold bg-[#B47F35] text-white px-2.5 py-1 rounded-md uppercase tracking-wider font-poppins">2022</span>
-                  <h4 className="text-base sm:text-lg font-bold text-[#2B132C] mt-2">Going Digital</h4>
-                  <p className="text-sm sm:text-base text-secondary-bronze/90 font-poppins font-normal">Launched mobile app, live darshan, and secure donation platform.</p>
-                </div>
-              </div>
-
-              {/* Timeline Item 4 */}
-              <div className="flex items-start space-x-4 relative z-10 text-left">
-                <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border-2 border-[#B47F35] flex items-center justify-center text-[#B47F35] shrink-0 shadow-md lg:ml-10">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <div className="space-y-1.5 pt-1">
-                  <span className="text-xs sm:text-sm font-bold bg-[#B47F35] text-white px-2.5 py-1 rounded-md uppercase tracking-wider font-poppins">2024 & Beyond</span>
-                  <h4 className="text-base sm:text-lg font-bold text-[#2B132C] mt-2">Building the Future</h4>
-                  <p className="text-sm sm:text-base text-secondary-bronze/90 font-poppins font-normal">Expanding services and creating a global spiritual ecosystem.</p>
-                </div>
-              </div>
-
+              ))}
             </div>
 
           </div>
@@ -464,7 +434,7 @@ export default function AboutPage() {
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3 font-poppins">
             <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] block">
-              WHAT WE OFFER
+              {cms.offers?.badge || "WHAT WE OFFER"}
             </span>
             <div className="flex items-center justify-center space-x-1.5 py-1">
               <div className="h-[1.5px] bg-[#B47F35]/35 w-8" />
@@ -472,7 +442,7 @@ export default function AboutPage() {
               <div className="h-[1.5px] bg-[#B47F35]/35 w-8" />
             </div>
             <p className="text-base sm:text-lg lg:text-xl text-secondary-bronze font-normal max-w-xl mx-auto font-poppins leading-relaxed">
-              Comprehensive digital solutions for temples and devotees
+              {cms.offers?.subtitle || "Comprehensive digital solutions for temples and devotees"}
             </p>
           </div>
 
@@ -535,7 +505,7 @@ export default function AboutPage() {
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3 font-poppins">
             <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] block">
-              WHAT DEVOTEES SAY
+              {cms.testimonials?.badge || "WHAT DEVOTEES SAY"}
             </span>
             <div className="flex items-center justify-center space-x-1.5 py-1">
               <div className="h-[1.5px] bg-[#B47F35]/35 w-8" />

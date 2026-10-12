@@ -1,26 +1,45 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useApp } from "@/lib/context";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_GALLERY_CONTENT, INITIAL_GALLERY_ITEMS } from "@/data/cmsDefaults";
 
 export default function GalleryPage() {
-  const { news } = useApp(); // Can draw from common state, but let's query mockGalleryItems directly
+  const { content: cms } = useCmsPage("gallery", DEFAULT_GALLERY_CONTENT);
   const [filter, setFilter] = useState<string>("All");
+  const [galleryItems, setGalleryItems] = useState<any[]>(INITIAL_GALLERY_ITEMS);
 
-  const categories = ["All", "Deities", "Festivals", "Temple Complex", "Social Events"];
+  // Background fetch of published gallery items from CMS API
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchGallery() {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const res = await axios.get(`${apiUrl}/cms/gallery`, { timeout: 4000 });
+        if (res.data?.success && Array.isArray(res.data?.data) && res.data.data.length > 0 && isMounted) {
+          // Normalize imageUrl / image_url and date / captured_date
+          const formatted = res.data.data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            imageUrl: item.image_url || item.imageUrl,
+            date: item.captured_date ? item.captured_date.split("T")[0] : item.date || ""
+          }));
+          setGalleryItems(formatted);
+        }
+      } catch (_) {
+        // Retain static initial items if offline
+      }
+    }
+    fetchGallery();
+    return () => { isMounted = false; };
+  }, []);
 
-  const galleryItems = [
-    { id: "gal-1", title: "Sri Radhe Krishna Shringar Darshan", category: "Deities", imageUrl: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80", date: "2026-06-21" },
-    { id: "gal-2", title: "Janmashtami Midnight Abhishek", category: "Festivals", imageUrl: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=800&q=80", date: "2025-08-25" },
-    { id: "gal-3", title: "Main Temple Dome & Architecture", category: "Temple Complex", imageUrl: "https://images.unsplash.com/photo-1583373834249-137a86892a50?auto=format&fit=crop&w=800&q=80", date: "2026-05-10" },
-    { id: "gal-4", title: "Vasant Utsav Holi Celebrations", category: "Festivals", imageUrl: "https://images.unsplash.com/photo-1545128485-c400e7702796?auto=format&fit=crop&w=800&q=80", date: "2026-03-25" },
-    { id: "gal-5", title: "Spiritual Discourse Hall in Evening", category: "Temple Complex", imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80", date: "2026-04-18" },
-    { id: "gal-6", title: "Devotees Serving in Nitya Annadan Kitchen", category: "Social Events", imageUrl: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80", date: "2026-06-01" },
-    { id: "gal-7", title: "Maha Shivratri Deepotsav", category: "Festivals", imageUrl: "https://images.unsplash.com/photo-1620121692029-d088224ddc74?auto=format&fit=crop&w=800&q=80", date: "2026-03-08" },
-    { id: "gal-8", title: "Children's Spiritual Camp Prize Distribution", category: "Social Events", imageUrl: "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=800&q=80", date: "2026-06-15" }
-  ];
+  const categories = cms.categories?.categories || ["All", "Deities", "Festivals", "Temple Complex", "Social Events"];
 
   const filteredItems = galleryItems.filter((item) => {
     if (filter === "All") return true;
@@ -32,9 +51,9 @@ export default function GalleryPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <SectionHeader
-          badge="Snapshots"
-          title="Temple Media Gallery"
-          subtitle="A collection of divine shringars, vibrant festivals, community services, and architectural beauty."
+          badge={cms.header?.badge || "Snapshots"}
+          title={cms.header?.title || "Temple Media Gallery"}
+          subtitle={cms.header?.subtitle || "A collection of divine shringars, vibrant festivals, community services, and architectural beauty."}
         />
 
         {/* Filters */}
@@ -74,9 +93,11 @@ export default function GalleryPage() {
                     {item.title}
                   </h4>
                 </div>
-                <p className="text-xs sm:text-sm text-secondary-bronze/70 uppercase font-medium mt-4 font-poppins">
-                  Captured: {item.date}
-                </p>
+                {item.date && (
+                  <p className="text-xs sm:text-sm text-secondary-bronze/70 uppercase font-medium mt-4 font-poppins">
+                    Captured: {item.date}
+                  </p>
+                )}
               </div>
             </GlassCard>
           ))}

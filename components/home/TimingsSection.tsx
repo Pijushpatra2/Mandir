@@ -4,11 +4,14 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function TimingsSection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   const timings = [
-    { session: "Morning Darshan", time: "5:30 AM - 11:00 AM", desc: "Perfect for morning rituals and meditative prayers." },
-    { session: "Evening Darshan", time: "4:00 PM - 8:30 PM", desc: "Join the congregational chanting and twilight discourse." }
+    { session: "Morning Darshan", time: cms.timings?.morningHours || "5:30 AM - 11:00 AM", desc: "Perfect for morning rituals and meditative prayers." },
+    { session: "Evening Darshan", time: cms.timings?.eveningHours || "4:00 PM - 8:30 PM", desc: "Join the congregational chanting and twilight discourse." }
   ];
 
   return (

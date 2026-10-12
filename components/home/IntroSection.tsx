@@ -3,8 +3,11 @@
 import React from "react";
 import { templeConfig } from "@/data/temple";
 import { Calendar, Heart, Shield, Users } from "lucide-react";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function IntroSection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   return (
     <section className="py-24 bg-surface-white font-jakarta relative overflow-hidden">
       
@@ -25,7 +28,7 @@ export function IntroSection() {
             <div className="space-y-4">
               {/* Gold uppercase tag */}
               <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] block">
-                ABOUT MANDIR
+                {cms.intro?.badge || "ABOUT MANDIR"}
               </span>
 
               {/* Tag Divider Line */}
@@ -37,8 +40,19 @@ export function IntroSection() {
 
               {/* Main Title Header */}
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold tracking-wide text-[#2B132C] leading-tight">
-                Tradition Rooted,<br />
-                <span className="text-[#B47F35]">Technology Driven</span>
+                {cms.intro?.title?.includes(",") ? (
+                  <>
+                    {cms.intro.title.split(",")[0]},<br />
+                    <span className="text-[#B47F35]">{cms.intro.title.split(",")[1]}</span>
+                  </>
+                ) : (
+                  cms.intro?.title || (
+                    <>
+                      Tradition Rooted,<br />
+                      <span className="text-[#B47F35]">Technology Driven</span>
+                    </>
+                  )
+                )}
               </h2>
 
               {/* Header Divider Line */}
@@ -50,9 +64,16 @@ export function IntroSection() {
             </div>
 
             {/* Description Text */}
-            <p className="text-base sm:text-lg md:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-2xl">
-              {templeConfig.name} is a complete digital platform dedicated to temples and devotees. We blend ancient traditions with modern technology to make your spiritual journey seamless, transparent and more meaningful.
-            </p>
+            {cms.intro?.description?.startsWith("<") ? (
+              <div
+                className="text-base sm:text-lg md:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-2xl prose"
+                dangerouslySetInnerHTML={{ __html: cms.intro.description }}
+              />
+            ) : (
+              <p className="text-base sm:text-lg md:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-2xl">
+                {cms.intro?.description || `${templeConfig.name} is a complete digital platform dedicated to temples and devotees. We blend ancient traditions with modern technology to make your spiritual journey seamless, transparent and more meaningful.`}
+              </p>
+            )}
 
             {/* Grid of 4 Core Areas with Separator Lines */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8 mt-10 pt-4 relative">

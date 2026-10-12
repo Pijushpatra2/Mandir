@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Radio } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 const CHANTS = [
   { name: "Prashant (Kampala)", text: "Jai Shree Swaminarayan! 🙏" },
@@ -16,6 +18,7 @@ const CHANTS = [
 ];
 
 export function LiveDarshanSection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   // Devotee Chants marquee ticker
   const [chatFeed, setChatFeed] = useState(CHANTS);
 
@@ -75,8 +78,8 @@ export function LiveDarshanSection() {
               {/* Embed video broadcast player (Standard Full Rectangular View) */}
               <iframe
                 className="w-full h-full object-cover select-none"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1"
-                title="Swaminarayan Live Stream Broadcast"
+                src={`${cms.live_darshan?.liveStreamUrl || "https://www.youtube.com/embed/dQw4w9WgXcQ"}?autoplay=1&mute=1`}
+                title={cms.live_darshan?.streamTitle || "Swaminarayan Live Stream Broadcast"}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />

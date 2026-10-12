@@ -32,6 +32,7 @@ import {
   Star,
   Coffee,
   ClipboardList,
+  Globe,
   LogOut
 } from "lucide-react";
 
@@ -103,6 +104,7 @@ export default function DashboardLayout({
     { label: "Accounting", href: "/dashboard/accounting", icon: IndianRupee, roles: ["SUPER_ADMIN", "ACCOUNTANT"] },
     { label: "Reports", href: "/dashboard/reports", icon: FileSpreadsheet, roles: ["SUPER_ADMIN", "TRUSTEE", "ACCOUNTANT"] },
     { label: "Staff Roster", href: "/dashboard/admins", icon: Shield, roles: ["SUPER_ADMIN"] },
+    { label: "Website CMS", href: "/dashboard/cms", icon: Globe, roles: ["SUPER_ADMIN"] },
     { label: "Settings", href: "/dashboard/settings", icon: Settings, roles: ["SUPER_ADMIN"] },
   ];
 

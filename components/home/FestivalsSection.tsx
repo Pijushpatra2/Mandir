@@ -6,9 +6,12 @@ import { ArrowRight, Calendar, Clock, Sparkles, CheckCircle2, UserCheck } from "
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useApp } from "@/lib/context";
 import { formatCurrency } from "@/lib/utils";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function FestivalsSection() {
   const { events } = useApp();
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
 
   // Filter upcoming festivals
   const upcomingFestivals = events.filter(
@@ -35,13 +38,15 @@ export function FestivalsSection() {
           <div className="flex items-center justify-center space-x-2">
             <span className="text-[#B47F35] text-xs">⚜️</span>
             <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#B47F35] font-poppins">
-              DIVINE CELEBRATIONS
+              {cms.festivals?.badge || "DIVINE CELEBRATIONS"}
             </span>
             <span className="text-[#B47F35] text-xs">⚜️</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#2B132C]">
-            Upcoming Celebrations <span className="text-[#B47F35] font-normal italic">& Festivals</span>
+            {cms.festivals?.title || (
+              <>Upcoming Celebrations <span className="text-[#B47F35] font-normal italic">& Festivals</span></>
+            )}
           </h2>
 
           <div className="flex items-center justify-center space-x-1.5 py-1">
@@ -51,7 +56,7 @@ export function FestivalsSection() {
           </div>
 
           <p className="text-base sm:text-lg lg:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-xl mx-auto">
-            Participate in spectacular seasonal gatherings, holy rites, cultural pageantry, and community feasts with SKSS Kampala.
+            {cms.festivals?.subtitle || "Participate in spectacular seasonal gatherings, holy rites, cultural pageantry, and community feasts with SKSS Kampala."}
           </p>
         </div>
 

@@ -5,8 +5,11 @@ import Link from "next/link";
 import { ArrowRight, Flame, Building, Heart, UserCheck, Tv, CalendarDays, ShoppingBag, Smartphone, ShieldCheck, Headphones, Zap } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function ServicesSection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   const services = [
     {
       title: "Pooja Booking",
@@ -100,13 +103,13 @@ export function ServicesSection() {
           <div className="flex items-center justify-center space-x-2">
             <span className="text-[#B47F35] text-[8px]">⚜️</span>
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#B47F35]">
-              OUR SERVICES
+              {cms.services?.badge || "OUR SERVICES"}
             </span>
             <span className="text-[#B47F35] text-[8px]">⚜️</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#2B132C]">
-            SaaS-Grade <span className="text-[#B47F35] font-normal italic">Quick Services</span>
+            {cms.services?.title || "SaaS-Grade Quick Services"}
           </h2>
 
           <div className="flex items-center justify-center space-x-1.5 py-1">
@@ -116,7 +119,7 @@ export function ServicesSection() {
           </div>
 
           <p className="text-base sm:text-lg md:text-xl text-secondary-bronze leading-relaxed font-normal font-poppins max-w-2xl mx-auto">
-            Manage your spiritual, social, and devotional requests with a modern, premium interface.
+            {cms.services?.subtitle || "Manage your spiritual, social, and devotional requests with a modern, premium interface."}
           </p>
         </div>
 

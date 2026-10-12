@@ -12,6 +12,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_DONATIONS_CONTENT } from "@/data/cmsDefaults";
 
 const FAQ_LIST = [
   {
@@ -38,6 +40,7 @@ const FAQ_LIST = [
 
 export default function DonationsPage() {
   const { donations, setDonations } = useApp();
+  const { content: cms } = useCmsPage("donations", DEFAULT_DONATIONS_CONTENT);
   
   // Form States
   const [donationType, setDonationType] = useState<"maintenance" | "annadanam" | "festival" | "gau" | "general">("maintenance");
@@ -161,7 +164,7 @@ export default function DonationsPage() {
         <div className="absolute inset-0 -z-20 w-full h-full bg-[#FAF7F2]">
           <div className="absolute right-0 top-0 w-full lg:w-[60%] h-full">
             <img 
-              src="/temple_hero_bg.png" 
+              src={cms.hero?.bgImageUrl || "/temple_hero_bg.png"} 
               className="w-full h-full object-cover object-[70%_center] lg:object-[68%_center]" 
               alt="Swaminarayan Temple Background" 
             />
@@ -179,14 +182,27 @@ export default function DonationsPage() {
               
               {/* Badge */}
               <div className="inline-flex items-center space-x-2 text-[#B47F35] text-xs sm:text-sm font-bold uppercase tracking-widest font-poppins">
-                <span>DONATE WITH FAITH</span>
+                <span>{cms.hero?.badge || "DONATE WITH FAITH"}</span>
                 <span>⚜️</span>
               </div>
 
               {/* Title */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-[#2B132C] leading-tight">
-                Your Donation,<br />
-                Their <span className="text-[#B47F35] font-normal italic pr-2">Blessing</span>
+                {cms.hero?.title?.includes(",") ? (
+                  <>
+                    {cms.hero.title.split(",")[0]},<br />
+                    <span className="text-[#B47F35] font-normal italic pr-2">
+                      {cms.hero.title.split(",")[1]}
+                    </span>
+                  </>
+                ) : (
+                  cms.hero?.title || (
+                    <>
+                      Your Donation,<br />
+                      Their <span className="text-[#B47F35] font-normal italic pr-2">Blessing</span>
+                    </>
+                  )
+                )}
               </h1>
 
               {/* Lotus Divider */}
@@ -197,9 +213,16 @@ export default function DonationsPage() {
               </div>
 
               {/* Description */}
-              <p className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-xl font-poppins">
-                Your contribution helps us maintain the temple, support daily rituals, fund annadanam, celebrate festivals and preserve our ancient traditions.
-              </p>
+              {cms.hero?.description?.startsWith("<") ? (
+                <div
+                  className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-xl font-poppins prose"
+                  dangerouslySetInnerHTML={{ __html: cms.hero.description }}
+                />
+              ) : (
+                <p className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-xl font-poppins">
+                  {cms.hero?.description || "Your contribution helps us maintain the temple, support daily rituals, fund annadanam, celebrate festivals and preserve our ancient traditions."}
+                </p>
+              )}
 
               {/* Trust labels row */}
               <div className="flex flex-wrap gap-6 pt-4 border-t border-[#B47F35]/15 max-w-xl text-[#2B132C] font-poppins">
@@ -369,9 +392,9 @@ export default function DonationsPage() {
               <div className="flex items-center space-x-3 text-[#2B132C]">
                 <Building className="w-6 h-6 text-[#B47F35]" />
                 <div>
-                  <h3 className="font-heading text-xl sm:text-2xl font-bold">Donation Form</h3>
+                  <h3 className="font-heading text-xl sm:text-2xl font-bold">{cms.donation_form?.title || "Donation Form"}</h3>
                   <p className="text-xs sm:text-sm text-secondary-bronze/80 mt-0.5 font-poppins">
-                    Fill in the details below to make a donation
+                    {cms.donation_form?.subtitle || "Fill in the details below to make a donation"}
                   </p>
                 </div>
               </div>
@@ -754,24 +777,23 @@ export default function DonationsPage() {
           
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
             <h3 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-[#2B132C]">
-              Your Donation Creates Impact
+              {cms.causes?.title || "Your Donation Creates Impact"}
             </h3>
             <div className="flex items-center justify-center space-x-1.5 py-0.5">
               <div className="h-[1.5px] bg-[#B47F35]/30 w-8" />
               <span className="text-[#B47F35] text-xs">✦</span>
               <div className="h-[1.5px] bg-[#B47F35]/30 w-8" />
             </div>
+            {cms.causes?.subtitle && (
+              <p className="text-xs sm:text-sm text-secondary-bronze leading-relaxed font-normal font-poppins max-w-xl mx-auto">
+                {cms.causes.subtitle}
+              </p>
+            )}
           </div>
 
           {/* 5 Impact Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-6xl mx-auto font-poppins">
-            {[
-              { type: "general", title: "Daily Pujas", desc: "Support daily pujas and rituals for divine blessings.", rateText: "UGX 501 / Day", rate: 501, img: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "annadanam", title: "Annadanam", desc: "Provide meals to devotees and those in need.", rateText: "UGX 1,101 / Meal Service", rate: 1101, img: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "festival", title: "Festival Celebrations", desc: "Support grand celebrations and cultural traditions.", rateText: "UGX 2,101 / Festival", rate: 2101, img: "https://images.unsplash.com/photo-1608976479500-66c1b376d8b6?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "gau", title: "Gau Seva", desc: "Care and protection of cows.", rateText: "UGX 1,101 / Month", rate: 1101, img: "https://images.unsplash.com/photo-1583373834249-137a86892a50?auto=format&fit=crop&w=180&h=130&q=80" },
-              { type: "maintenance", title: "Temple Maintenance", desc: "Preserve and maintain our sacred temple.", rateText: "UGX 5,101 / Support", rate: 5101, img: "https://images.unsplash.com/photo-1545128485-c400e7702796?auto=format&fit=crop&w=180&h=130&q=80" }
-            ].map((item, idx) => (
+            {(cms.causes?.causes || DEFAULT_DONATIONS_CONTENT.causes.causes).map((item, idx) => (
               <div 
                 key={idx}
                 onClick={() => handleSelectImpactCard(item.type, item.rate)}
@@ -806,7 +828,7 @@ export default function DonationsPage() {
               
               <div className="space-y-4">
                 <h3 className="font-heading text-lg sm:text-xl font-bold text-[#2B132C] tracking-wide text-left">
-                  Recent Donors
+                  {cms.recent_donors?.title || "Recent Donors"}
                 </h3>
                 
                 <div className="space-y-3.5">
@@ -839,7 +861,7 @@ export default function DonationsPage() {
                   href="/membership"
                   className="w-full py-3 rounded-xl bg-[#FAF7F2] border border-[#B47F35]/25 text-secondary-bronze hover:text-[#B47F35] text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center space-x-2 transition-colors cursor-pointer font-poppins"
                 >
-                  <span>View All Donors</span>
+                  <span>{cms.recent_donors?.viewAllText || "View All Donors"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -853,10 +875,10 @@ export default function DonationsPage() {
             {/* Accordions */}
             <div className="w-full sm:w-2/3 space-y-3 text-left">
               <h3 className="font-heading text-lg sm:text-xl font-bold text-[#2B132C] tracking-wide mb-4">
-                Frequently Asked Questions
+                {cms.faqs?.title || "Frequently Asked Questions"}
               </h3>
 
-              {FAQ_LIST.map((faq, idx) => (
+              {(cms.faqs?.faqs || FAQ_LIST).map((faq, idx) => (
                 <div key={idx} className="border border-primary-gold/15 rounded-xl bg-white overflow-hidden shadow-sm font-poppins">
                   <button
                     onClick={() => setActiveFaqIndex(activeFaqIndex === idx ? null : idx)}

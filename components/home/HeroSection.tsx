@@ -15,8 +15,11 @@ import {
   ArrowRight
 } from "lucide-react";
 import { templeConfig } from "@/data/temple";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function HeroSection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   const darshanSchedule = [
     {
       name: "Mangala Aarti",
@@ -101,20 +104,37 @@ export function HeroSection() {
               className="space-y-2"
             >
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[66px] font-heading font-bold text-[#2B132C] leading-[1.12] tracking-tight">
-                Your Devotion,<br />
-                Our <span className="font-heading font-normal italic text-[#C59D5F] inline-block">Responsibility</span>
+                {cms.hero?.title?.includes(",") ? (
+                  <>
+                    {cms.hero.title.split(",")[0]},<br />
+                    <span className="font-heading font-normal italic text-[#C59D5F] inline-block">
+                      {cms.hero.title.split(",")[1]}
+                    </span>
+                  </>
+                ) : (
+                  cms.hero?.title || (
+                    <>
+                      Your Devotion,<br />
+                      Our <span className="font-heading font-normal italic text-[#C59D5F] inline-block">Responsibility</span>
+                    </>
+                  )
+                )}
               </h1>
             </motion.div>
 
             {/* Subtitle */}
-            <motion.p
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-base sm:text-lg md:text-xl text-secondary-bronze/90 leading-relaxed max-w-xl font-poppins font-normal"
             >
-              Experience divine blessings, book services, join events, and stay connected with your temple, anytime, anywhere.
-            </motion.p>
+              {cms.hero?.subtitle?.startsWith("<") ? (
+                <div dangerouslySetInnerHTML={{ __html: cms.hero.subtitle }} />
+              ) : (
+                <p>{cms.hero?.subtitle || "Experience divine blessings, book services, join events, and stay connected with your temple, anytime, anywhere."}</p>
+              )}
+            </motion.div>
 
             {/* CTA Action Buttons */}
             <motion.div
@@ -125,18 +145,18 @@ export function HeroSection() {
             >
               {/* Primary Solid Button */}
               <Link
-                href="/services"
+                href={cms.hero?.ctaPrimaryLink || "/services"}
                 className="px-8 sm:px-9 py-4 rounded-full bg-[#B47F35] hover:bg-[#976426] text-white font-medium text-sm sm:text-base md:text-lg shadow-lg shadow-[#B47F35]/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center cursor-pointer"
               >
-                Book a Service
+                {cms.hero?.ctaPrimaryText || "Book a Service"}
               </Link>
 
               {/* Secondary Outline Button */}
               <Link
-                href="/darshan"
+                href={cms.hero?.ctaSecondaryLink || "/darshan"}
                 className="px-8 sm:px-9 py-4 rounded-full border-2 border-[#B47F35] text-[#2B132C] bg-white/40 hover:bg-white hover:text-[#B47F35] font-medium text-sm sm:text-base md:text-lg shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center cursor-pointer"
               >
-                Explore More
+                {cms.hero?.ctaSecondaryText || "Explore More"}
               </Link>
             </motion.div>
 

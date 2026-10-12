@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
 import { Smartphone, Bell, FileText, UserCheck, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function MobileAppSection() {
+  const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
   // Framer Motion Animation Variants
   const containerVariants: any = {
     hidden: { opacity: 0 },
@@ -76,14 +78,22 @@ export function MobileAppSection() {
                 className="inline-flex items-center space-x-2 border border-[#B47F35]/35 bg-[#B47F35]/5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-[#B47F35] select-none font-poppins"
               >
                 <Smartphone className="w-4 h-4" />
-                <span>Mandir Mobile App</span>
+                <span>{cms.mobile_app?.badge || "Mandir Mobile App"}</span>
               </motion.div>
 
               {/* Title / Heading */}
               <motion.div variants={fadeUpVariants} className="space-y-3">
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#2B132C] leading-tight">
-                  Carry Temple Grace <br />
-                  <span className="text-[#B47F35] font-normal italic pr-1">Everywhere</span> in Your Pocket
+                  {cms.mobile_app?.title?.includes("<br") || cms.mobile_app?.title?.includes("\n") ? (
+                    cms.mobile_app.title
+                  ) : (
+                    cms.mobile_app?.title || (
+                      <>
+                        Carry Temple Grace <br />
+                        <span className="text-[#B47F35] font-normal italic pr-1">Everywhere</span> in Your Pocket
+                      </>
+                    )
+                  )}
                 </h2>
 
                 {/* Lotus Divider */}
@@ -95,12 +105,16 @@ export function MobileAppSection() {
               </motion.div>
 
               {/* Description */}
-              <motion.p 
+              <motion.div 
                 variants={fadeUpVariants}
                 className="text-secondary-bronze leading-relaxed font-normal text-base sm:text-lg lg:text-xl max-w-xl font-poppins"
               >
-                Available for iOS and Android. Receive daily shlokas, custom push notifications for Aarti timings, download donation receipts, and access member details instantly on the go.
-              </motion.p>
+                {cms.mobile_app?.description?.startsWith("<") ? (
+                  <div dangerouslySetInnerHTML={{ __html: cms.mobile_app.description }} />
+                ) : (
+                  <p>{cms.mobile_app?.description || "Available for iOS and Android. Receive daily shlokas, custom push notifications for Aarti timings, download donation receipts, and access member details instantly on the go."}</p>
+                )}
+              </motion.div>
 
               {/* 4 Feature Columns Grid */}
               <motion.div 
@@ -162,7 +176,9 @@ export function MobileAppSection() {
                 
                 {/* Google Play */}
                 <a 
-                  href="#" 
+                  href={cms.mobile_app?.googlePlayUrl || "https://play.google.com"} 
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center space-x-3 px-5 py-3 rounded-xl bg-[#B47F35] hover:bg-[#8B5E34] text-white transition-colors cursor-pointer shadow-sm select-none"
                 >
                   <Smartphone className="w-5 h-5 text-white" />
@@ -176,7 +192,9 @@ export function MobileAppSection() {
 
                 {/* App Store */}
                 <a 
-                  href="#" 
+                  href={cms.mobile_app?.appStoreUrl || "https://www.apple.com/app-store/"} 
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center space-x-3 px-5 py-3 rounded-xl bg-[#2B132C] hover:bg-black text-white transition-colors cursor-pointer shadow-sm select-none"
                 >
                   <Smartphone className="w-5 h-5 text-white" />
@@ -189,13 +207,33 @@ export function MobileAppSection() {
                 </a>
 
                 {/* QR Code and Label */}
-                <div className="flex items-center space-x-2.5 bg-white/50 border border-[#B47F35]/20 p-2 rounded-xl">
-                  {/* Mini Vector QR code */}
-                  <svg className="w-10 h-10 text-[#2B132C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M3 3h4v4H3zm14 0h4v4h-4zm0 14h4v4h-4zM3 17h4v4H3zM10 3h4v4h-4zm0 14h4v4h-4zM3 10h4v4H3zm14 0h4v4h-4z" />
-                  </svg>
+                <div className="flex items-center space-x-2.5 bg-white/70 backdrop-blur-xs border border-[#B47F35]/20 p-2 rounded-xl shadow-xs group relative">
+                  {cms.mobile_app?.qrCodeImageUrl ? (
+                    <img 
+                      src={cms.mobile_app.qrCodeImageUrl} 
+                      alt="Mandir App QR Code" 
+                      className="w-11 h-11 object-contain rounded-md border border-stone-200" 
+                    />
+                  ) : (
+                    /* Clean Vector QR code */
+                    <svg className="w-10 h-10 text-[#2B132C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M3 3h4v4H3zm14 0h4v4h-4zm0 14h4v4h-4zM3 17h4v4H3zM10 3h4v4h-4zm0 14h4v4h-4zM3 10h4v4H3zm14 0h4v4h-4z" />
+                    </svg>
+                  )}
                   <p className="text-xs sm:text-sm uppercase tracking-wider font-bold text-secondary-bronze leading-tight select-none font-poppins">
-                    Scan to<br />Download App
+                    {cms.mobile_app?.qrCodeLabel ? (
+                      cms.mobile_app.qrCodeLabel.includes("\n") ? (
+                        cms.mobile_app.qrCodeLabel.split("\n").map((line, i) => (
+                          <span key={i} className="block">{line}</span>
+                        ))
+                      ) : (
+                        cms.mobile_app.qrCodeLabel
+                      )
+                    ) : (
+                      <>
+                        Scan to<br />Download App
+                      </>
+                    )}
                   </p>
                 </div>
 

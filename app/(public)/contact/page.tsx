@@ -5,8 +5,11 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Mail, Phone, MapPin, CheckCircle2, X } from "lucide-react";
 import { templeConfig } from "@/data/temple";
+import { useCmsPage } from "@/lib/cms";
+import { DEFAULT_CONTACT_CONTENT } from "@/data/cmsDefaults";
 
 export default function ContactPage() {
+  const { content: cms } = useCmsPage("contact", DEFAULT_CONTACT_CONTENT);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -29,9 +32,9 @@ export default function ContactPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <SectionHeader
-          badge="Reach out"
-          title="Contact & Feedback"
-          subtitle="Get in touch with the mandir administrative office or send us your spiritual feedback."
+          badge={cms.header?.badge || "Reach out"}
+          title={cms.header?.title || "Contact & Feedback"}
+          subtitle={cms.header?.subtitle || "Get in touch with the mandir administrative office or send us your spiritual feedback."}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-20">
@@ -47,16 +50,16 @@ export default function ContactPage() {
                 <li className="flex items-start space-x-3.5">
                   <MapPin className="w-5 h-5 text-primary-gold shrink-0 mt-1" />
                   <span className="leading-relaxed">
-                    {templeConfig.address}
+                    {cms.info?.address || templeConfig.address}
                   </span>
                 </li>
                 <li className="flex items-center space-x-3.5">
                   <Phone className="w-5 h-5 text-primary-gold shrink-0" />
-                  <span>{templeConfig.phone}</span>
+                  <span>{cms.info?.phone || templeConfig.phone}</span>
                 </li>
                 <li className="flex items-center space-x-3.5">
                   <Mail className="w-5 h-5 text-primary-gold shrink-0" />
-                  <span>{templeConfig.email}</span>
+                  <span>{cms.info?.email || templeConfig.email}</span>
                 </li>
               </ul>
             </GlassCard>
@@ -66,8 +69,8 @@ export default function ContactPage() {
                 Office Hours
               </h4>
               <p className="text-sm sm:text-base text-secondary-bronze leading-relaxed font-poppins">
-                Monday - Sunday: 9:00 AM - 6:00 PM <br />
-                For wedding hall site inspection, please book an appointment via the hall booking panel.
+                {cms.info?.officeHours || "Monday - Sunday: 9:00 AM - 6:00 PM"} <br />
+                {cms.info?.bookingNote || "For wedding hall site inspection, please book an appointment via the hall booking panel."}
               </p>
             </GlassCard>
           </div>
@@ -85,7 +88,7 @@ export default function ContactPage() {
                     Message Sent Successfully!
                   </h3>
                   <p className="text-sm sm:text-base text-secondary-bronze font-poppins max-w-sm mx-auto">
-                    Thank you for your feedback. Our administrative office will review your request shortly.
+                    {cms.feedback_form?.successMessage || "Thank you for your feedback. Our administrative office will review your request shortly."}
                   </p>
                   <button
                     onClick={() => setSuccess(false)}
@@ -97,8 +100,13 @@ export default function ContactPage() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <h3 className="font-heading text-2xl sm:text-3xl font-medium text-dark-surface">
-                    Send a Message
+                    {cms.feedback_form?.title || "Send a Message"}
                   </h3>
+                  {cms.feedback_form?.subtitle && (
+                    <p className="text-xs sm:text-sm text-secondary-bronze/80 font-poppins -mt-4">
+                      {cms.feedback_form.subtitle}
+                    </p>
+                  )}
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
@@ -147,7 +155,7 @@ export default function ContactPage() {
                     type="submit"
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-gold to-secondary-bronze text-white text-sm sm:text-base font-semibold shadow-md hover:brightness-105 transition-all uppercase tracking-wider cursor-pointer font-poppins"
                   >
-                    Submit message
+                    {cms.feedback_form?.submitButtonText || "Submit message"}
                   </button>
                 </form>
               )}
@@ -165,10 +173,10 @@ export default function ContactPage() {
             <div className="relative text-center p-8 space-y-2 z-10">
               <MapPin className="w-10 h-10 text-primary-gold mx-auto animate-bounce" />
               <h4 className="font-heading text-lg sm:text-xl font-medium text-dark-surface">
-                Location Map Simulator
+                {cms.map?.title || "Location Map Simulator"}
               </h4>
               <p className="text-sm sm:text-base text-secondary-bronze font-poppins leading-relaxed">
-                Shree Swaminarayan Complex, Nsimbiziwoome, Bukoto, Kampala, Uganda
+                {cms.map?.mapLocationText || cms.info?.address || templeConfig.address}
               </p>
             </div>
           </div>
