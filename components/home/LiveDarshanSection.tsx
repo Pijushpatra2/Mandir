@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Radio } from "lucide-react";
+import { ArrowRight, Radio, Tv } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { useCmsPage } from "@/lib/cms";
+import { useCmsPage, formatYoutubeEmbedUrl } from "@/lib/cms";
 import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 const CHANTS = [
@@ -35,6 +35,10 @@ export function LiveDarshanSection() {
     return () => clearInterval(interval);
   }, []);
 
+  const rawUrl = cms.live_darshan?.liveStreamUrl;
+  const embedUrl = formatYoutubeEmbedUrl(rawUrl);
+  const isLive = cms.live_darshan?.isLive ?? true;
+
   return (
     <section className="py-24 bg-[#1F0E1F] text-white relative overflow-hidden font-poppins">
       
@@ -44,18 +48,18 @@ export function LiveDarshanSection() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Section Header */}
+        {/* Section Header (Dynamic from CMS) */}
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <span className="text-primary-gold text-xs">⚜️</span>
             <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-primary-gold font-poppins">
-              SACRED BROADCAST
+              {cms.live_darshan?.badge || "SACRED BROADCAST"}
             </span>
             <span className="text-primary-gold text-xs">⚜️</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-white">
-            Virtual Shrine <span className="text-primary-gold font-normal italic">& Live Darshan</span>
+            {cms.live_darshan?.title || "Virtual Shrine & Live Darshan"}
           </h2>
 
           <div className="flex items-center justify-center space-x-1.5 py-1">
@@ -65,7 +69,7 @@ export function LiveDarshanSection() {
           </div>
 
           <p className="text-base sm:text-lg lg:text-xl text-white/80 leading-relaxed font-normal font-poppins max-w-xl mx-auto">
-            Connect online and feel the divine energy. Watch live broadcasts from the main shrine at Kampala.
+            {cms.live_darshan?.subtitle || "Connect online and feel the divine energy. Watch live broadcasts from the main shrine at Kampala."}
           </p>
         </div>
 
@@ -74,15 +78,51 @@ export function LiveDarshanSection() {
           
           {/* LEFT: FULL-WIDTH RECTANGULAR PLAYER CONTAINER */}
           <div className="lg:col-span-8 flex flex-col justify-between">
-            <div className="relative w-full aspect-video rounded-3xl border border-primary-gold/25 overflow-hidden shadow-2xl bg-black">
-              {/* Embed video broadcast player (Standard Full Rectangular View) */}
-              <iframe
-                className="w-full h-full object-cover select-none"
-                src={`${cms.live_darshan?.liveStreamUrl || "https://www.youtube.com/embed/dQw4w9WgXcQ"}?autoplay=1&mute=1`}
-                title={cms.live_darshan?.streamTitle || "Swaminarayan Live Stream Broadcast"}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+            {embedUrl ? (
+              <div className="relative w-full aspect-video rounded-3xl border border-primary-gold/25 overflow-hidden shadow-2xl bg-black group">
+                {isLive && (
+                  <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-red-600/90 text-white text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm pointer-events-none">
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                    <span>LIVE DARSHAN</span>
+                  </div>
+                )}
+                {/* Embed video broadcast player */}
+                <iframe
+                  className="w-full h-full object-cover select-none"
+                  src={`${embedUrl}?autoplay=1&mute=1&rel=0`}
+                  title={cms.live_darshan?.streamTitle || "Swaminarayan Live Stream Broadcast"}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div className="relative w-full aspect-video rounded-3xl border border-primary-gold/25 overflow-hidden shadow-2xl bg-gradient-to-br from-[#2D162B] via-[#1F0E1F] to-black flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-primary-gold/10 border border-primary-gold/30 flex items-center justify-center text-primary-gold mb-4 shadow-inner">
+                  <Tv className="w-8 h-8 text-[#C59D5F] animate-pulse" />
+                </div>
+                <h4 className="text-xl sm:text-2xl font-heading font-bold text-white mb-2">
+                  {cms.live_darshan?.streamTitle || "Daily Sacred Darshan"}
+                </h4>
+                <p className="text-xs sm:text-sm text-white/70 max-w-md mb-4">
+                  {cms.live_darshan?.scheduleNote || "Streaming daily morning Mangala Aarti (6:00 AM) and evening Sandhya Aarti (6:45 PM EAT)."}
+                </p>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+                  <span>⚡ Broadcast stream offline — check back during scheduled Aarti timings</span>
+                </div>
+              </div>
+            )}
+
+            {/* Broadcast Details Footer */}
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-white/80 px-1">
+              <span className="font-semibold text-white flex items-center gap-2">
+                <Radio className={`w-4 h-4 ${isLive ? "text-red-400 animate-pulse" : "text-amber-400"}`} />
+                {cms.live_darshan?.streamTitle || "Daily Sacred Darshan Live Stream"}
+              </span>
+              {cms.live_darshan?.scheduleNote && (
+                <span className="text-primary-gold/90 font-medium">
+                  ⏰ {cms.live_darshan.scheduleNote}
+                </span>
+              )}
             </div>
           </div>
 

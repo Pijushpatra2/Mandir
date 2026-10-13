@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import { Upload, X, Check, Image as ImageIcon, Loader2, ExternalLink } from "lucide-react";
+import { useApp } from "@/lib/context";
 
 interface ImageUploaderProps {
   label: string;
@@ -19,6 +20,7 @@ export function ImageUploader({
   folder = "cms",
   recommendedSize = "1920x1080 or 800x600"
 }: ImageUploaderProps) {
+  const { showToast } = useApp();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -30,13 +32,17 @@ export function ImageUploader({
 
     // Validate type
     if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image file (PNG, JPG, WEBP)");
+      const errText = "Please select a valid image file (PNG, JPG, WEBP)";
+      setError(errText);
+      showToast(errText, "error");
       return;
     }
 
     // Validate size (15MB)
     if (file.size > 15 * 1024 * 1024) {
-      setError("Image size must be under 15MB");
+      const errText = "Image size must be under 15MB";
+      setError(errText);
+      showToast(errText, "error");
       return;
     }
 
@@ -60,12 +66,15 @@ export function ImageUploader({
 
       if (res.data?.success && res.data?.url) {
         onChange(res.data.url);
+        showToast("Image uploaded to S3 successfully!", "success");
       } else {
         throw new Error(res.data?.message || "Upload failed");
       }
     } catch (err: any) {
       console.error("Upload error:", err);
-      setError(err.response?.data?.message || err.message || "Failed to upload image to S3");
+      const errMsg = err.response?.data?.message || err.message || "Failed to upload image to S3";
+      setError(errMsg);
+      showToast(errMsg, "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -78,6 +87,7 @@ export function ImageUploader({
     if (!value) return;
     navigator.clipboard.writeText(value);
     setCopied(true);
+    showToast("Image S3 URL copied to clipboard!", "info");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -115,7 +125,10 @@ export function ImageUploader({
               </button>
               <button
                 type="button"
-                onClick={() => onChange("")}
+                onClick={() => {
+                  onChange("");
+                  showToast("Image removed", "info");
+                }}
                 disabled={uploading}
                 className="px-3 py-1.5 rounded-lg bg-red-600/90 text-xs font-semibold text-white hover:bg-red-600 shadow transition-transform hover:scale-105 cursor-pointer"
               >

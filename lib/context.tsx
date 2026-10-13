@@ -18,7 +18,7 @@ import {
   clearDevoteeTokens
 } from "@/lib/authStorage";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Info, X } from "lucide-react";
 
 export interface DevoteeProfile {
   id: string;
@@ -514,20 +514,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-6 right-6 z-50 max-w-sm p-4 rounded-2xl shadow-xl flex items-center gap-3 backdrop-blur-md border ${
+            onClick={() => setToast(null)}
+            className={`fixed bottom-6 right-6 z-[9999] max-w-sm p-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md border cursor-pointer select-none transition-transform hover:scale-[1.02] ${
               toast.type === "success"
-                ? "bg-green-50/90 border-green-200/50 text-green-700"
+                ? "bg-emerald-50/95 border-emerald-300 text-emerald-800 shadow-emerald-500/10"
                 : toast.type === "error"
-                ? "bg-red-50/90 border-red-200/50 text-red-700"
-                : "bg-blue-50/90 border-blue-200/50 text-blue-700"
+                ? "bg-red-50/95 border-red-300 text-red-800 shadow-red-500/10"
+                : "bg-blue-50/95 border-blue-300 text-blue-800 shadow-blue-500/10"
             }`}
           >
             {toast.type === "error" ? (
-              <AlertTriangle className="w-5 h-5 shrink-0 text-red-500" />
+              <AlertTriangle className="w-5 h-5 shrink-0 text-red-600" />
+            ) : toast.type === "info" ? (
+              <Info className="w-5 h-5 shrink-0 text-blue-600" />
             ) : (
-              <CheckCircle2 className="w-5 h-5 shrink-0 text-green-500" />
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
             )}
-            <span className="text-xs font-semibold tracking-wide font-sans">{toast.message}</span>
+            <span className="text-xs font-semibold tracking-wide font-sans flex-1">{toast.message}</span>
+            <X className="w-4 h-4 opacity-50 hover:opacity-100 shrink-0 ml-1 transition-opacity" />
           </motion.div>
         )}
       </AnimatePresence>

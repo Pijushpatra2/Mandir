@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useApp } from "@/lib/context";
+import { formatYoutubeEmbedUrl } from "@/lib/cms";
 import { WordStyleEditor } from "@/components/cms/WordStyleEditor";
 import { ImageUploader } from "@/components/cms/ImageUploader";
 import {
@@ -51,6 +52,7 @@ function SectionCard({
   apiConnectedNotice,
   children
 }: SectionCardProps) {
+  const { showToast } = useApp();
   return (
     <div className="bg-white rounded-3xl border border-[#B47F35]/20 overflow-hidden shadow-xs transition-shadow hover:shadow-sm">
       <div
@@ -99,7 +101,10 @@ function SectionCard({
           <div className="flex items-center justify-between pt-4 border-t border-[#B47F35]/15">
             <button
               type="button"
-              onClick={onReset}
+              onClick={() => {
+                onReset();
+                showToast(`"${title}" content reset to defaults`, "info");
+              }}
               className="text-xs font-semibold text-stone-500 hover:text-stone-800 flex items-center gap-1.5 cursor-pointer px-3 py-2 rounded-lg hover:bg-stone-100 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -123,7 +128,7 @@ function SectionCard({
 }
 
 export default function SuperAdminCmsPage() {
-  const { userRole } = useApp();
+  const { userRole, showToast } = useApp();
   const [activeTab, setActiveTab] = useState<"home" | "about" | "donations" | "gallery" | "contact">("home");
 
   // State for each page's content
@@ -185,8 +190,15 @@ export default function SuperAdminCmsPage() {
         if (conRes.status === "fulfilled" && conRes.value.data?.data?.sections) {
           setContactData(prev => ({ ...prev, ...conRes.value.data.data.sections }));
         }
-        if (itemsRes.status === "fulfilled" && itemsRes.value.data?.data?.length > 0) {
-          setGalleryItems(itemsRes.value.data.data);
+        if (itemsRes.status === "fulfilled" && Array.isArray(itemsRes.value.data?.data) && itemsRes.value.data.data.length > 0) {
+          const formatted = itemsRes.value.data.data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            imageUrl: item.image_url || item.imageUrl,
+            capturedDate: item.captured_date ? String(item.captured_date).split("T")[0] : item.capturedDate || item.date || ""
+          }));
+          setGalleryItems(formatted);
         }
       } catch (err) {
         console.warn("Could not prefetch CMS database content, loaded static baseline.", err);
@@ -201,8 +213,9 @@ export default function SuperAdminCmsPage() {
   };
 
   const handleSaveSection = async (pageSlug: string, sectionKey: string, payload: any) => {
-    const key = `${pageSlug}-${sectionKey}`;
-    setSavingSection(key);
+    const rawKey = `${pageSlug}-${sectionKey}`;
+    const hyphenKey = rawKey.replace(/_/g, "-");
+    setSavingSection(hyphenKey);
     setSaveSuccess(null);
     setSaveError(null);
 
@@ -217,14 +230,19 @@ export default function SuperAdminCmsPage() {
       );
 
       if (res.data?.success) {
-        setSaveSuccess(`"${sectionKey}" section on ${pageSlug.toUpperCase()} page saved successfully!`);
+        const readableSection = sectionKey.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        const successMsg = `"${readableSection}" section on ${pageSlug.toUpperCase()} page saved successfully!`;
+        setSaveSuccess(successMsg);
+        showToast(successMsg, "success");
         setTimeout(() => setSaveSuccess(null), 4000);
       } else {
         throw new Error(res.data?.message || "Failed to save section");
       }
     } catch (err: any) {
       console.error("Save error:", err);
-      setSaveError(err.response?.data?.message || err.message || "Failed to save changes to database");
+      const errMsg = err.response?.data?.message || err.message || "Failed to save changes to database";
+      setSaveError(errMsg);
+      showToast(errMsg, "error");
       setTimeout(() => setSaveError(null), 5000);
     } finally {
       setSavingSection(null);
@@ -234,7 +252,8 @@ export default function SuperAdminCmsPage() {
   const handleCreateGalleryItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGalleryPhoto.imageUrl || !newGalleryPhoto.title) {
-      alert("Please provide both photo title and uploaded image");
+      const errMsg = "Please provide both photo title and uploaded image";
+      showToast(errMsg, "error");
       return;
     }
 
@@ -247,7 +266,14 @@ export default function SuperAdminCmsPage() {
       });
 
       if (res.data?.success && res.data?.data) {
-        setGalleryItems(prev => [res.data.data, ...prev]);
+        const created = {
+          id: res.data.data.id,
+          title: res.data.data.title,
+          category: res.data.data.category,
+          imageUrl: res.data.data.image_url || res.data.data.imageUrl || newGalleryPhoto.imageUrl,
+          capturedDate: res.data.data.captured_date ? String(res.data.data.captured_date).split("T")[0] : newGalleryPhoto.capturedDate
+        };
+        setGalleryItems(prev => [created, ...prev]);
         setNewGalleryPhoto({
           title: "",
           category: "Deities",
@@ -255,11 +281,15 @@ export default function SuperAdminCmsPage() {
           capturedDate: new Date().toISOString().split("T")[0],
           displayOrder: 1
         });
-        setSaveSuccess("New photo published to public gallery successfully!");
+        const successMsg = "New photo published to public gallery successfully!";
+        setSaveSuccess(successMsg);
+        showToast(successMsg, "success");
         setTimeout(() => setSaveSuccess(null), 4000);
       }
     } catch (err: any) {
-      setSaveError(err.response?.data?.message || "Failed to add gallery item");
+      const errMsg = err.response?.data?.message || "Failed to add gallery item";
+      setSaveError(errMsg);
+      showToast(errMsg, "error");
     }
   };
 
@@ -275,10 +305,14 @@ export default function SuperAdminCmsPage() {
       });
 
       setGalleryItems(prev => prev.filter(item => item.id !== id));
-      setSaveSuccess("Gallery photo removed successfully");
+      const successMsg = "Gallery photo removed successfully";
+      setSaveSuccess(successMsg);
+      showToast(successMsg, "success");
       setTimeout(() => setSaveSuccess(null), 3000);
     } catch (err: any) {
-      setSaveError(err.response?.data?.message || "Failed to delete gallery item");
+      const errMsg = err.response?.data?.message || "Failed to delete gallery item";
+      setSaveError(errMsg);
+      showToast(errMsg, "error");
     }
   };
 
@@ -789,16 +823,56 @@ export default function SuperAdminCmsPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase text-stone-700 block mb-1">YouTube Embed Stream URL</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold uppercase text-stone-700">
+                    YouTube Stream / Video URL
+                  </label>
+                  {homeData.live_darshan.liveStreamUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setHomeData(p => ({ ...p, live_darshan: { ...p.live_darshan, liveStreamUrl: "" } }))}
+                      className="text-[11px] text-red-600 hover:underline font-semibold cursor-pointer"
+                    >
+                      Clear Video
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={homeData.live_darshan.liveStreamUrl}
                   onChange={(e) => setHomeData(p => ({ ...p, live_darshan: { ...p.live_darshan, liveStreamUrl: e.target.value } }))}
-                  placeholder="https://www.youtube.com/embed/..."
+                  placeholder="e.g. https://www.youtube.com/watch?v=... or https://youtu.be/..."
                   className="w-full px-4 py-2.5 rounded-xl border border-[#B47F35]/25 text-sm font-mono"
                 />
+                <p className="text-[11px] text-stone-500 mt-1">
+                  Supports any YouTube link (watch, youtu.be, or embed). Leave empty to show offline shrine state.
+                </p>
               </div>
             </div>
+
+            {/* Live Video Preview Box */}
+            {homeData.live_darshan.liveStreamUrl && (
+              <div className="rounded-2xl border border-[#B47F35]/20 bg-[#FAF7F2] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wide text-[#2B132C] flex items-center gap-1.5">
+                    <Tv className="w-3.5 h-3.5 text-[#B47F35]" />
+                    Live Player Embed Preview
+                  </span>
+                  <span className="text-[11px] text-[#8B5E34] font-mono truncate max-w-xs" title={formatYoutubeEmbedUrl(homeData.live_darshan.liveStreamUrl)}>
+                    {formatYoutubeEmbedUrl(homeData.live_darshan.liveStreamUrl)}
+                  </span>
+                </div>
+                <div className="relative aspect-video max-w-md rounded-xl overflow-hidden bg-black shadow-md border border-black/10">
+                  <iframe
+                    className="w-full h-full object-cover"
+                    src={`${formatYoutubeEmbedUrl(homeData.live_darshan.liveStreamUrl)}?autoplay=0&mute=1`}
+                    title="Live Darshan Preview"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-3 p-3 bg-amber-50/60 rounded-xl border border-amber-200">
               <input
@@ -833,7 +907,7 @@ export default function SuperAdminCmsPage() {
             onToggle={() => toggleSection("home-hall")}
             onSave={() => handleSaveSection("home", "hall_showcase", homeData.hall_showcase)}
             onReset={() => setHomeData(p => ({ ...p, hall_showcase: DEFAULT_HOME_CONTENT.hall_showcase }))}
-            isSaving={savingSection === "home-hall"}
+            isSaving={savingSection === "home-hall" || savingSection === "home-hall-showcase"}
             saveLabel="Save Hall Showcase"
             apiConnectedNotice="Connected to Hall Booking & Calculator API — Dynamic pricing formulas, calendar availability, and booking forms stay connected to the Hall module. Framing copy is editable below."
           >
@@ -1845,7 +1919,7 @@ export default function SuperAdminCmsPage() {
             onToggle={() => toggleSection("donations-form")}
             onSave={() => handleSaveSection("donations", "donation_form", donationsData.donation_form)}
             onReset={() => setDonationsData(p => ({ ...p, donation_form: DEFAULT_DONATIONS_CONTENT.donation_form }))}
-            isSaving={savingSection === "donations-form"}
+            isSaving={savingSection === "donations-form" || savingSection === "donations-donation-form"}
             saveLabel="Save Form Header"
             apiConnectedNotice="Connected to Payment Gateway & Ledger API — Payment processing, donor receipt PDF generation, and currency transactions remain securely managed by the payment engine. Form title and security badges are editable below."
           >
@@ -2021,7 +2095,7 @@ export default function SuperAdminCmsPage() {
             onToggle={() => toggleSection("donations-bank")}
             onSave={() => handleSaveSection("donations", "bank_details", donationsData.bank_details)}
             onReset={() => setDonationsData(p => ({ ...p, bank_details: DEFAULT_DONATIONS_CONTENT.bank_details }))}
-            isSaving={savingSection === "donations-bank"}
+            isSaving={savingSection === "donations-bank" || savingSection === "donations-bank-details"}
             saveLabel="Save Bank Details"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2464,7 +2538,7 @@ export default function SuperAdminCmsPage() {
             onToggle={() => toggleSection("contact-feedback")}
             onSave={() => handleSaveSection("contact", "feedback_form", contactData.feedback_form)}
             onReset={() => setContactData(p => ({ ...p, feedback_form: DEFAULT_CONTACT_CONTENT.feedback_form }))}
-            isSaving={savingSection === "contact-feedback"}
+            isSaving={savingSection === "contact-feedback" || savingSection === "contact-feedback-form"}
             saveLabel="Save Feedback Header"
             apiConnectedNotice="Connected to Inquiries & Feedback CRM API — Submissions are routed to the administrative inquiry desk. Form framing copy and button text are editable below."
           >

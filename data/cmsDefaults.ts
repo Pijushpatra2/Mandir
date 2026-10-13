@@ -298,7 +298,7 @@ export const DEFAULT_HOME_CONTENT: HomeCmsData = {
     title: "Virtual Shrine & Live Darshan",
     subtitle: "Connect online and feel the divine energy. Watch live broadcasts from the main shrine at Kampala.",
     streamTitle: "Daily Sacred Darshan Live Stream",
-    liveStreamUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    liveStreamUrl: "",
     isLive: true,
     scheduleNote: "Streaming daily morning Mangala Aarti (6:00 AM) and evening Sandhya Aarti (6:45 PM EAT)."
   },

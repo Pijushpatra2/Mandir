@@ -79,3 +79,30 @@ export function useCmsPage<T>(slug: string, defaultContent: T): { content: T; is
 
   return { content, isLive };
 }
+
+/**
+ * Normalizes any YouTube URL (watch?v=, youtu.be/, live/, /v/, or embed/) into a safe iframe embed URL.
+ * Also handles query parameters cleanly.
+ */
+export function formatYoutubeEmbedUrl(url?: string | null): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  // 1. If already an embed URL, extract the ID to sanitize any bad parameters
+  if (trimmed.includes("youtube.com/embed/")) {
+    const idMatch = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+    if (idMatch && idMatch[1]) {
+      return `https://www.youtube.com/embed/${idMatch[1]}`;
+    }
+    return trimmed;
+  }
+
+  // 2. Standard watch URL, short youtu.be, or live stream URL
+  const match = trimmed.match(/(?:youtube\.com\/(?:watch\?v=|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (match && match[1]) {
+    return `https://www.youtube.com/embed/${match[1]}`;
+  }
+
+  return trimmed;
+}
