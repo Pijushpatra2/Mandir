@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import type { Swiper as SwiperCore } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -12,8 +13,7 @@ import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 
 export function TestimonialsSection() {
   const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
-  const prevRef = useRef<HTMLButtonElement>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
+  const [swiperInstance, setSwiperInstance] = useState<SwiperCore | null>(null);
 
   const testimonials = (cms.testimonials?.items && cms.testimonials.items.length > 0)
     ? cms.testimonials.items
@@ -62,7 +62,8 @@ export function TestimonialsSection() {
             modules={[Autoplay, Navigation, Pagination]}
             spaceBetween={24}
             slidesPerView={1}
-            loop={testimonials.length > 2}
+            loop={testimonials.length > 3}
+            onSwiper={setSwiperInstance}
             autoplay={{
               delay: 3500,
               disableOnInteraction: false,
@@ -72,17 +73,9 @@ export function TestimonialsSection() {
               clickable: true,
               dynamicBullets: true,
             }}
-            navigation={{
-              prevEl: prevRef.current,
-              nextEl: nextRef.current,
-            }}
-            onBeforeInit={(swiper: any) => {
-              swiper.params.navigation.prevEl = prevRef.current;
-              swiper.params.navigation.nextEl = nextRef.current;
-            }}
             breakpoints={{
               640: {
-                slidesPerView: 1.5,
+                slidesPerView: 1,
                 spaceBetween: 20,
               },
               768: {
@@ -91,10 +84,14 @@ export function TestimonialsSection() {
               },
               1024: {
                 slidesPerView: 3,
+                spaceBetween: 24,
+              },
+              1280: {
+                slidesPerView: 3,
                 spaceBetween: 28,
               },
             }}
-            className="pb-14 pt-2 !overflow-visible"
+            className="pb-14 pt-2"
           >
             {testimonials.map((test, index) => (
               <SwiperSlide key={test.id || index} className="h-auto">
@@ -146,16 +143,16 @@ export function TestimonialsSection() {
           {/* Left / Right Navigation Controls */}
           <div className="flex items-center justify-center gap-4 mt-8">
             <button
-              ref={prevRef}
               type="button"
+              onClick={() => swiperInstance?.slidePrev()}
               aria-label="Previous Testimonial"
               className="w-11 h-11 rounded-full border border-[#B47F35]/30 bg-white hover:bg-[#FAF7F2] text-[#2B132C] hover:text-[#B47F35] flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
-              ref={nextRef}
               type="button"
+              onClick={() => swiperInstance?.slideNext()}
               aria-label="Next Testimonial"
               className="w-11 h-11 rounded-full border border-[#B47F35]/30 bg-white hover:bg-[#FAF7F2] text-[#2B132C] hover:text-[#B47F35] flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
             >

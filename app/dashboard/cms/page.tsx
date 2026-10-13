@@ -310,6 +310,15 @@ export default function SuperAdminCmsPage() {
       showToast(successMsg, "success");
       setTimeout(() => setSaveSuccess(null), 3000);
     } catch (err: any) {
+      if (err.response?.status === 404) {
+        // Idempotent client cleanup: if item not in DB or already deleted, remove from state cleanly
+        setGalleryItems(prev => prev.filter(item => item.id !== id));
+        const successMsg = "Gallery photo removed successfully";
+        setSaveSuccess(successMsg);
+        showToast(successMsg, "success");
+        setTimeout(() => setSaveSuccess(null), 3000);
+        return;
+      }
       const errMsg = err.response?.data?.message || "Failed to delete gallery item";
       setSaveError(errMsg);
       showToast(errMsg, "error");

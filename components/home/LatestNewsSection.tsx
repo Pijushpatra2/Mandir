@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
@@ -11,6 +11,7 @@ import { useCmsPage } from "@/lib/cms";
 import { DEFAULT_HOME_CONTENT } from "@/data/cmsDefaults";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import type { Swiper as SwiperCore } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -18,8 +19,7 @@ import "swiper/css/pagination";
 export function LatestNewsSection() {
   const { news } = useApp();
   const { content: cms } = useCmsPage("home", DEFAULT_HOME_CONTENT);
-  const prevRef = useRef<HTMLButtonElement>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
+  const [swiperInstance, setSwiperInstance] = useState<SwiperCore | null>(null);
 
   // Dynamic articles from CMS with fallback to app context news
   const articles = (cms.latest_news?.articles && cms.latest_news.articles.length > 0)
@@ -49,16 +49,16 @@ export function LatestNewsSection() {
           {/* Swiper Left / Right Navigation Buttons */}
           <div className="flex items-center gap-3 shrink-0">
             <button
-              ref={prevRef}
               type="button"
+              onClick={() => swiperInstance?.slidePrev()}
               aria-label="Previous News"
               className="w-11 h-11 rounded-full border border-[#B47F35]/30 bg-white hover:bg-[#FAF7F2] text-[#2B132C] hover:text-[#B47F35] flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
-              ref={nextRef}
               type="button"
+              onClick={() => swiperInstance?.slideNext()}
               aria-label="Next News"
               className="w-11 h-11 rounded-full border border-[#B47F35]/30 bg-white hover:bg-[#FAF7F2] text-[#2B132C] hover:text-[#B47F35] flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
@@ -73,7 +73,8 @@ export function LatestNewsSection() {
             modules={[Autoplay, Navigation, Pagination]}
             spaceBetween={28}
             slidesPerView={1}
-            loop={articles.length > 2}
+            loop={articles.length > 3}
+            onSwiper={setSwiperInstance}
             autoplay={{
               delay: 4000,
               disableOnInteraction: false,
@@ -83,17 +84,9 @@ export function LatestNewsSection() {
               clickable: true,
               dynamicBullets: true,
             }}
-            navigation={{
-              prevEl: prevRef.current,
-              nextEl: nextRef.current,
-            }}
-            onBeforeInit={(swiper: any) => {
-              swiper.params.navigation.prevEl = prevRef.current;
-              swiper.params.navigation.nextEl = nextRef.current;
-            }}
             breakpoints={{
               640: {
-                slidesPerView: 1.5,
+                slidesPerView: 1,
                 spaceBetween: 20,
               },
               768: {
@@ -102,10 +95,14 @@ export function LatestNewsSection() {
               },
               1024: {
                 slidesPerView: 3,
+                spaceBetween: 24,
+              },
+              1280: {
+                slidesPerView: 3,
                 spaceBetween: 28,
               },
             }}
-            className="pb-12 !overflow-visible"
+            className="pb-12"
           >
             {articles.map((item) => (
               <SwiperSlide key={item.id} className="h-auto">
