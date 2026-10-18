@@ -1,57 +1,67 @@
+
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter, Plus_Jakarta_Sans, Poppins } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  Inter,
+  Plus_Jakarta_Sans,
+  Poppins,
+} from "next/font/google";
 import { AppProvider } from "@/lib/context";
 import { QueryProvider } from "@/lib/QueryProvider";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
-variable: "--font-cormorant",
-subsets: ["latin"],
-weight: ["300", "400", "500", "600", "700"],
-style: ["normal", "italic"],
-display: "swap",
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
 });
 
 const inter = Inter({
-variable: "--font-inter",
-subsets: ["latin"],
-display: "swap",
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
-variable: "--font-jakarta",
-subsets: ["latin"],
-display: "swap",
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 const poppins = Poppins({
-variable: "--font-poppins",
-subsets: ["latin"],
-weight: ["300", "400", "500", "600", "700"],
-display: "swap",
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-title: "SKSS Temple, Kampala - Enterprise ERP",
-description:
-"Experience Divine Grace. Book Pooja services, Donate online, Become a Member, and Watch Live Darshan.",
+  title: "SKSS Temple, Kampala - Enterprise ERP",
+  description:
+    "Experience Divine Grace. Book Pooja services, Donate online, Become a Member, and Watch Live Darshan.",
 };
 
 export default function RootLayout({
-children,
+  children,
 }: Readonly<{
-children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-return (
-<html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-<body
-className={${cormorantGaramond.variable} ${inter.variable} ${plusJakartaSans.variable} ${poppins.variable} antialiased bg-[#FAF7F2] text-[#111111]}
->
-{/* QueryProvider must wrap AppProvider so all contexts can use useQuery */}
-<QueryProvider>
-<AppProvider>{children}</AppProvider>
-</QueryProvider>
-</body>
-</html>
-);
+  return (
+    <html
+      lang="en"
+      className="scroll-smooth"
+      data-scroll-behavior="smooth"
+    >
+      <body
+        className={`${cormorantGaramond.variable} ${inter.variable} ${plusJakartaSans.variable} ${poppins.variable} antialiased bg-[#FAF7F2] text-[#111111]`}
+      >
+        {/* QueryProvider must wrap AppProvider so all contexts can use useQuery */}
+        <QueryProvider>
+          <AppProvider>{children}</AppProvider>
+        </QueryProvider>
+      </body>
+    </html>
+  );
 }
