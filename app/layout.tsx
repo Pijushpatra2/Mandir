@@ -1,11 +1,6 @@
-
 import "./globals.css";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout() {
   return (
     <html lang="en">
       <body
@@ -32,8 +27,8 @@ export default function RootLayout({
           </h1>
 
           <p style={{ color: "#666" }}>
-            An unknown error has occurred while processing the request.
-            Please try again later.
+            Our website is temporarily unavailable due to scheduled
+            maintenance. Please try again later.
           </p>
 
           <p
