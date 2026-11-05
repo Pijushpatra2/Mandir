@@ -1,46 +1,112 @@
+// import "./globals.css";
+
+// export default function RootLayout() {
+//   return (
+//     <html lang="en">
+//       <body
+//         style={{
+//           margin: 0,
+//           display: "flex",
+//           justifyContent: "center",
+//           alignItems: "center",
+//           minHeight: "100vh",
+//           fontFamily: "Arial, sans-serif",
+//           background: "#f5f5f5",
+//           color: "#333",
+//         }}
+//       >
+//         <div
+//           style={{
+//             textAlign: "center",
+//             maxWidth: "600px",
+//             padding: "20px",
+//           }}
+//         >
+//           <h1 style={{ fontSize: "36px", marginBottom: "10px" }}>
+//             503 - Service Temporarily Unavailable
+//           </h1>
+
+//           <p style={{ color: "#666" }}>
+//             Our website is temporarily unavailable due to scheduled
+//             maintenance. Please try again later.
+//           </p>
+
+//           <p
+//             style={{
+//               marginTop: "30px",
+//               color: "#999",
+//               fontSize: "14px",
+//             }}
+//           >
+//             Error Code: 503 | Service Unavailable
+//           </p>
+//         </div>
+//       </body>
+//     </html>
+//   );
+// }
+
+
+
+
+import type { Metadata } from "next";
+import {
+  Cormorant_Garamond,
+  Inter,
+  Plus_Jakarta_Sans,
+  Poppins,
+} from "next/font/google";
+import { AppProvider } from "@/lib/context";
+import { QueryProvider } from "@/lib/QueryProvider";
 import "./globals.css";
 
-export default function RootLayout() {
+const cormorantGaramond = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "SKSS Temple, Kampala - Enterprise ERP",
+  description:
+    "Experience Divine Grace. Book Pooja services, Donate online, Become a Member, and Watch Live Darshan.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <body
-        style={{
-          margin: 0,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          fontFamily: "Arial, sans-serif",
-          background: "#f5f5f5",
-          color: "#333",
-        }}
+        className={`${cormorantGaramond.variable} ${inter.variable} ${plusJakartaSans.variable} ${poppins.variable} antialiased bg-[#FAF7F2] text-[#111111]`}
       >
-        <div
-          style={{
-            textAlign: "center",
-            maxWidth: "600px",
-            padding: "20px",
-          }}
-        >
-          <h1 style={{ fontSize: "36px", marginBottom: "10px" }}>
-            503 - Service Temporarily Unavailable
-          </h1>
-
-          <p style={{ color: "#666" }}>
-            Our website is temporarily unavailable due to scheduled
-            maintenance. Please try again later.
-          </p>
-
-          <p
-            style={{
-              marginTop: "30px",
-              color: "#999",
-              fontSize: "14px",
-            }}
-          >
-            Error Code: 503 | Service Unavailable
-          </p>
-        </div>
+        {/* QueryProvider must wrap AppProvider so all contexts can use useQuery */}
+        <QueryProvider>
+          <AppProvider>{children}</AppProvider>
+        </QueryProvider>
       </body>
     </html>
   );
