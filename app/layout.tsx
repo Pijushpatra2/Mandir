@@ -27,13 +27,6 @@ export default function RootLayout() {
             503 - Server Failed
           </h1>
 
-          <p style={{ color: "#666", lineHeight: "1.6" }}>
-            We're sorry, but our server is currently experiencing technical
-            difficulties and is unable to process your request.
-            Our technical team is working to restore the service.
-            Please try again later.
-          </p>
-
           <p
             style={{
               marginTop: "30px",
